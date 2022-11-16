@@ -8,8 +8,11 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.moveup.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first"/>
+        tools:layout="@layout/fragment_first">
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_bluetooth"
+            app:destination="@id/navigation_bluetooth" />
+    </fragment>
     <fragment
         android:id="@+id/navigation_graph"
         android:name="com.example.moveup.SecondFragment"
@@ -20,5 +23,10 @@
         android:name="com.example.moveup.ThirdFragment"
         android:label="ThirdFragment"
         tools:layout="@layout/fragment_third"/>
+    <fragment
+        android:id="@+id/navigation_bluetooth"
+        android:name="com.example.moveup.BluetoothFragment"
+        android:label="fragment_bluetooth"
+        tools:layout="@layout/fragment_bluetooth" />
 
 </navigation>
