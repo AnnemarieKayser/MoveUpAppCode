@@ -19,6 +19,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentBluetoothBinding
+import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
 
@@ -37,6 +38,7 @@ class BluetoothFragment : Fragment() {
     private var deviceIsSelected = false
     private var isConnected = false
     private var isOnLED = false
+    private var isReceivingData = false
     private var discoveredDevices = arrayListOf<String>()
     private lateinit var selectedDevice: String
     private var bluetoothLeService: BluetoothLeService? = null
@@ -94,16 +96,15 @@ class BluetoothFragment : Fragment() {
         }
 
         binding.buttonLed.setOnClickListener {
+
             val obj = JSONObject()
             isOnLED = !isOnLED
             // Werte setzen
             if (isOnLED) {
                 binding.buttonLed.text = getString(R.string.bt_led_off)
-                binding.textViewLed.text = getString(R.string.led_on)
                 obj.put("LED", "H")
             } else {
                 binding.buttonLed.text = getString(R.string.bt_led_on)
-                binding.textViewLed.text = getString(R.string.led_off)
                 obj.put("LED", "L")
             }
 
@@ -111,6 +112,19 @@ class BluetoothFragment : Fragment() {
             if (gattCharacteristic != null) {
                 gattCharacteristic!!.value = obj.toString().toByteArray()
                 bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+            }
+        }
+
+        binding.buttonDaten.setOnClickListener {
+            if (isReceivingData) {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false);
+                isReceivingData = false;
+                binding.buttonDaten.text = getString(R.string.btn_data)
+
+            } else {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true);
+                isReceivingData = true;
+                binding.buttonDaten.text = getString(R.string.bt_data_off)
             }
         }
 
@@ -230,7 +244,19 @@ class BluetoothFragment : Fragment() {
         val bytes: ByteArray = gattCharacteristic!!.value
         // byte[] to string
         val s = String(bytes)
-        //parseJSONData(s)
+        parseJSONData(s)
+    }
+
+    private fun parseJSONData(jsonString : String) {
+        try {
+            val obj = JSONObject(jsonString)
+            //extrahieren des Objektes data
+            binding.textViewLed.text = obj.getString("s").toString()
+            //Array Ausgabe
+
+        } catch (e : JSONException) {
+            e.printStackTrace()
+        }
     }
 
 

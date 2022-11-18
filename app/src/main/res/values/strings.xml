@@ -30,5 +30,7 @@
     <string name="led_on">Led an</string>
     <string name="bt_led_on">Led anschalten</string>
     <string name="led_off">Led aus</string>
+    <string name="btn_data">Daten</string>
+    <string name="bt_data_off">keine daten</string>
 
 </resources>
