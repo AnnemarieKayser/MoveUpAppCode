@@ -22,4 +22,13 @@
     <string name="btn_led">Led anschalten</string>
     <string name="tv_led">Led aus</string>
     <string name="tv_selected_device">Kein Gerät ausgewählt</string>
+    <string name="bt_connect_off">Gerät nicht verbunden</string>
+    <string name="btn_scan_stop">Scan stopp</string>
+    <string name="connected">verbunden</string>
+    <string name="disconnected">nicht verbunden</string>
+    <string name="bt_led_off">Led ausschalten</string>
+    <string name="led_on">Led an</string>
+    <string name="bt_led_on">Led anschalten</string>
+    <string name="led_off">Led aus</string>
+
 </resources>

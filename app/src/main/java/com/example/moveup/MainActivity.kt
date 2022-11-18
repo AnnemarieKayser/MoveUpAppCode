@@ -2,9 +2,14 @@ package com.example.moveup
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.content.ComponentName
+import android.content.ContentValues.TAG
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -26,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: BasicViewModel by viewModels()
 
+    //Ble
     private lateinit var mBluetooth: BluetoothAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +52,7 @@ class MainActivity : AppCompatActivity() {
             toast(getString(R.string.bt_not_available))
             finish();
         }
+
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -102,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(turnBTOn, 1)
         }
+
     }
 
     private fun checkBTPermission() {
