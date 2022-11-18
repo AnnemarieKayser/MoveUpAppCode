@@ -10,25 +10,32 @@ class BasicViewModel : ViewModel() {
     val someTestData: String
         get() = _someTestData
 
-    private val _terminList = MutableLiveData<MutableList<String>>()
-    val terminList: LiveData<MutableList<String>>
-        get() = _terminList
+    private val _discoveredDevices = MutableLiveData<MutableList<String>>()
+    val discoveredDevices: LiveData<MutableList<String>>
+        get() = _discoveredDevices
 
     private val _terminSelected = MutableLiveData<String>()
     val terminSelected: LiveData<String>
         get() = _terminSelected
 
     init {
-        _terminList.value = mutableListOf("Testtermin 1", "Testtermin 2")
+        _discoveredDevices.value = mutableListOf()
         _terminSelected.value = "Testtermin selected"
     }
 
 
-    fun getTerminList(): List<String>? {
-        return _terminList.value
+    fun getDeviceList(): List<String>? {
+        return _discoveredDevices.value
     }
     fun getTerminSelected(): String {
         return _terminSelected.value.toString()
+    }
+
+    fun addDevice(termin: String) {
+        if (!(_discoveredDevices.value?.contains(termin) ?: true)) {
+            _discoveredDevices.value?.add(termin)
+            _discoveredDevices.notifyObserver()
+        }
     }
 
     // Extension Function, um Änderung in den Einträgen von Listen
@@ -36,5 +43,6 @@ class BasicViewModel : ViewModel() {
     fun <T> MutableLiveData<T>.notifyObserver() {
         this.value = this.value
     }
+
 }
 
