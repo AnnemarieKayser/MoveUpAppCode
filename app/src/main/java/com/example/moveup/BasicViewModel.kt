@@ -14,21 +14,27 @@ class BasicViewModel : ViewModel() {
     val discoveredDevices: LiveData<MutableList<String>>
         get() = _discoveredDevices
 
-    private val _terminSelected = MutableLiveData<String>()
-    val terminSelected: LiveData<String>
-        get() = _terminSelected
+    private val _deviceAddress = MutableLiveData<String>()
+    val deviceAddress: LiveData<String>
+        get() = _deviceAddress
 
     init {
         _discoveredDevices.value = mutableListOf()
-        _terminSelected.value = "Testtermin selected"
+        _deviceAddress.value = ""
+
     }
 
 
     fun getDeviceList(): List<String>? {
         return _discoveredDevices.value
     }
-    fun getTerminSelected(): String {
-        return _terminSelected.value.toString()
+
+    fun getDeviceAddress(): String {
+        return _deviceAddress.value.toString()
+    }
+
+    fun setDeviceAddress(address: String) {
+        _deviceAddress.value = address
     }
 
     fun addDevice(termin: String) {

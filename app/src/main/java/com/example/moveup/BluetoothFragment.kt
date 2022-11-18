@@ -1,5 +1,4 @@
 package com.example.moveup
-import android.Manifest
 import android.R
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.BluetoothLeScanner
@@ -9,12 +8,13 @@ import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import androidx.core.app.ActivityCompat
+import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentBluetoothBinding
 
@@ -30,7 +30,9 @@ class BluetoothFragment : Fragment() {
     private lateinit var scanner: BluetoothLeScanner
     private lateinit var mBluetooth: BluetoothAdapter
     private var isScanning = false
+    private var deviceIsSelected = false
     private var discoveredDevices = arrayListOf<String>()
+    private lateinit var selectedDevice: String
 
 
     override fun onCreateView(
@@ -43,6 +45,9 @@ class BluetoothFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.buttonConnect.isEnabled = false
+        binding.buttonLed.isEnabled = false
 
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
@@ -63,7 +68,32 @@ class BluetoothFragment : Fragment() {
             }
         }
 
+        binding.buttonConnect.setOnClickListener {
+
+        }
+
+        binding.buttonLed.setOnClickListener {
+
+        }
+
+        binding.listView.onItemClickListener = lvClickListener
+
     }
+
+    private val lvClickListener =
+        AdapterView.OnItemClickListener { parent, view, position, id ->
+            // Gerät aus dem Listview auswählen
+            if (isScanning) {
+                scanner.stopScan(scanCallback)
+                isScanning = false
+                binding.buttonScan.text = "Scannen"
+            }
+            selectedDevice = (view as TextView).text.toString()
+            viewModel.setDeviceAddress(selectedDevice.substring(selectedDevice.length - 17))
+            binding.textViewSelectedDevice.text = selectedDevice
+            deviceIsSelected = true
+            binding.buttonConnect.isEnabled = true
+        }
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -106,5 +136,10 @@ class BluetoothFragment : Fragment() {
             val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(turnBTOn, 1)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scanner.stopScan(scanCallback)
     }
 }

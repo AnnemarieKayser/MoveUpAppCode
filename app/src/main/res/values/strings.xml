@@ -17,4 +17,9 @@
     <string name="bt_not_available">Bluetooth nicht verfügbar</string>
     <string name="btn_scan">Scan</string>
     <string name="ble_not_supported">BLE wird nicht unterstützt</string>
+    <string name="btn_connect">Verbinden</string>
+    <string name="tv_status">nicht verbunden</string>
+    <string name="btn_led">Led anschalten</string>
+    <string name="tv_led">Led aus</string>
+    <string name="tv_selected_device">Kein Gerät ausgewählt</string>
 </resources>
