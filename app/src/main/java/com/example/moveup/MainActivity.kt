@@ -1,5 +1,9 @@
 package com.example.moveup
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -11,10 +15,10 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-
 import androidx.navigation.ui.setupWithNavController
 import com.example.moveup.databinding.ActivityMainBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import splitties.toast.toast
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,17 +26,33 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: BasicViewModel by viewModels()
 
+    private lateinit var mBluetooth: BluetoothAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        checkBTPermission()
+
+        if (!packageManager.hasSystemFeature(
+                PackageManager.FEATURE_BLUETOOTH_LE))
+        {
+            toast(getString(R.string.ble_not_supported))
+            finish()
+        }
+
+        mBluetooth = BluetoothAdapter.getDefaultAdapter()
+        if(mBluetooth == null)
+        {
+            toast(getString(R.string.bt_not_available))
+            finish();
+        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
 
-
         val navView: BottomNavigationView = binding.navView
-
 
         val navController = findNavController(R.id.nav_host_fragment_content_main)
 
@@ -74,6 +94,24 @@ class MainActivity : AppCompatActivity() {
         navView.visibility = View.VISIBLE
         return navController.navigateUp(appBarConfiguration)
                 || super.onSupportNavigateUp()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!mBluetooth.isEnabled) {
+            val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(turnBTOn, 1)
+        }
+    }
+
+    private fun checkBTPermission() {
+        var permissionCheck = checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION")
+        permissionCheck += checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION")
+        if (permissionCheck != 0) {
+            requestPermissions(arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION), 1001)
+        }
     }
 
 }
