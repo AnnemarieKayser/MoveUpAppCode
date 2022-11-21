@@ -42,9 +42,10 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:popupTheme="@style/Theme.MoveUP.PopupOverlay"
         app:menu="@menu/toolbar_menu"
-        />
+        app:popupTheme="@style/Theme.MoveUP.PopupOverlay"
+        app:title='moveUp'
+        app:titleTextColor="#FFFFFF" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,7 +7,7 @@
 
     <item
         android:id="@+id/mainActionBluetooth"
-        android:icon="@drawable/ic_baseline_settings_bluetooth_24"
+        android:icon="@drawable/ic_baseline_bluetooth_24"
         android:title="@string/mainActionBluetooth"
         app:showAsAction="always"/>
 

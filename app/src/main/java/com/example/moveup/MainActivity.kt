@@ -4,6 +4,7 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
@@ -34,9 +35,12 @@ class MainActivity : AppCompatActivity() {
     //Ble
     private lateinit var mBluetooth: BluetoothAdapter
 
+    private val DEVICEADDRESS = "address"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        readSharedPreferences()
         checkBTPermission()
 
         if (!packageManager.hasSystemFeature(
@@ -109,7 +113,12 @@ class MainActivity : AppCompatActivity() {
             val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(turnBTOn, 1)
         }
+    }
 
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "onPause")
+        writeSharedPreferences()
     }
 
     private fun checkBTPermission() {
@@ -120,6 +129,23 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION), 1001)
         }
+    }
+
+    private fun writeSharedPreferences() {
+        Log.i(TAG, "writeSharedPreferences")
+        // speicher die Terminliste
+        val sp = getPreferences(Context.MODE_PRIVATE)
+        val edit = sp.edit()
+        val address = viewModel.getDeviceAddress()
+        edit.putString(DEVICEADDRESS, address)
+        edit.commit()
+    }
+
+    private fun readSharedPreferences() {
+        Log.i(TAG, "readSharedPreferences")
+        // Termine wieder einlesen
+        val sp = getPreferences(Context.MODE_PRIVATE)
+        viewModel.setDeviceAddress(sp.getString(DEVICEADDRESS, "").toString())
     }
 
 }
