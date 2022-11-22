@@ -32,5 +32,7 @@
     <string name="led_off">Led aus</string>
     <string name="btn_data">Daten</string>
     <string name="bt_data_off">keine daten</string>
+    <string name="tv_move_up">moveUp</string>
+    <string name="chart_title">Tagesübersicht</string>
 
 </resources>
