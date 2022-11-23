@@ -77,8 +77,6 @@ class FirstFragment : Fragment() {
         }
         mHandler.postDelayed(mRunnable, 1000)
 
-        toast("FirstFrag")
-
         binding.button2.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_bluetooth)
 

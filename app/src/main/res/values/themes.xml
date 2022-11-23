@@ -3,14 +3,15 @@
     <style name="Theme.MoveUP" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/blue_grey</item>
-        <item name="colorPrimaryVariant">@color/blue_grey_light</item>
+        <item name="colorPrimaryVariant">@color/blue_grey_dark</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/brown</item>
-        <item name="colorSecondaryVariant">@color/brown_light</item>
+        <item name="colorSecondaryVariant">@color/brown_dark</item>
         <item name="colorOnSecondary">@color/white</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:navigationBarColor">?attr/colorPrimary</item>
         <!-- Customize your theme here. -->
 
 

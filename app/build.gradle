@@ -49,4 +49,5 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
     implementation("com.louiscad.splitties:splitties-toast:3.0.0")
     implementation 'com.github.AAChartModel:AAChartCore-Kotlin:-SNAPSHOT'
+    implementation 'com.louiscad.splitties:splitties-alertdialog:3.0.0'
 }

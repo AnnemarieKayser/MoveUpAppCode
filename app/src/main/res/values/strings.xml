@@ -34,5 +34,9 @@
     <string name="bt_data_off">keine daten</string>
     <string name="tv_move_up">moveUp</string>
     <string name="chart_title">Tagesübersicht</string>
+    <string name="title_alert_dialog">Hinweis</string>
+    <string name="message_alert_dialog">Sie haben sich über einen längeren Zeitraum nicht bewegt. Zeit für eine kleine Bewegungspause</string>
+    <string name="accept">Ok</string>
+
 
 </resources>

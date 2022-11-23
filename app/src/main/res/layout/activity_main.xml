@@ -11,7 +11,10 @@
         android:id="@+id/nav_view"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="?android:attr/windowBackground"
+        android:background="@color/blue_grey"
+        app:elevation="5dp"
+        app:itemIconTint="@color/white"
+        app:itemTextColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -27,10 +30,10 @@
         app:defaultNavHost="true"
         app:layout_constraintBottom_toTopOf="@+id/nav_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintVertical_bias="0.0"
         app:navGraph="@navigation/nav_graph" />
 
     <androidx.appcompat.widget.Toolbar
@@ -46,7 +49,8 @@
         app:menu="@menu/toolbar_menu"
         app:popupTheme="@style/Theme.MoveUP.PopupOverlay"
         app:title='moveUp'
-        app:titleTextColor="#FFFFFF" />
+        app:titleTextColor="#FFFFFF"
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
