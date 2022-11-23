@@ -28,6 +28,7 @@ import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.json.JSONException
 import org.json.JSONObject
+import splitties.toast.toast
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -80,10 +81,7 @@ class SecondFragment : Fragment() {
                     bluetoothLeService!!.connect(viewModel.getDeviceAddress());
                     mRunnable = Runnable {
                         if (isConnected) {
-                            bluetoothLeService!!.setCharacteristicNotification(
-                                gattCharacteristic!!,
-                                true
-                            );
+                            bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true);
                         }
                     }
                     mHandler.postDelayed(mRunnable, 1000)
@@ -106,13 +104,13 @@ class SecondFragment : Fragment() {
             .stacking(AAChartStackingType.Percent)
             .series(arrayOf(
                 AASeriesElement()
-                    .name("Tokyo")
+                    .name("Aufrecht")
                     .data(arrayOf(7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6)),
                 AASeriesElement()
-                    .name("NewYork")
+                    .name("Zurückgelehnt")
                     .data(arrayOf(0.2, 0.8, 5.7, 11.3, 17.0, 22.0, 24.8, 24.1, 20.1, 14.1, 8.6, 2.5)),
                 AASeriesElement()
-                    .name("London")
+                    .name("")
                     .data(arrayOf(0.9, 0.6, 3.5, 8.4, 13.5, 17.0, 18.6, 17.9, 14.3, 9.0, 3.9, 1.0)),
                 AASeriesElement()
                     .name("Berlin")
@@ -171,6 +169,7 @@ class SecondFragment : Fragment() {
         isConnected = true
         //binding.textViewConnected.setText(R.string.connected)
         Log.i(ContentValues.TAG, "connected")
+        toast("connected")
     }
 
     private fun onDisconnect() {
@@ -212,6 +211,8 @@ class SecondFragment : Fragment() {
                         .show()
                 }
             }
+
+
 
 
 

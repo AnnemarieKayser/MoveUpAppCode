@@ -225,6 +225,7 @@ class BluetoothFragment : Fragment() {
         binding.textViewStatus.setText(R.string.connected)
         binding.buttonLed.isEnabled = true
         Log.i(TAG, "connected")
+        toast("connected")
     }
 
     private fun onDisconnect() {
