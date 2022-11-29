@@ -37,6 +37,14 @@
     <string name="title_alert_dialog">Hinweis</string>
     <string name="message_alert_dialog">Sie haben sich über einen längeren Zeitraum nicht bewegt. Zeit für eine kleine Bewegungspause</string>
     <string name="accept">Ok</string>
+    <string name="tv_welcome">Willkommen in der moveUp-App</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_passwort">Passwort</string>
+    <string name="btn_login">Einlogggen</string>
+    <string name="tv_passwort">Passwort vergessen</string>
+    <string name="hint_name">Benutzername</string>
+    <string name="tv_login">Login</string>
+    <string name="tv_signin">Registrieren</string>
 
 
 </resources>

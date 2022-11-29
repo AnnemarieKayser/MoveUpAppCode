@@ -211,11 +211,6 @@ class SecondFragment : Fragment() {
                         .show()
                 }
             }
-
-
-
-
-
         } catch (e : JSONException) {
             e.printStackTrace()
         }
