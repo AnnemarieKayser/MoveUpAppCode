@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.example.moveup.databinding.FragmentFirstBinding
 import com.example.moveup.databinding.LoginTabFragmentBinding
 
 class LoginTabFragment: Fragment() {
@@ -28,6 +27,17 @@ class LoginTabFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.email.translationX = 800F
+        binding.password.translationX = 800F
+        binding.buttonLogin.translationX = 800F
+        binding.textViewPasswortVergessen.translationX = 800F
+
+        binding.email.alpha = 0F
+        binding.password.alpha = 0F
+        binding.buttonLogin.alpha =0F
+        binding.textViewPasswortVergessen.alpha = 0F
+
+
 
         binding.email.animate().translationX(0F).alpha(1F).setDuration(800).setStartDelay(300).start()
         binding.password.animate().translationX(0F).alpha(1F).setDuration(800).setStartDelay(500).start()
@@ -35,8 +45,9 @@ class LoginTabFragment: Fragment() {
         binding.textViewPasswortVergessen.animate().translationX(0F).alpha(1F).setDuration(800).setStartDelay(700).start()
 
         binding.buttonLogin.setOnClickListener {
-            //val intent = context.Intent(this, MainActivity::class.java)
-           // startActivity(intent)
+
+            val intent = Intent (getActivity(), MainActivity::class.java)
+            getActivity()?.startActivity(intent)
         }
     }
 

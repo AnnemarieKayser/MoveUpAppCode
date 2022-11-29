@@ -29,5 +29,10 @@
         android:name="com.example.moveup.BluetoothFragment"
         android:label="Bluetooth"
         tools:layout="@layout/fragment_bluetooth" />
+    <fragment
+        android:id="@+id/loginTabFragment"
+        android:name="com.example.moveup.LoginTabFragment"
+        android:label="login_tab_fragment"
+        tools:layout="@layout/login_tab_fragment" />
 
 </navigation>
