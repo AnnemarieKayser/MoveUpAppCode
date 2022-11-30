@@ -57,6 +57,8 @@
     <string name="button_cancel">Abbrechen</string>
     <string name="fill_out">Email eintragen</string>
     <string name="btn_log_out">Ausloggen</string>
+    <string name="tv_connect_sensor_main">Verbinde deinen moveUp-Sensor \nund starte in den Tag!</string>
+    <string name="tv_main_go">Let\'s do this!</string>
 
 
 </resources>

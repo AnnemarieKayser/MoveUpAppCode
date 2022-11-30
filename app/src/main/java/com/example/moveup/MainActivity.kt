@@ -144,8 +144,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.setDeviceAddress(sp.getString(DEVICEADDRESS, "").toString())
     }
 
-    override fun onBackPressed() {
+   /* override fun onBackPressed() {
         // Do Here what ever you want do on back press;
-    }
+    }*/
 }
 
