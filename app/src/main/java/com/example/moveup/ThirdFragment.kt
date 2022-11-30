@@ -1,5 +1,6 @@
 package com.example.moveup
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,16 +9,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentThirdBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class ThirdFragment: Fragment() {
 
     private var _binding: FragmentThirdBinding? = null
-
     private val viewModel: BasicViewModel by activityViewModels()
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
+
+    private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,7 +31,12 @@ class ThirdFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.textviewSecond.text = viewModel.someTestData
+
+        binding.buttonLogOut.setOnClickListener {
+            mFirebaseAuth.signOut()
+            val intent = Intent (getActivity(), LoginInActivity::class.java)
+            getActivity()?.startActivity(intent)
+        }
     }
 
     override fun onDestroyView() {

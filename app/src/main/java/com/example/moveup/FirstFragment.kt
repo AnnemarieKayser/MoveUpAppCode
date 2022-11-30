@@ -8,19 +8,15 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentFirstBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.json.JSONException
 import org.json.JSONObject
-import splitties.toast.toast
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -41,7 +37,7 @@ class FirstFragment : Fragment() {
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
 
-    private val mHandler : Handler by lazy { Handler() }
+    private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
 
@@ -71,7 +67,7 @@ class FirstFragment : Fragment() {
         //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
         mRunnable = Runnable {
 
-            if(viewModel.getDeviceAddress() != "") {
+            if (viewModel.getDeviceAddress() != "") {
                 bluetoothLeService!!.connect(viewModel.getDeviceAddress());
             }
         }
@@ -146,12 +142,12 @@ class FirstFragment : Fragment() {
         parseJSONData(s)
     }
 
-    private fun parseJSONData(jsonString : String) {
+    private fun parseJSONData(jsonString: String) {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
 
-        } catch (e : JSONException) {
+        } catch (e: JSONException) {
             e.printStackTrace()
         }
     }
@@ -187,7 +183,7 @@ class FirstFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         context?.unregisterReceiver(gattUpdateReceiver)
-        if(isConnected) {
+        if (isConnected) {
             bluetoothLeService!!.disconnect()
         }
     }

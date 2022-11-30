@@ -2,20 +2,16 @@ package com.example.moveup
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
-import android.content.ComponentName
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -148,4 +144,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.setDeviceAddress(sp.getString(DEVICEADDRESS, "").toString())
     }
 
+    override fun onBackPressed() {
+        // Do Here what ever you want do on back press;
+    }
 }
+

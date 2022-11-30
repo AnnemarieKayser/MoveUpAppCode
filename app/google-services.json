@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "287944582508",
+    "project_id": "moveup-32bec",
+    "storage_bucket": "moveup-32bec.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287944582508:android:49d09606aa551e59653f49",
+        "android_client_info": {
+          "package_name": "com.example.moveup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "287944582508-iug6vffo3m59pojo16qokia6phr2m4t0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNS5UEDKBmZEQ24k75yaD_HAXjRl-Tlnk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "287944582508-iug6vffo3m59pojo16qokia6phr2m4t0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
