@@ -11,53 +11,47 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
-import com.example.moveup.databinding.FragmentFirstBinding
+import com.example.moveup.databinding.FragmentSettingBinding
+import com.google.firebase.auth.FirebaseAuth
 import org.json.JSONException
 import org.json.JSONObject
+import splitties.toast.toast
 
-/**
- * A simple [Fragment] subclass as the default destination in the navigation.
- */
-class FirstFragment : Fragment() {
+class SettingFragment: Fragment() {
 
-    private var _binding: FragmentFirstBinding? = null
+    private var _binding: FragmentSettingBinding? = null
     private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
 
     //Ble
     private lateinit var scanner: BluetoothLeScanner
     private lateinit var mBluetooth: BluetoothAdapter
-    private var isScanning = false
     private var isConnected = false
-    private var isOnLED = false
     private var isReceivingData = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
+    private var statusVibration = true
+
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
+    private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-        _binding = FragmentFirstBinding.inflate(inflater, container, false)
+        _binding = FragmentSettingBinding.inflate(inflater, container, false)
         return binding.root
 
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            // With blank your fragment BackPressed will be disabled.
-        }
 
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
@@ -78,11 +72,48 @@ class FirstFragment : Fragment() {
         }
         mHandler.postDelayed(mRunnable, 1000)
 
-        binding.button2.setOnClickListener {
-            findNavController().navigate(R.id.action_navigation_home_to_navigation_bluetooth)
+        binding.buttonLogOut.setOnClickListener {
+            mFirebaseAuth.signOut()
+            val intent = Intent(getActivity(), LoginInActivity::class.java)
+            getActivity()?.startActivity(intent)
+        }
 
+
+        // To listen for a switch's checked/unchecked state changes
+        binding.switchVibration.setOnCheckedChangeListener { buttonView, isChecked ->
+            if(isChecked){
+                toast(getString(R.string.vibration_on))
+
+                statusVibration = true
+
+                val obj = JSONObject()
+                // Werte setzen
+                obj.put("VIBRATION", "VIBON")
+
+                // Senden
+                if (gattCharacteristic != null) {
+                    gattCharacteristic!!.value = obj.toString().toByteArray()
+                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                }
+            }
+            else {
+                toast(getString(R.string.vibration_off))
+
+                statusVibration = false
+
+                val obj = JSONObject()
+                // Werte setzen
+                obj.put("VIBRATION", "VIBOFF")
+
+                // Senden
+                if (gattCharacteristic != null) {
+                    gattCharacteristic!!.value = obj.toString().toByteArray()
+                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                }
+            }
         }
     }
+
 
     // BluetoothLE Service Anbindung
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
@@ -126,12 +157,14 @@ class FirstFragment : Fragment() {
         isConnected = true
         //binding.textViewConnected.setText(R.string.connected)
         Log.i(ContentValues.TAG, "connected")
+        toast("connected")
     }
 
     private fun onDisconnect() {
         isConnected = false
         //binding.textViewConnected.setText(R.string.disconnected)
         Log.i(ContentValues.TAG, "disconnected")
+        toast("disconnected")
     }
 
     private fun onGattCharacteristicDiscovered() {
@@ -175,6 +208,7 @@ class FirstFragment : Fragment() {
             var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress());
             Log.d(ContentValues.TAG, "Connect request result=" + result);
         }
+
     }
 
     override fun onDestroy() {

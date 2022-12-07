@@ -7,23 +7,26 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.example.moveup.FirstFragment"
+        android:name="com.example.moveup.HomeFragment"
         android:label="moveUp"
-        tools:layout="@layout/fragment_first">
+        tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_navigation_home_to_navigation_bluetooth"
             app:destination="@id/navigation_bluetooth" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_graph"
+            app:destination="@id/navigation_graph" />
     </fragment>
     <fragment
         android:id="@+id/navigation_graph"
-        android:name="com.example.moveup.SecondFragment"
+        android:name="com.example.moveup.GraphFragment"
         android:label="Statistik"
-        tools:layout="@layout/fragment_second"/>
+        tools:layout="@layout/fragment_graph"/>
     <fragment
         android:id="@+id/navigation_setting"
-        android:name="com.example.moveup.ThirdFragment"
+        android:name="com.example.moveup.SettingFragment"
         android:label="Einstellungen"
-        tools:layout="@layout/fragment_third"/>
+        tools:layout="@layout/fragment_setting"/>
     <fragment
         android:id="@+id/navigation_bluetooth"
         android:name="com.example.moveup.BluetoothFragment"

@@ -51,8 +51,7 @@
         app:menu="@menu/toolbar_menu"
         app:popupTheme="@style/Theme.MoveUP.PopupOverlay"
         app:title='moveUp'
-        app:titleTextColor="#FFFFFF"
-        />
+        app:titleTextColor="#FFFFFF" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -59,6 +59,12 @@
     <string name="btn_log_out">Ausloggen</string>
     <string name="tv_connect_sensor_main">Verbinde deinen moveUp-Sensor \nund starte in den Tag!</string>
     <string name="tv_main_go">Let\'s do this!</string>
+    <string name="tv_vibration">Vibration</string>
+    <string name="vibration_on">Vibration an</string>
+    <string name="vibration_off">Vibration aus</string>
+    <string name="tv_reminder">Anzahl der Phasen mit ungerader Haltung: %d.</string>
+    <string name="sensor_connected">Dein Sensor ist verbunden! Schau dir deine Statistik an.</string>
+    <string name="btn_sensor_connected">Statistik öffnen</string>
 
 
 </resources>

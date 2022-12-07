@@ -1,41 +1,36 @@
 package com.example.moveup
 
-import android.app.AlertDialog
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
-import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
-import android.system.Os.accept
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.postDelayed
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
-import com.example.moveup.databinding.FragmentSecondBinding
-import com.github.aachartmodel.aainfographics.aachartcreator.AAChartModel
-import com.github.aachartmodel.aainfographics.aachartcreator.AAChartModel.Companion.Builder
-import com.github.aachartmodel.aainfographics.aachartcreator.AAChartStackingType
-import com.github.aachartmodel.aainfographics.aachartcreator.AAChartType
-import com.github.aachartmodel.aainfographics.aachartcreator.AASeriesElement
+import com.example.moveup.databinding.FragmentGraphBinding
+import com.github.aachartmodel.aainfographics.aachartcreator.*
+import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAScrollablePlotArea
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class SecondFragment : Fragment() {
+class GraphFragment : Fragment() {
 
-    private var _binding: FragmentSecondBinding? = null
+    private var _binding: FragmentGraphBinding? = null
     private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
 
@@ -43,20 +38,25 @@ class SecondFragment : Fragment() {
     private lateinit var scanner: BluetoothLeScanner
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
-    private var isReceivingData = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var statusPos = "Haltung gerade"
+    private var counterReminder = 0
+    private var time = 0
 
     private val mHandler : Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
+
+    private var aaChartModel = AAChartModel()
+    private var arrayTest = arrayOfNulls<Any>(24)
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-        _binding = FragmentSecondBinding.inflate(inflater, container, false)
+        _binding = FragmentGraphBinding.inflate(inflater, container, false)
         return binding.root
 
     }
@@ -90,42 +90,75 @@ class SecondFragment : Fragment() {
         }
         mHandler.postDelayed(mRunnable, 1000)
 
+        setUpAAChartView()
 
+        //binding.progressBar.indicatorInset = 100
+        binding.progressBar.progress = 100
 
-        val aaChartModel : AAChartModel = AAChartModel()
-            .chartType(AAChartType.Column)
-            .titleStyle(AAStyle.Companion.style("#FFFFFF"))
-            .title(getString(R.string.chart_title))
-            //.subtitle("subtitle")
-            .colorsTheme(arrayOf("#ce93d8", "#536dfe", "#7e57c2", "#81d4fa"))
-            .axesTextColor("#FFFFFF")
-            .backgroundColor(R.color.blue_grey)
-            .dataLabelsEnabled(false)
-            .stacking(AAChartStackingType.Percent)
-            .series(arrayOf(
-                AASeriesElement()
-                    .name("Aufrecht")
-                    .data(arrayOf(7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6)),
-                AASeriesElement()
-                    .name("Zurückgelehnt")
-                    .data(arrayOf(0.2, 0.8, 5.7, 11.3, 17.0, 22.0, 24.8, 24.1, 20.1, 14.1, 8.6, 2.5)),
-                AASeriesElement()
-                    .name("")
-                    .data(arrayOf(0.9, 0.6, 3.5, 8.4, 13.5, 17.0, 18.6, 17.9, 14.3, 9.0, 3.9, 1.0)),
-                AASeriesElement()
-                    .name("Berlin")
-                    .data(arrayOf(3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8))
-            )
-            )
+    }
 
+    fun setUpAAChartView() {
+        aaChartModel = configureAAChartModel()
         binding.chartView.aa_drawChartWithChartModel(aaChartModel)
+    }
+
+    private fun configureAAChartModel(): AAChartModel {
+        val aaChartModel = configureChartBasicContent()
+        aaChartModel.series(this.configureChartSeriesArray() as Array<Any>)
+        return aaChartModel
+    }
+
+    private fun configureChartBasicContent(): AAChartModel {
+        return AAChartModel.Builder(requireContext().applicationContext)
+            .setChartType(AAChartType.Column)
+            .setXAxisVisible(true)
+            .setYAxisVisible(true)
+            .setTitle(getString(R.string.chart_title))
+            .setColorsTheme(arrayOf("#ce93d8", "#536dfe", "#7e57c2", "#81d4fa"))
+            .setStacking(AAChartStackingType.Percent)
+            .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
+            .setAxesTextColor("#FFFFFF")
+            .setBackgroundColor(R.color.blue_grey)
+            .setCategories("00:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "8:00", "9:00",
+                "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00" ,"18:00",
+                "19:00", "20:00", "21:00", "22:00", "23:00", "24:00")
+            .setScrollablePlotArea(
+                AAScrollablePlotArea()
+                    .minWidth(400)
+                    .scrollPositionX(1f))
+            .build()
+    }
+
+
+    private fun configureChartSeriesArray(): Array<AASeriesElement> {
+
+        val kalender: Calendar = Calendar.getInstance()
+        val zeitformat = SimpleDateFormat("HH")
+        val hour = zeitformat.format(kalender.time)
+        time = hour.toInt()
+
+        arrayTest[time] = counterReminder
+
+        return arrayOf(
+            AASeriesElement()
+                .name("Aufrecht")
+                .data(arrayTest as Array<Any>),
+            AASeriesElement()
+                .name("zurückgelehnt")
+                .data(arrayTest as Array<Any>),
+            AASeriesElement()
+                .name("krumm")
+                .data(arrayTest as Array<Any>),
+            AASeriesElement()
+                .name("dynamisch")
+                .data(arrayTest as Array<Any>),
+        )
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
 
     // BluetoothLE Service Anbindung
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
@@ -198,21 +231,33 @@ class SecondFragment : Fragment() {
 
             statusPos = obj.getString("statusPosition").toString()
 
-            if(statusPos == "Die Haltung ist krumm") {
+            counterReminder = obj.getString("counterReminder").toInt()
 
-                context?.let {
-                    MaterialAlertDialogBuilder(it)
-                        .setTitle(resources.getString(R.string.title_alert_dialog))
-                        .setMessage(resources.getString(R.string.message_alert_dialog))
+            binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
 
-                        .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
+            val seriesArr = configureChartSeriesArray()
+            binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
-                        }
-                        .show()
-                }
-            }
+            showDialog()
+
         } catch (e : JSONException) {
             e.printStackTrace()
+        }
+    }
+
+    private fun showDialog() {
+        if(statusPos == "Die Haltung ist krumm") {
+
+            context?.let {
+                MaterialAlertDialogBuilder(it)
+                    .setTitle(resources.getString(R.string.title_alert_dialog))
+                    .setMessage(resources.getString(R.string.message_alert_dialog))
+
+                    .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
+
+                    }
+                    .show()
+            }
         }
     }
 
