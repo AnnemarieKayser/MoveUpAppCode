@@ -4,6 +4,8 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+
+
 android {
     namespace 'com.example.moveup'
     compileSdk 33
@@ -18,11 +20,13 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -62,7 +66,7 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class:1.0.1")
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'com.google.firebase:firebase-auth-ktx:21.1.0'
-    implementation 'com.google.firebase:firebase-firestore-ktx:24.4.1'
+    implementation 'com.google.firebase:firebase-firestore-ktx:24.0.0'
     implementation("com.louiscad.splitties:splitties-alertdialog:3.0.0")
 
 

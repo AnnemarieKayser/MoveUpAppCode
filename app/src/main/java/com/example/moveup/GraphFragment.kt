@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
+import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -19,9 +20,13 @@ import com.github.aachartmodel.aainfographics.aachartcreator.*
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAScrollablePlotArea
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
+import java.text.DateFormat
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,14 +47,24 @@ class GraphFragment : Fragment() {
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var statusPos = "Haltung gerade"
     private var counterReminder = 0
+    private var counterLeanBack = 0
+    private var counterReminderBefore = 0
+    private var counterLeanBackBefore = 0
     private var time = 0
+    private var data: UserData? = null
 
     private val mHandler : Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
     private var aaChartModel = AAChartModel()
-    private var arrayTest = arrayOfNulls<Any>(24)
+    private var arrayBent = arrayOfNulls<Any>(24)
+    private var arrayLeanBack = arrayOfNulls<Any>(24)
+    private var arrayDynamic = arrayOfNulls<Any>(24)
+    private var arrayStraight = arrayOfNulls<Any>(24)
 
+    //Datenbank
+    private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -95,6 +110,9 @@ class GraphFragment : Fragment() {
         //binding.progressBar.indicatorInset = 100
         binding.progressBar.progress = 100
 
+        //loadDbData()
+
+
     }
 
     fun setUpAAChartView() {
@@ -118,7 +136,7 @@ class GraphFragment : Fragment() {
             .setStacking(AAChartStackingType.Percent)
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
             .setAxesTextColor("#FFFFFF")
-            .setBackgroundColor(R.color.blue_grey)
+            .setBackgroundColor("#435359")
             .setCategories("00:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "8:00", "9:00",
                 "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00" ,"18:00",
                 "19:00", "20:00", "21:00", "22:00", "23:00", "24:00")
@@ -137,21 +155,27 @@ class GraphFragment : Fragment() {
         val hour = zeitformat.format(kalender.time)
         time = hour.toInt()
 
-        arrayTest[time] = counterReminder
+        arrayBent[time] = counterReminder
+        arrayLeanBack[time] = counterLeanBack
 
+        if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore) {
+            insertDataInDb()
+            counterReminderBefore = counterReminder
+            counterLeanBackBefore = counterLeanBack
+        }
         return arrayOf(
             AASeriesElement()
                 .name("Aufrecht")
-                .data(arrayTest as Array<Any>),
+                .data(arrayStraight as Array<Any>),
             AASeriesElement()
                 .name("zurückgelehnt")
-                .data(arrayTest as Array<Any>),
+                .data(arrayLeanBack as Array<Any>),
             AASeriesElement()
                 .name("krumm")
-                .data(arrayTest as Array<Any>),
+                .data(arrayBent as Array<Any>),
             AASeriesElement()
                 .name("dynamisch")
-                .data(arrayTest as Array<Any>),
+                .data(arrayDynamic as Array<Any>),
         )
     }
 
@@ -233,6 +257,8 @@ class GraphFragment : Fragment() {
 
             counterReminder = obj.getString("counterReminder").toInt()
 
+            counterLeanBack = obj.getString("counterLeanBack").toInt()
+
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
 
             val seriesArr = configureChartSeriesArray()
@@ -289,5 +315,51 @@ class GraphFragment : Fragment() {
         if(isConnected) {
             bluetoothLeService!!.disconnect()
         }
+    }
+
+    private fun insertDataInDb() {
+
+        // Weather Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        val userData = UserData()
+        userData.setHour(time)
+        userData.setCounterBentBack(counterReminder)
+        userData.setCounterLeanBack(counterLeanBack)
+
+        // Schreibe Daten als Document in die Collection Messungen in DB;
+        // Eine id als Document Name wird automatisch vergeben
+        // Implementiere auch onSuccess und onFailure Listender
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Daten").document("1")
+            .set(userData)
+            .addOnSuccessListener { documentReference ->
+                toast(getString(R.string.save))
+            }
+            .addOnFailureListener { e ->
+                toast(getString(R.string.not_save))
+            }
+    }
+
+    fun loadDbData() {
+
+        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Messungen").document("1") // alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    data = task.result!!.toObject(UserData::class.java)
+                    // Frage anzeigen
+                    counterReminder = data!!.getCounterBentBack()
+                    counterLeanBack = data!!.getCounterLeanBack()
+                    time = data!!.getHour()
+
+                    val seriesArr = configureChartSeriesArray()
+                    binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+
+                } else {
+                    Log.d(TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
     }
 }

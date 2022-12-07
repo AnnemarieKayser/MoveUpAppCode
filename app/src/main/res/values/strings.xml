@@ -65,6 +65,8 @@
     <string name="tv_reminder">Anzahl der Phasen mit ungerader Haltung: %d.</string>
     <string name="sensor_connected">Dein Sensor ist verbunden! Schau dir deine Statistik an.</string>
     <string name="btn_sensor_connected">Statistik öffnen</string>
+    <string name="save">Daten wurden gespeichert!</string>
+    <string name="not_save">Daten wurden nicht gespeichert!</string>
 
 
 </resources>
