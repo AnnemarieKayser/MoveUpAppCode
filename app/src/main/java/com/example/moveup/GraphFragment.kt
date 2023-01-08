@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
 import android.content.ContentValues.TAG
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -13,6 +14,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentGraphBinding
@@ -22,6 +24,7 @@ import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
@@ -52,6 +55,10 @@ class GraphFragment : Fragment() {
     private var counterLeanBackBefore = 0
     private var time = 0
     private var data: UserData? = null
+
+    //Circular-Progress-Bar
+    private var timeMaxProgressBar = "60"
+    private var progressTime : Float = 0F
 
     private val mHandler : Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
@@ -107,10 +114,34 @@ class GraphFragment : Fragment() {
 
         setUpAAChartView()
 
-        //binding.progressBar.indicatorInset = 100
-        binding.progressBar.progress = 100
+        loadDbData()
 
-        //loadDbData()
+        binding.circularProgressBar.apply {
+            // Set Progress Max
+            progressMax = timeMaxProgressBar.toFloat()
+
+            // Set ProgressBar Color
+            progressBarColorStart = Color.RED
+            progressBarColorEnd = Color.GREEN
+            progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
+
+            // Set background ProgressBar Color
+            backgroundProgressBarColor = Color.GRAY
+            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+
+            // Set Width
+            progressBarWidth = 7f // in DP
+            backgroundProgressBarWidth = 12f // in DP
+
+            // Other
+            roundBorder = true
+
+            progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
+        }
+
+        binding.buttonSetGoal.setOnClickListener {
+            showDialogEditTime()
+        }
 
 
     }
@@ -259,10 +290,18 @@ class GraphFragment : Fragment() {
 
             counterLeanBack = obj.getString("counterLeanBack").toInt()
 
+            progressTime = obj.getString("sittingStraightTime").toFloat()
+
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
 
             val seriesArr = configureChartSeriesArray()
             binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+
+            binding.circularProgressBar.progress = progressTime
+
+            binding.circularProgressBar.apply {
+                binding.textViewTime.text = getString(R.string.tv_time, progressTime, progressMax)
+            }
 
             showDialog()
 
@@ -284,6 +323,27 @@ class GraphFragment : Fragment() {
                     }
                     .show()
             }
+        }
+    }
+
+    private fun showDialogEditTime() {
+        //AlertDialog mit Text-Eingabe-Feld
+        val editTextView = EditText(context)
+
+        context?.let {
+            MaterialAlertDialogBuilder(it)
+                .setTitle(R.string.dialog_set_time_title)
+                .setView(editTextView)
+                .setNeutralButton(R.string.dialog_cancel) { dialog, which ->
+                }
+                .setPositiveButton(R.string.dialog_OK) { dialog, which ->
+                    timeMaxProgressBar = editTextView.text.toString()
+                    binding.circularProgressBar.apply{
+                        progressMax = timeMaxProgressBar.toFloat()
+                        binding.textViewTime.text = getString(R.string.tv_time, progressTime, progressMax )
+                    }
+                }
+                .show()
         }
     }
 
@@ -343,7 +403,7 @@ class GraphFragment : Fragment() {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection("Messungen").document("1") // alle Einträge abrufen
+        db.collection("users").document(uid).collection("Daten").document("1") // alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

@@ -6,25 +6,16 @@ import java.util.*
 
 class UserData {
 
-    private var leanBack = 0
+    private var counterLeanBack = 0
     private var hour = 0
-    private var bentBack = 0
-    private var straightBack = 0
+    private var counterBentBack = 0
+    private var counterStraightBack = 0
     private var dynamicPhase = 0
-    private var date: String? = null
-    private var dateTimestamp: Date? = null
 
     // serverTimestamp soll automatisch vom Server gesetzt werden
     @ServerTimestamp
     private var serverTimestamp: Timestamp? = null
 
-    fun getDateTimestamp(): Date? {
-        return dateTimestamp
-    }
-
-    fun setDateTimestamp(dateTimestamp: Date?) {
-        this.dateTimestamp = dateTimestamp
-    }
 
     fun getServerTimestamp(): Timestamp? {
         return serverTimestamp
@@ -35,11 +26,11 @@ class UserData {
     }
 
     fun getCounterLeanBack(): Int {
-        return leanBack
+        return counterLeanBack
     }
 
-    fun setCounterLeanBack(leanBack: Int) {
-        this.leanBack = leanBack
+    fun setCounterLeanBack(counterLeanBack: Int) {
+        this.counterLeanBack = counterLeanBack
     }
 
     fun getHour(): Int {
@@ -51,19 +42,19 @@ class UserData {
     }
 
     fun getCounterStraightBack(): Int {
-        return straightBack
+        return counterStraightBack
     }
 
-    fun setCounterStraightBack(straightBack: Int) {
-        this.straightBack = straightBack
+    fun setCounterStraightBack(counterStraightBack: Int) {
+        this.counterStraightBack = counterStraightBack
     }
 
     fun getCounterBentBack(): Int {
-        return bentBack
+        return counterBentBack
     }
 
-    fun setCounterBentBack(bentBack: Int) {
-        this.bentBack = bentBack
+    fun setCounterBentBack(counterBentBack: Int) {
+        this.counterBentBack = counterBentBack
     }
 
     fun getDynamicPhase(): Int {
@@ -74,23 +65,14 @@ class UserData {
         this.dynamicPhase = dynamicPhase
     }
 
-    fun getDate(): String? {
-        return date
-    }
-
-    fun setDate(date: String?) {
-        this.date = date
-    }
-
 
     override fun toString(): String {
         return "UserData{" +
-                ", leanBack=" + leanBack +
-                ", straightBack='" + straightBack + '\'' +
-                ", bentback=" + bentBack +
-                ", dynamicPhase=" + dynamicPhase +
-                ", hour='" + hour + '\'' +
-                ", dateTimestamp=" + dateTimestamp +
+                ", counterLeanBack='" + counterLeanBack +
+                ", counterStraightBack='" + counterStraightBack +
+                ", counterBentBack='" + counterBentBack +
+                ", dynamicPhase='" + dynamicPhase +
+                ", hour='" + hour +
                 '}'
     }
 }

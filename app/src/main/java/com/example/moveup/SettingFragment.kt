@@ -78,6 +78,10 @@ class SettingFragment: Fragment() {
             getActivity()?.startActivity(intent)
         }
 
+        binding.buttonConfig.setOnClickListener {
+
+        }
+
 
         // To listen for a switch's checked/unchecked state changes
         binding.switchVibration.setOnCheckedChangeListener { buttonView, isChecked ->

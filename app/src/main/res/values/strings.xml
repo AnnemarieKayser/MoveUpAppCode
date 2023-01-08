@@ -67,6 +67,13 @@
     <string name="btn_sensor_connected">Statistik öffnen</string>
     <string name="save">Daten wurden gespeichert!</string>
     <string name="not_save">Daten wurden nicht gespeichert!</string>
-
+    <string name="tv_config">Konfiguration deines Sensors</string>
+    <string name="btn_config">Starten</string>
+    <string name="tv_time">Status: %1$.0f / %2$.0f min.</string>
+    <string name="btn_time_goal">Zielzeit setzen</string>
+    <string name="dialog_set_time_title">Geben Sie ihre Zielzeit in Minuten an</string>
+    <string name="dialog_cancel">Abbrechen</string>
+    <string name="dialog_OK">Ok</string>
+    <string name="tv_progress">Dein aktueller Stand heute: </string>
 
 </resources>

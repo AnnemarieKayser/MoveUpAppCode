@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -16,6 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentHomeBinding
+import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
@@ -32,15 +34,16 @@ class HomeFragment : Fragment() {
     //Ble
     private lateinit var scanner: BluetoothLeScanner
     private lateinit var mBluetooth: BluetoothAdapter
-    private var isScanning = false
     private var isConnected = false
-    private var isOnLED = false
-    private var isReceivingData = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
+
+    //Circular-Progress-Bar
+    private var timeMaxProgressBar = "60"
+    private var progressTime : Float = 0F
 
 
     override fun onCreateView(
@@ -50,6 +53,7 @@ class HomeFragment : Fragment() {
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
+
 
     }
 
@@ -87,6 +91,30 @@ class HomeFragment : Fragment() {
                 findNavController().navigate(R.id.action_navigation_home_to_navigation_bluetooth)
             }
         }
+
+        binding.circularProgressBar.apply {
+            // Set Progress Max
+            progressMax = timeMaxProgressBar.toFloat()
+
+            // Set ProgressBar Color
+            progressBarColorStart = Color.RED
+            progressBarColorEnd = Color.GREEN
+            progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
+
+            // Set background ProgressBar Color
+            backgroundProgressBarColor = Color.GRAY
+            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+
+            // Set Width
+            progressBarWidth = 7f // in DP
+            backgroundProgressBarWidth = 12f // in DP
+
+            // Other
+            roundBorder = true
+
+            progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
+        }
+
     }
 
     // BluetoothLE Service Anbindung
