@@ -17,6 +17,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentHomeBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import org.json.JSONException
 import org.json.JSONObject
@@ -42,8 +44,13 @@ class HomeFragment : Fragment() {
     private lateinit var mRunnable: Runnable
 
     //Circular-Progress-Bar
-    private var timeMaxProgressBar = "60"
+    private var timeMaxProgressBar = 0F
     private var progressTime : Float = 0F
+
+    //Datenbank
+    private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
+    private var data: UserData? = null
 
 
     override fun onCreateView(
@@ -92,13 +99,17 @@ class HomeFragment : Fragment() {
             }
         }
 
+        binding.buttonConfig.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_home_to_configFragment)
+        }
+
         binding.circularProgressBar.apply {
             // Set Progress Max
-            progressMax = timeMaxProgressBar.toFloat()
+            progressMax = timeMaxProgressBar
 
             // Set ProgressBar Color
-            progressBarColorStart = Color.RED
-            progressBarColorEnd = Color.GREEN
+            progressBarColorStart = Color.CYAN
+            //progressBarColorEnd = Color.GREEN
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
 
             // Set background ProgressBar Color
@@ -107,13 +118,15 @@ class HomeFragment : Fragment() {
 
             // Set Width
             progressBarWidth = 7f // in DP
-            backgroundProgressBarWidth = 12f // in DP
+            backgroundProgressBarWidth = 9f // in DP
 
             // Other
             roundBorder = true
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
+
+        loadDbData()
 
     }
 
@@ -231,5 +244,31 @@ class HomeFragment : Fragment() {
         if (isConnected) {
             bluetoothLeService!!.disconnect()
         }
+    }
+
+    fun loadDbData() {
+
+        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Daten").document("1") // alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    data = task.result!!.toObject(UserData::class.java)
+                    // Frage anzeigen
+                    progressTime = data!!.getProgressTime()
+                    timeMaxProgressBar = data!!.getProgressTimeMax()
+
+                    binding.circularProgressBar.apply{
+                        progressMax = timeMaxProgressBar
+                        binding.textViewHomeProgressTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
+                    }
+                    binding.circularProgressBar.progress = progressTime
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
     }
 }

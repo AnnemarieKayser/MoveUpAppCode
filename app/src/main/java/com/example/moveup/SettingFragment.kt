@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentSettingBinding
 import com.google.firebase.auth.FirebaseAuth
 import org.json.JSONException
@@ -79,7 +80,7 @@ class SettingFragment: Fragment() {
         }
 
         binding.buttonConfig.setOnClickListener {
-
+            findNavController().navigate(R.id.action_navigation_setting_to_configFragment)
         }
 
 

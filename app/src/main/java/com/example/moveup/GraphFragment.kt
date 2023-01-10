@@ -57,7 +57,7 @@ class GraphFragment : Fragment() {
     private var data: UserData? = null
 
     //Circular-Progress-Bar
-    private var timeMaxProgressBar = "60"
+    private var timeMaxProgressBar = 60F
     private var progressTime : Float = 0F
 
     private val mHandler : Handler by lazy { Handler() }
@@ -114,15 +114,13 @@ class GraphFragment : Fragment() {
 
         setUpAAChartView()
 
-        loadDbData()
-
         binding.circularProgressBar.apply {
             // Set Progress Max
-            progressMax = timeMaxProgressBar.toFloat()
+            progressMax = timeMaxProgressBar
 
             // Set ProgressBar Color
-            progressBarColorStart = Color.RED
-            progressBarColorEnd = Color.GREEN
+            progressBarColorStart = Color.CYAN
+            //progressBarColorEnd = Color.GREEN
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
 
             // Set background ProgressBar Color
@@ -131,7 +129,7 @@ class GraphFragment : Fragment() {
 
             // Set Width
             progressBarWidth = 7f // in DP
-            backgroundProgressBarWidth = 12f // in DP
+            backgroundProgressBarWidth = 9f // in DP
 
             // Other
             roundBorder = true
@@ -142,6 +140,8 @@ class GraphFragment : Fragment() {
         binding.buttonSetGoal.setOnClickListener {
             showDialogEditTime()
         }
+
+        loadDbData()
 
 
     }
@@ -303,6 +303,7 @@ class GraphFragment : Fragment() {
                 binding.textViewTime.text = getString(R.string.tv_time, progressTime, progressMax)
             }
 
+            insertDataInDb()
             showDialog()
 
         } catch (e : JSONException) {
@@ -337,11 +338,12 @@ class GraphFragment : Fragment() {
                 .setNeutralButton(R.string.dialog_cancel) { dialog, which ->
                 }
                 .setPositiveButton(R.string.dialog_OK) { dialog, which ->
-                    timeMaxProgressBar = editTextView.text.toString()
+                    timeMaxProgressBar = editTextView.text.toString().toFloat()
                     binding.circularProgressBar.apply{
-                        progressMax = timeMaxProgressBar.toFloat()
-                        binding.textViewTime.text = getString(R.string.tv_time, progressTime, progressMax )
+                        progressMax = timeMaxProgressBar
+                        binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
                     }
+                    insertDataInDb()
                 }
                 .show()
         }
@@ -379,11 +381,13 @@ class GraphFragment : Fragment() {
 
     private fun insertDataInDb() {
 
-        // Weather Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
         userData.setHour(time)
         userData.setCounterBentBack(counterReminder)
         userData.setCounterLeanBack(counterLeanBack)
+        userData.setProgressTime(progressTime)
+        userData.setProgressTimeMax(timeMaxProgressBar)
 
         // Schreibe Daten als Document in die Collection Messungen in DB;
         // Eine id als Document Name wird automatisch vergeben
@@ -412,10 +416,18 @@ class GraphFragment : Fragment() {
                     // Frage anzeigen
                     counterReminder = data!!.getCounterBentBack()
                     counterLeanBack = data!!.getCounterLeanBack()
+                    progressTime = data!!.getProgressTime()
+                    timeMaxProgressBar = data!!.getProgressTimeMax()
                     time = data!!.getHour()
 
                     val seriesArr = configureChartSeriesArray()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+
+                    binding.circularProgressBar.apply{
+                        progressMax = timeMaxProgressBar
+                        binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
+                    }
+                    binding.circularProgressBar.progress = progressTime
 
                 } else {
                     Log.d(TAG, "FEHLER: Daten lesen ", task.exception)

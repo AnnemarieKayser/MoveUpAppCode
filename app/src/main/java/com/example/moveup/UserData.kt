@@ -7,6 +7,8 @@ import java.util.*
 class UserData {
 
     private var counterLeanBack = 0
+    private var progressTime = 0F
+    private var progressTimeMax = 0F
     private var hour = 0
     private var counterBentBack = 0
     private var counterStraightBack = 0
@@ -65,6 +67,22 @@ class UserData {
         this.dynamicPhase = dynamicPhase
     }
 
+    fun getProgressTime(): Float {
+        return progressTime
+    }
+
+    fun setProgressTime(progressTime: Float) {
+        this.progressTime = progressTime
+    }
+
+    fun getProgressTimeMax(): Float {
+        return progressTimeMax
+    }
+
+    fun setProgressTimeMax(progressTimeMax: Float) {
+        this.progressTimeMax = progressTimeMax
+    }
+
 
     override fun toString(): String {
         return "UserData{" +
@@ -73,6 +91,8 @@ class UserData {
                 ", counterBentBack='" + counterBentBack +
                 ", dynamicPhase='" + dynamicPhase +
                 ", hour='" + hour +
+                ", progressTime='" + progressTime +
+                ", progressTimeMax='" + progressTimeMax +
                 '}'
     }
 }

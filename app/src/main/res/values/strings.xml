@@ -75,5 +75,8 @@
     <string name="dialog_cancel">Abbrechen</string>
     <string name="dialog_OK">Ok</string>
     <string name="tv_progress">Dein aktueller Stand heute: </string>
+    <string name="tv_time_home">Status: %1$.0f / %2$.0f min.</string>
+    <string name="btn_config_home">Starte Konfiguration</string>
+    <string name="tv_config_home">Passe deinen Sensor auf deine individuelle Haltung an!</string>
 
 </resources>
