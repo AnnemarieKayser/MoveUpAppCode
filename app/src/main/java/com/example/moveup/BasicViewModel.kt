@@ -37,9 +37,9 @@ class BasicViewModel : ViewModel() {
         _deviceAddress.value = address
     }
 
-    fun addDevice(termin: String) {
-        if (!(_discoveredDevices.value?.contains(termin) ?: true)) {
-            _discoveredDevices.value?.add(termin)
+    fun addDevice(device: String) {
+        if (!(_discoveredDevices.value?.contains(device) ?: true)) {
+            _discoveredDevices.value?.add(device)
             _discoveredDevices.notifyObserver()
         }
     }

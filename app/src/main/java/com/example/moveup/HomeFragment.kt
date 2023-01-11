@@ -39,6 +39,7 @@ class HomeFragment : Fragment() {
     private var isConnected = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
+    private var sensorStarted = false
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
@@ -101,6 +102,29 @@ class HomeFragment : Fragment() {
 
         binding.buttonConfig.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_configFragment)
+        }
+
+        binding.buttonStartSensor.setOnClickListener {
+
+
+            val obj = JSONObject()
+            sensorStarted = !sensorStarted
+            // Werte setzen
+            if(sensorStarted){
+                obj.put("STARTMESSUNG", "AN")
+                binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
+
+            }
+            else{
+                obj.put("STARTMESSUNG", "AUS")
+                binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
+            }
+
+            // Senden
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+            }
         }
 
         binding.circularProgressBar.apply {

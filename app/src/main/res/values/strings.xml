@@ -83,5 +83,8 @@
     <string name="tv_start">Nehme nun eine gerade Haltung ein und drücke anschließend den Start-Button. Halte die gerade Haltung für 10 Sekunden.</string>
     <string name="btn_start">Start</string>
     <string name="tv_countdown">10</string>
+    <string name="tv_config2">Nehme nun eine ungerade Haltung ein und drücke erneuert den Start-Button. Halte die Position für 10 Sekunden</string>
+    <string name="btn_start_sensor">Starte die Messung!</string>
+    <string name="btn_stop_sensor">Beende die Messung</string>
 
 </resources>

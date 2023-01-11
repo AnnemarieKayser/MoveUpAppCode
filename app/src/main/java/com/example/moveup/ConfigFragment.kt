@@ -36,6 +36,7 @@ class ConfigFragment : Fragment() {
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var statusVibration = true
+    private var threshold = -40F
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
@@ -52,6 +53,9 @@ class ConfigFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.buttonStart.isEnabled = false
+        binding.buttonStart2.isEnabled = false
 
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
@@ -99,12 +103,53 @@ class ConfigFragment : Fragment() {
                     if (n.getAndDecrement() >= 1) {
                         handler.postDelayed(this, 1000)
                     } else {
-                        //Textfeld verschwindet, wenn Countdown zu Ende
-                        binding.textViewCountdown.visibility = View.INVISIBLE
+                        binding.textViewCountdown.text = getString(R.string.tv_countdown)
 
                         val obj = JSONObject()
                         // Werte setzen
                         obj.put("STATUSKONFIG", false)
+
+                        // Senden
+                        if (gattCharacteristic != null) {
+                            gattCharacteristic!!.value = obj.toString().toByteArray()
+                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                        }
+
+                    }
+                }
+            }
+            handler.postDelayed(counter, 0)
+        }
+
+        binding.buttonStart2.setOnClickListener {
+
+            val obj = JSONObject()
+            // Werte setzen
+            obj.put("STATUSKONFIG2", true)
+
+            // Senden
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+            }
+
+            //Start Countdown
+            val handler = Handler()
+            val n = AtomicInteger(10) // initialisiere mit 10.
+            val counter: Runnable = object : Runnable {
+                override fun run() {
+                    //Textfeld mit aktuellem n füllen.
+                    binding.textViewCountdown2.text = Integer.toString(n.get())
+                    //wenn n >= 1, sekündlich runterzählen
+                    if (n.getAndDecrement() >= 1) {
+                        handler.postDelayed(this, 1000)
+                    } else {
+
+                        binding.textViewCountdown2.text = getString(R.string.tv_countdown)
+
+                        val obj = JSONObject()
+                        // Werte setzen
+                        obj.put("STATUSKONFIG2", false)
 
                         // Senden
                         if (gattCharacteristic != null) {
@@ -168,6 +213,9 @@ class ConfigFragment : Fragment() {
         binding.textViewStatusBLE.text = getString(R.string.tv_status_ble, "verbunden")
         toast("connected")
         binding.buttonConnectSensor.visibility = View.INVISIBLE
+        binding.buttonStart.isEnabled = true
+        binding.buttonStart2.isEnabled = true
+
     }
 
     private fun onDisconnect() {
@@ -176,7 +224,8 @@ class ConfigFragment : Fragment() {
         binding.textViewStatusBLE.text = getString(R.string.tv_status_ble, "Nicht verbunden")
         toast("disconnected")
         binding.buttonConnectSensor.visibility = View.VISIBLE
-
+        binding.buttonStart.isEnabled = false
+        binding.buttonStart2.isEnabled = false
     }
 
     private fun onGattCharacteristicDiscovered() {
@@ -196,6 +245,9 @@ class ConfigFragment : Fragment() {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
+
+            threshold = obj.getString("threshold").toFloat()
+
 
         } catch (e: JSONException) {
             e.printStackTrace()
