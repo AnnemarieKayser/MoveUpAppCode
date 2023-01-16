@@ -247,6 +247,7 @@ class ConfigFragment : Fragment() {
             //extrahieren des Objektes data
 
             threshold = obj.getString("threshold").toFloat()
+            toast(threshold.toInt())
 
 
         } catch (e: JSONException) {

@@ -25,7 +25,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" >
+            app:layout_constraintTop_toTopOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -171,7 +171,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardViewCalibrate" >
+            app:layout_constraintTop_toBottomOf="@+id/cardViewCalibrate">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -219,7 +219,6 @@
         </androidx.cardview.widget.CardView>
 
 
-
         <TextView
             android:id="@+id/textViewMoveUp"
             android:layout_width="wrap_content"
@@ -232,6 +231,18 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonLogOutHome" />
+
+        <Button
+            android:id="@+id/buttonLogOutHome"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/btn_log_out"
+            android:textSize="10sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/cardView3" />
     </androidx.constraintlayout.widget.ConstraintLayout>

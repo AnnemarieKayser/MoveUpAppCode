@@ -3,6 +3,7 @@ package com.example.moveup
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.*
+import kotlin.collections.ArrayList
 
 class UserData {
 
@@ -13,6 +14,7 @@ class UserData {
     private var counterBentBack = 0
     private var counterStraightBack = 0
     private var dynamicPhase = 0
+    private var array = arrayListOf<Any?>()
 
     // serverTimestamp soll automatisch vom Server gesetzt werden
     @ServerTimestamp
@@ -83,6 +85,14 @@ class UserData {
         this.progressTimeMax = progressTimeMax
     }
 
+    fun getArray(): ArrayList<Any?> {
+        return array
+    }
+
+    fun setArray(array: ArrayList<Any?>) {
+        this.array = array
+    }
+
 
     override fun toString(): String {
         return "UserData{" +
@@ -93,6 +103,7 @@ class UserData {
                 ", hour='" + hour +
                 ", progressTime='" + progressTime +
                 ", progressTimeMax='" + progressTimeMax +
+                ", array='" + array +
                 '}'
     }
 }

@@ -104,6 +104,12 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_navigation_home_to_configFragment)
         }
 
+        binding.buttonLogOutHome.setOnClickListener {
+            mFirebaseAuth.signOut()
+            val intent = Intent(getActivity(), LoginInActivity::class.java)
+            getActivity()?.startActivity(intent)
+        }
+
         binding.buttonStartSensor.setOnClickListener {
 
 
@@ -113,7 +119,6 @@ class HomeFragment : Fragment() {
             if(sensorStarted){
                 obj.put("STARTMESSUNG", "AN")
                 binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
-
             }
             else{
                 obj.put("STARTMESSUNG", "AUS")

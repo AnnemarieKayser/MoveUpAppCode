@@ -18,11 +18,11 @@
             android:id="@+id/chartView"
             android:layout_width="match_parent"
             android:layout_height="350dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@+id/buttonData">
 
         </com.github.aachartmodel.aainfographics.aachartcreator.AAChartView>
 
@@ -94,6 +94,17 @@
             app:layout_constraintEnd_toStartOf="@+id/textViewTime"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/chartView" />
+
+        <Button
+            android:id="@+id/buttonData"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/btn_data_graph"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

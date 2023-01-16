@@ -1,6 +1,5 @@
 package com.example.moveup
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.BluetoothLeScanner
@@ -28,8 +27,6 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
-import java.text.DateFormat
-import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -53,8 +50,10 @@ class GraphFragment : Fragment() {
     private var counterLeanBack = 0
     private var counterReminderBefore = 0
     private var counterLeanBackBefore = 0
+    private var progressTimeBefore = 0F
     private var time = 0
     private var data: UserData? = null
+    private var isReceivingData = false
 
     //Circular-Progress-Bar
     private var timeMaxProgressBar = 60F
@@ -68,6 +67,7 @@ class GraphFragment : Fragment() {
     private var arrayLeanBack = arrayOfNulls<Any>(24)
     private var arrayDynamic = arrayOfNulls<Any>(24)
     private var arrayStraight = arrayOfNulls<Any>(24)
+    private var arrayBentList = arrayListOf<Any?>()
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -100,17 +100,23 @@ class GraphFragment : Fragment() {
         mRunnable = Runnable {
             if (isAdded() && activity != null) {
                 if (viewModel.getDeviceAddress() != "") {
-                    bluetoothLeService!!.connect(viewModel.getDeviceAddress());
-                    mRunnable = Runnable {
-                        if (isConnected) {
-                            bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true);
-                        }
-                    }
-                    mHandler.postDelayed(mRunnable, 1000)
+                    bluetoothLeService!!.connect(viewModel.getDeviceAddress())
                 }
             }
         }
         mHandler.postDelayed(mRunnable, 1000)
+
+        binding.buttonData.setOnClickListener {
+            if (isReceivingData) {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
+                isReceivingData = false
+                binding.buttonData.text = getString(R.string.btn_data_graph)
+            } else {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
+                isReceivingData = true
+                binding.buttonData.text = getString(R.string.bt_data_off)
+            }
+        }
 
         setUpAAChartView()
 
@@ -142,8 +148,6 @@ class GraphFragment : Fragment() {
         }
 
         loadDbData()
-
-
     }
 
     fun setUpAAChartView() {
@@ -189,11 +193,30 @@ class GraphFragment : Fragment() {
         arrayBent[time] = counterReminder
         arrayLeanBack[time] = counterLeanBack
 
-        if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore) {
+        if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
             insertDataInDb()
             counterReminderBefore = counterReminder
             counterLeanBackBefore = counterLeanBack
+            progressTimeBefore = progressTime
         }
+        return arrayOf(
+            AASeriesElement()
+                .name("Aufrecht")
+                .data(arrayStraight as Array<Any>),
+            AASeriesElement()
+                .name("zurückgelehnt")
+                .data(arrayLeanBack as Array<Any>),
+            AASeriesElement()
+                .name("krumm")
+                .data(arrayBent as Array<Any>),
+            AASeriesElement()
+                .name("dynamisch")
+                .data(arrayDynamic as Array<Any>),
+        )
+    }
+
+    private fun configureChartSeriesArrayAfterLoadDb(): Array<AASeriesElement> {
+
         return arrayOf(
             AASeriesElement()
                 .name("Aufrecht")
@@ -221,7 +244,7 @@ class GraphFragment : Fragment() {
             // Variable zum Zugriff auf die Service-Methoden
             bluetoothLeService = (service as BluetoothLeService.LocalBinder).getService()
             if (!bluetoothLeService!!.initialize()) {
-                Log.e(ContentValues.TAG, "Unable to initialize Bluetooth")
+                Log.e(TAG, "Unable to initialize Bluetooth")
 
             }
         }
@@ -255,15 +278,12 @@ class GraphFragment : Fragment() {
 
     private fun onConnect() {
         isConnected = true
-        //binding.textViewConnected.setText(R.string.connected)
-        Log.i(ContentValues.TAG, "connected")
         toast("connected")
     }
 
     private fun onDisconnect() {
         isConnected = false
-        //binding.textViewConnected.setText(R.string.disconnected)
-        Log.i(ContentValues.TAG, "disconnected")
+        toast("disconnected")
     }
 
     private fun onGattCharacteristicDiscovered() {
@@ -272,7 +292,7 @@ class GraphFragment : Fragment() {
 
     private fun onDataAvailable() {
         // neue Daten verfügbar
-        Log.i(ContentValues.TAG, "Data available")
+        Log.i(TAG, "Data available")
         val bytes: ByteArray = gattCharacteristic!!.value
         // byte[] to string
         val s = String(bytes)
@@ -303,7 +323,6 @@ class GraphFragment : Fragment() {
                 binding.textViewTime.text = getString(R.string.tv_time, progressTime, progressMax)
             }
 
-            insertDataInDb()
             showDialog()
 
         } catch (e : JSONException) {
@@ -356,10 +375,10 @@ class GraphFragment : Fragment() {
             val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(turnBTOn, 1)
         }
-        context?.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
+        context?.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter())
         if (bluetoothLeService != null && isConnected) {
-            var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress());
-            Log.d(ContentValues.TAG, "Connect request result=" + result);
+            var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress())
+            Log.d(TAG, "Connect request result=" + result)
         }
     }
 
@@ -381,6 +400,19 @@ class GraphFragment : Fragment() {
 
     private fun insertDataInDb() {
 
+        val kalender: Calendar = Calendar.getInstance()
+        var zeitformat = SimpleDateFormat("HH")
+        val hour = zeitformat.format(kalender.time)
+        time = hour.toInt()
+
+        zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
+
+        for(i in 0 until 24){
+            arrayBentList.add(i, arrayBent[i])
+        }
+
+
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
         userData.setHour(time)
@@ -388,12 +420,13 @@ class GraphFragment : Fragment() {
         userData.setCounterLeanBack(counterLeanBack)
         userData.setProgressTime(progressTime)
         userData.setProgressTimeMax(timeMaxProgressBar)
+        userData.setArray(arrayBentList)
 
         // Schreibe Daten als Document in die Collection Messungen in DB;
         // Eine id als Document Name wird automatisch vergeben
         // Implementiere auch onSuccess und onFailure Listender
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection("Daten").document("1")
+        db.collection("users").document(uid).collection(date).document("Daten")
             .set(userData)
             .addOnSuccessListener { documentReference ->
                 toast(getString(R.string.save))
@@ -401,13 +434,23 @@ class GraphFragment : Fragment() {
             .addOnFailureListener { e ->
                 toast(getString(R.string.not_save))
             }
+        arrayBentList.clear()
     }
 
     fun loadDbData() {
 
+        val kalender: Calendar = Calendar.getInstance()
+        var zeitformat = SimpleDateFormat("HH")
+        val hour = zeitformat.format(kalender.time)
+        time = hour.toInt()
+
+        zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
+
+
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection("Daten").document("1") // alle Einträge abrufen
+        db.collection("users").document(uid).collection(date).document("Daten")// alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -418,9 +461,14 @@ class GraphFragment : Fragment() {
                     counterLeanBack = data!!.getCounterLeanBack()
                     progressTime = data!!.getProgressTime()
                     timeMaxProgressBar = data!!.getProgressTimeMax()
+                    arrayBentList = data!!.getArray()
                     time = data!!.getHour()
 
-                    val seriesArr = configureChartSeriesArray()
+                    for(i in 0 until 24){
+                        arrayBent[i] = arrayBentList[i]
+                    }
+
+                    val seriesArr = configureChartSeriesArrayAfterLoadDb()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
                     binding.circularProgressBar.apply{
@@ -428,6 +476,8 @@ class GraphFragment : Fragment() {
                         binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
                     }
                     binding.circularProgressBar.progress = progressTime
+
+
 
                 } else {
                     Log.d(TAG, "FEHLER: Daten lesen ", task.exception)

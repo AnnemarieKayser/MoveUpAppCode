@@ -86,5 +86,6 @@
     <string name="tv_config2">Nehme nun eine ungerade Haltung ein und drücke erneuert den Start-Button. Halte die Position für 10 Sekunden</string>
     <string name="btn_start_sensor">Starte die Messung!</string>
     <string name="btn_stop_sensor">Beende die Messung</string>
+    <string name="btn_data_graph">Daten empfangen</string>
 
 </resources>
