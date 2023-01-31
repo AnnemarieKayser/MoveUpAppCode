@@ -88,5 +88,7 @@
     <string name="btn_stop_sensor">Beende die Messung</string>
     <string name="btn_data_graph">Daten empfangen</string>
     <string name="tv_data">Daten</string>
+    <string name="alert_dialog_message_wifi">Für die Nutzung dieser App wird W-lan benötigt. Bitte verbinde dein Smartphone zunächst mit dem W-lan.</string>
+    <string name="alert_dialog_title_reminder">Erinnerung:</string>
 
 </resources>

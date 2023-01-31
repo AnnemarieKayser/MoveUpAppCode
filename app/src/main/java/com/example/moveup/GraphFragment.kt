@@ -72,6 +72,7 @@ class GraphFragment : Fragment() {
     private var arrayDynamic = arrayOfNulls<Any>(24)
     private var arrayStraight = arrayOfNulls<Any>(24)
     private var arrayBentList = arrayListOf<Any?>()
+    private var val1 = arrayOfNulls<Int>(24)
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -331,7 +332,10 @@ class GraphFragment : Fragment() {
             }
 
             for(i in 0 until 24) {
-                arrayBent[i] = listdata[i].toInt()
+                if(listdata[i].toInt() != 0 && listdata[i].toInt() != val1[i]) {
+                        arrayBent[i] = arrayBent[i].toString().toInt() + listdata[i].toInt() - (val1[i] ?: 0)
+                        val1[i] = listdata[i].toInt()
+                }
             }
 
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)

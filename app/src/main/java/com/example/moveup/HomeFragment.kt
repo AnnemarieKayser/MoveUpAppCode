@@ -87,6 +87,8 @@ class HomeFragment : Fragment() {
         context?.bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
 
+        loadDbData()
+
         //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
         mRunnable = Runnable {
 
@@ -171,8 +173,6 @@ class HomeFragment : Fragment() {
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
-
-        loadDbData()
 
     }
 
