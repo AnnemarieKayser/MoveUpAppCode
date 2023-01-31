@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -23,6 +24,8 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -40,6 +43,8 @@ class HomeFragment : Fragment() {
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var sensorStarted = false
+    private var hour = 0
+    private var minute = 0
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
@@ -115,9 +120,21 @@ class HomeFragment : Fragment() {
 
             val obj = JSONObject()
             sensorStarted = !sensorStarted
+
+            val kalender: Calendar = Calendar.getInstance()
+            var zeitformat = SimpleDateFormat("HH")
+            var time = zeitformat.format(kalender.time)
+            hour = time.toInt()
+
+            zeitformat = SimpleDateFormat("mm")
+            time = zeitformat.format(kalender.time)
+            minute = time.toInt()
+
             // Werte setzen
             if(sensorStarted){
                 obj.put("STARTMESSUNG", "AN")
+                obj.put("HOUR", hour)
+                obj.put("MINUTE", minute)
                 binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
             }
             else{

@@ -87,5 +87,6 @@
     <string name="btn_start_sensor">Starte die Messung!</string>
     <string name="btn_stop_sensor">Beende die Messung</string>
     <string name="btn_data_graph">Daten empfangen</string>
+    <string name="tv_data">Daten</string>
 
 </resources>

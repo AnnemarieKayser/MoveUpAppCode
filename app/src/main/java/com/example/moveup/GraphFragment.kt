@@ -17,13 +17,17 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentGraphBinding
-import com.github.aachartmodel.aainfographics.aachartcreator.*
+import com.github.aachartmodel.aainfographics.aachartcreator.AAChartModel
+import com.github.aachartmodel.aainfographics.aachartcreator.AAChartStackingType
+import com.github.aachartmodel.aainfographics.aachartcreator.AAChartType
+import com.github.aachartmodel.aainfographics.aachartcreator.AASeriesElement
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAScrollablePlotArea
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
@@ -147,7 +151,12 @@ class GraphFragment : Fragment() {
             showDialogEditTime()
         }
 
-        loadDbData()
+        /*for(i in 0 until 24){
+            arrayBentList.add(i, 0)
+        }*/
+
+       loadDbData()
+
     }
 
     fun setUpAAChartView() {
@@ -190,8 +199,8 @@ class GraphFragment : Fragment() {
         val hour = zeitformat.format(kalender.time)
         time = hour.toInt()
 
-        arrayBent[time] = counterReminder
-        arrayLeanBack[time] = counterLeanBack
+        //arrayBent[time] = counterReminder
+       arrayLeanBack[time] = counterLeanBack
 
         if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
             insertDataInDb()
@@ -312,7 +321,21 @@ class GraphFragment : Fragment() {
 
             progressTime = obj.getString("sittingStraightTime").toFloat()
 
+
+            val listdata = ArrayList<String>()
+            val jArray = obj.getJSONArray("arrayBentBack")
+            if (jArray != null) {
+                for (i in 0 until jArray.length()) {
+                    listdata.add(jArray.getString(i))
+                }
+            }
+
+            for(i in 0 until 24) {
+                arrayBent[i] = listdata[i].toInt()
+            }
+
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
+
 
             val seriesArr = configureChartSeriesArray()
             binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
@@ -408,7 +431,7 @@ class GraphFragment : Fragment() {
         zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        for(i in 0 until 24){
+        for(i in 0 until 24) {
             arrayBentList.add(i, arrayBent[i])
         }
 

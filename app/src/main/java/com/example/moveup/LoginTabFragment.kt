@@ -22,9 +22,6 @@ class LoginTabFragment: Fragment() {
     private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val mHandler: Handler by lazy { Handler() }
-    private lateinit var mRunnable: Runnable
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -67,18 +64,6 @@ class LoginTabFragment: Fragment() {
         binding.textViewPasswortVergessen.setOnClickListener {
             sendResetPw()
         }
-
-
-        mRunnable = Runnable {
-            if (mFirebaseAuth.currentUser == null) {
-                //txtLogStatus.text = getString(R.string.logged_out)
-            } else {
-                //txtLogStatus.text = getString(R.string.logged_in)
-                val intent = Intent (getActivity(), MainActivity::class.java)
-                getActivity()?.startActivity(intent)
-            }
-        }
-        mHandler.postDelayed(mRunnable, 2000)
     }
 
     private fun validateForm(email: String, password: String): Boolean {
