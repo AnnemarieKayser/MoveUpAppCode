@@ -72,7 +72,11 @@ class GraphFragment : Fragment() {
     private var arrayDynamic = arrayOfNulls<Any>(24)
     private var arrayStraight = arrayOfNulls<Any>(24)
     private var arrayBentList = arrayListOf<Any?>()
+    private var arrayLeanList = arrayListOf<Any?>()
+    private var arrayDynamicList = arrayListOf<Any?>()
     private var val1 = arrayOfNulls<Int>(24)
+    private var val2 = arrayOfNulls<Int>(24)
+    private var val3 = arrayOfNulls<Int>(24)
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -152,11 +156,18 @@ class GraphFragment : Fragment() {
             showDialogEditTime()
         }
 
-        /*for(i in 0 until 24){
-            arrayBentList.add(i, 0)
-        }*/
+        for(i in 0 until 24) {
+            arrayBent[i] = 0
+        }
+        for(i in 0 until 24) {
+            arrayLeanBack[i] = 0
+        }
+        for(i in 0 until 24) {
+            arrayDynamic[i] = 0
+        }
 
-       loadDbData()
+
+        loadDbData()
 
     }
 
@@ -201,7 +212,7 @@ class GraphFragment : Fragment() {
         time = hour.toInt()
 
         //arrayBent[time] = counterReminder
-       arrayLeanBack[time] = counterLeanBack
+       //arrayLeanBack[time] = counterLeanBack
 
         if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
             insertDataInDb()
@@ -323,20 +334,52 @@ class GraphFragment : Fragment() {
             progressTime = obj.getString("sittingStraightTime").toFloat()
 
 
-            val listdata = ArrayList<String>()
-            val jArray = obj.getJSONArray("arrayBentBack")
-            if (jArray != null) {
-                for (i in 0 until jArray.length()) {
-                    listdata.add(jArray.getString(i))
+            val listdataBent = ArrayList<String>()
+            val jArrayBent = obj.getJSONArray("arrayBentBack")
+            if (jArrayBent != null) {
+                for (i in 0 until jArrayBent.length()) {
+                    listdataBent.add(jArrayBent.getString(i))
                 }
             }
 
             for(i in 0 until 24) {
-                if(listdata[i].toInt() != 0 && listdata[i].toInt() != val1[i]) {
-                        arrayBent[i] = arrayBent[i].toString().toInt() + listdata[i].toInt() - (val1[i] ?: 0)
-                        val1[i] = listdata[i].toInt()
+                if(listdataBent[i].toInt() != 0 && listdataBent[i].toInt() != val1[i]) {
+                        arrayBent[i] = arrayBent[i].toString().toInt() + listdataBent[i].toInt() - (val1[i] ?: 0)
+                        val1[i] = listdataBent[i].toInt()
                 }
             }
+
+            val listdataLean = ArrayList<String>()
+            val jArrayLean = obj.getJSONArray("arrayLeanBack")
+            if (jArrayLean != null) {
+                for (i in 0 until jArrayLean.length()) {
+                    listdataLean.add(jArrayLean.getString(i))
+                }
+            }
+
+            for(i in 0 until 24) {
+                if(listdataLean[i].toInt() != 0 && listdataLean[i].toInt() != val2[i]) {
+                    arrayLeanBack[i] = arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i] ?: 0)
+                    val2[i] = listdataLean[i].toInt()
+                }
+            }
+
+            val listdataDynamic = ArrayList<String>()
+            val jArrayDynamic = obj.getJSONArray("arrayCounterDynamic")
+            if (jArrayDynamic != null) {
+                for (i in 0 until jArrayDynamic.length()) {
+                    listdataDynamic.add(jArrayDynamic.getString(i))
+                }
+            }
+
+            for(i in 0 until 24) {
+                if(listdataDynamic[i].toInt() != 0 && listdataDynamic[i].toInt() != val3[i]) {
+                    arrayDynamic[i] = arrayDynamic[i].toString().toInt() + listdataDynamic[i].toInt() - (val3[i] ?: 0)
+                    val3[i] = listdataDynamic[i].toInt()
+                }
+            }
+
+
 
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
 
@@ -358,7 +401,7 @@ class GraphFragment : Fragment() {
     }
 
     private fun showDialog() {
-        if(statusPos == "Die Haltung ist krumm") {
+        if(statusPos == "krumm") {
 
             context?.let {
                 MaterialAlertDialogBuilder(it)
@@ -439,6 +482,14 @@ class GraphFragment : Fragment() {
             arrayBentList.add(i, arrayBent[i])
         }
 
+        for(i in 0 until 24) {
+            arrayLeanList.add(i, arrayLeanBack[i])
+        }
+
+        for(i in 0 until 24) {
+            arrayDynamicList.add(i, arrayDynamic[i])
+        }
+
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
@@ -447,7 +498,9 @@ class GraphFragment : Fragment() {
         userData.setCounterLeanBack(counterLeanBack)
         userData.setProgressTime(progressTime)
         userData.setProgressTimeMax(timeMaxProgressBar)
-        userData.setArray(arrayBentList)
+        userData.setArrayBentBack(arrayBentList)
+        userData.setArrayLeanBack(arrayLeanList)
+        userData.setArrayDynamicPhase(arrayDynamicList)
 
         // Schreibe Daten als Document in die Collection Messungen in DB;
         // Eine id als Document Name wird automatisch vergeben
@@ -462,6 +515,8 @@ class GraphFragment : Fragment() {
                 toast(getString(R.string.not_save))
             }
         arrayBentList.clear()
+        arrayLeanList.clear()
+        arrayDynamicList.clear()
     }
 
     fun loadDbData() {
@@ -473,6 +528,7 @@ class GraphFragment : Fragment() {
 
         zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
+
 
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
@@ -488,12 +544,21 @@ class GraphFragment : Fragment() {
                     counterLeanBack = data!!.getCounterLeanBack()
                     progressTime = data!!.getProgressTime()
                     timeMaxProgressBar = data!!.getProgressTimeMax()
-                    arrayBentList = data!!.getArray()
+                    arrayBentList = data!!.getArrayBentBack()
+                    arrayLeanList = data!!.getArrayLeanBack()
                     time = data!!.getHour()
 
                     for(i in 0 until 24){
                         arrayBent[i] = arrayBentList[i]
                     }
+
+                    for(i in 0 until 24){
+                        arrayLeanBack[i] = arrayLeanList[i]
+                    }
+
+                    /*for(i in 0 until 24){
+                        arrayDynamic[i] = arrayDynamicList[i]
+                    }*/
 
                     val seriesArr = configureChartSeriesArrayAfterLoadDb()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)

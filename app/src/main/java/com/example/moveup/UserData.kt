@@ -13,8 +13,9 @@ class UserData {
     private var hour = 0
     private var counterBentBack = 0
     private var counterStraightBack = 0
-    private var dynamicPhase = 0
-    private var array = arrayListOf<Any?>()
+    private var arrayDynamicPhase = arrayListOf<Any?>()
+    private var arrayBentBack = arrayListOf<Any?>()
+    private var arrayLeanBack = arrayListOf<Any?>()
 
     // serverTimestamp soll automatisch vom Server gesetzt werden
     @ServerTimestamp
@@ -61,14 +62,6 @@ class UserData {
         this.counterBentBack = counterBentBack
     }
 
-    fun getDynamicPhase(): Int {
-        return dynamicPhase
-    }
-
-    fun setDynamicPhase(dynamicPhase: Int) {
-        this.dynamicPhase = dynamicPhase
-    }
-
     fun getProgressTime(): Float {
         return progressTime
     }
@@ -85,12 +78,28 @@ class UserData {
         this.progressTimeMax = progressTimeMax
     }
 
-    fun getArray(): ArrayList<Any?> {
-        return array
+    fun getArrayBentBack(): ArrayList<Any?> {
+        return arrayBentBack
     }
 
-    fun setArray(array: ArrayList<Any?>) {
-        this.array = array
+    fun setArrayBentBack(arrayBentBack: ArrayList<Any?>) {
+        this.arrayBentBack = arrayBentBack
+    }
+
+    fun getArrayLeanBack(): ArrayList<Any?> {
+        return arrayLeanBack
+    }
+
+    fun setArrayLeanBack(arrayLeanBack: ArrayList<Any?>) {
+        this.arrayLeanBack = arrayLeanBack
+    }
+
+    fun getArrayDynamicPhase(): ArrayList<Any?> {
+        return arrayDynamicPhase
+    }
+
+    fun setArrayDynamicPhase(arrayDynamicPhase: ArrayList<Any?>) {
+        this.arrayDynamicPhase = arrayDynamicPhase
     }
 
 
@@ -99,11 +108,12 @@ class UserData {
                 ", counterLeanBack='" + counterLeanBack +
                 ", counterStraightBack='" + counterStraightBack +
                 ", counterBentBack='" + counterBentBack +
-                ", dynamicPhase='" + dynamicPhase +
+                ", dynamicPhase='" + arrayDynamicPhase +
                 ", hour='" + hour +
                 ", progressTime='" + progressTime +
                 ", progressTimeMax='" + progressTimeMax +
-                ", array='" + array +
+                ", arrayBentBack='" + arrayBentBack +
+                ", arrayLeanBack='" + arrayLeanBack +
                 '}'
     }
 }
