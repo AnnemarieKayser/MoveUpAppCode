@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.navigation_home, R.id.navigation_graph, R.id.navigation_setting
+                R.id.navigation_home, R.id.navigation_graph, R.id.navigation_exercise, R.id.navigation_setting
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -132,7 +132,11 @@ class MainActivity : AppCompatActivity() {
         val sp = getPreferences(Context.MODE_PRIVATE)
         val edit = sp.edit()
         val address = viewModel.getDeviceAddress()
+        val day = viewModel.getDate()
+        val savedData = viewModel.getSavedData()
         edit.putString(DEVICEADDRESS, address)
+        edit.putString("DAY", day)
+        edit.putBoolean("SAVEDDATA", savedData)
         edit.commit()
     }
 
@@ -141,6 +145,8 @@ class MainActivity : AppCompatActivity() {
         // Termine wieder einlesen
         val sp = getPreferences(Context.MODE_PRIVATE)
         viewModel.setDeviceAddress(sp.getString(DEVICEADDRESS, "").toString())
+        viewModel.setDate(sp.getString("DAY", "").toString())
+        viewModel.setSavedData(sp.getBoolean("SAVEDDATA", false))
     }
 
 }

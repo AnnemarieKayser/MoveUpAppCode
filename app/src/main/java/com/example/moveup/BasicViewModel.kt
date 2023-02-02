@@ -18,10 +18,19 @@ class BasicViewModel : ViewModel() {
     val deviceAddress: LiveData<String>
         get() = _deviceAddress
 
+    private val _date = MutableLiveData<String>()
+    val date: LiveData<String>
+        get() = _date
+
+    private val _savedData = MutableLiveData<Boolean>()
+    val savedData: LiveData<Boolean>
+        get() = _savedData
+
     init {
         _discoveredDevices.value = mutableListOf()
         _deviceAddress.value = ""
-
+        _date.value = ""
+        _savedData.value = false
     }
 
 
@@ -42,6 +51,22 @@ class BasicViewModel : ViewModel() {
             _discoveredDevices.value?.add(device)
             _discoveredDevices.notifyObserver()
         }
+    }
+
+    fun getDate(): String {
+        return _date.value.toString()
+    }
+
+    fun setDate(date: String) {
+        _date.value = date
+    }
+
+    fun getSavedData(): Boolean {
+        return _savedData.value!!
+    }
+
+    fun setSavedData(savedData: Boolean) {
+        _savedData.value = savedData
     }
 
     // Extension Function, um Änderung in den Einträgen von Listen

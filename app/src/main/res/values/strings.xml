@@ -90,5 +90,14 @@
     <string name="tv_data">Daten</string>
     <string name="alert_dialog_message_wifi">Für die Nutzung dieser App wird W-lan benötigt. Bitte verbinde dein Smartphone zunächst mit dem W-lan.</string>
     <string name="alert_dialog_title_reminder">Erinnerung:</string>
+    <string name="title_exercise"><![CDATA[Übungen & Challenges]]></string>
+    <string name="tv_challenge">Starte eine neue Challenge!\n Gibt eine Zeit ein, die du gerade Sitzen möchtest. </string>
+    <string name="btn_start_challenge">Starte die Challenge!</string>
+    <string name="tv_challenge_title">Challenge</string>
+    <string name="tv_hint_challenge">Minuten</string>
+    <string name="btn_stop_challenge">Beende die Challenge</string>
+    <string name="title_alert_challenge">Challenge</string>
+    <string name="message_alert_dialog_challenge">Sie haben die Challenge geschafft!</string>
+    <string name="btn_get_data">Daten Empfangen</string>
 
 </resources>

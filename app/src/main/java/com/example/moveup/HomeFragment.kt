@@ -174,6 +174,14 @@ class HomeFragment : Fragment() {
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
 
+        val kalender: Calendar = Calendar.getInstance()
+        var zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
+
+        if(viewModel.getDate() != date) {
+            viewModel.setSavedData(false)
+            viewModel.setDate(date)
+        }
     }
 
     // BluetoothLE Service Anbindung

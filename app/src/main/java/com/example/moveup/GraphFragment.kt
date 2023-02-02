@@ -166,9 +166,9 @@ class GraphFragment : Fragment() {
             arrayDynamic[i] = 0
         }
 
-
-        loadDbData()
-
+        if(viewModel.getSavedData()) {
+            loadDbData()
+        }
     }
 
     fun setUpAAChartView() {
@@ -470,6 +470,8 @@ class GraphFragment : Fragment() {
 
     private fun insertDataInDb() {
 
+        viewModel.setSavedData(true)
+
         val kalender: Calendar = Calendar.getInstance()
         var zeitformat = SimpleDateFormat("HH")
         val hour = zeitformat.format(kalender.time)
@@ -546,6 +548,7 @@ class GraphFragment : Fragment() {
                     timeMaxProgressBar = data!!.getProgressTimeMax()
                     arrayBentList = data!!.getArrayBentBack()
                     arrayLeanList = data!!.getArrayLeanBack()
+                    arrayDynamicList = data!!.getArrayDynamicPhase()
                     time = data!!.getHour()
 
                     for(i in 0 until 24){
@@ -556,9 +559,9 @@ class GraphFragment : Fragment() {
                         arrayLeanBack[i] = arrayLeanList[i]
                     }
 
-                    /*for(i in 0 until 24){
+                    for(i in 0 until 24){
                         arrayDynamic[i] = arrayDynamicList[i]
-                    }*/
+                    }
 
                     val seriesArr = configureChartSeriesArrayAfterLoadDb()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)

@@ -12,11 +12,17 @@
         android:id="@+id/navigation_graph"
         android:icon="@drawable/ic_graph"
         android:title="@string/title_graph" />
-
+    <item
+        android:id="@+id/navigation_exercise"
+        android:icon="@drawable/ic_exercise"
+        android:title="@string/title_exercise"/>
     <item
         android:id="@+id/navigation_setting"
         android:icon="@drawable/ic_setting"
         android:title="@string/title_setting"/>
+
+
+
 
 
 
