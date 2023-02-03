@@ -26,11 +26,16 @@ class BasicViewModel : ViewModel() {
     val savedData: LiveData<Boolean>
         get() = _savedData
 
+    private val _savedDataChallenge = MutableLiveData<Boolean>()
+    val savedDataChallenge: LiveData<Boolean>
+        get() = _savedDataChallenge
+
     init {
         _discoveredDevices.value = mutableListOf()
         _deviceAddress.value = ""
         _date.value = ""
         _savedData.value = false
+        _savedDataChallenge.value = false
     }
 
 
@@ -67,6 +72,14 @@ class BasicViewModel : ViewModel() {
 
     fun setSavedData(savedData: Boolean) {
         _savedData.value = savedData
+    }
+
+    fun getSavedDataChallenge(): Boolean {
+        return _savedDataChallenge.value!!
+    }
+
+    fun setSavedDataChallenge(savedDataChallenge: Boolean) {
+        _savedDataChallenge.value = savedDataChallenge
     }
 
     // Extension Function, um Änderung in den Einträgen von Listen

@@ -180,6 +180,7 @@ class HomeFragment : Fragment() {
 
         if(viewModel.getDate() != date) {
             viewModel.setSavedData(false)
+            viewModel.setSavedDataChallenge(false)
             viewModel.setDate(date)
         }
     }
@@ -299,7 +300,7 @@ class HomeFragment : Fragment() {
             bluetoothLeService!!.disconnect()
         }
     }
-
+    //ändern
     fun loadDbData() {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen

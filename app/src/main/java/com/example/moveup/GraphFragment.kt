@@ -211,8 +211,6 @@ class GraphFragment : Fragment() {
         val hour = zeitformat.format(kalender.time)
         time = hour.toInt()
 
-        //arrayBent[time] = counterReminder
-       //arrayLeanBack[time] = counterLeanBack
 
         if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
             insertDataInDb()

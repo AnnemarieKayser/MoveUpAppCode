@@ -46,10 +46,13 @@ class ExerciseFragment : Fragment() {
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
-    private var data: UserData? = null
+    private var data: UserDataExercise? = null
+    private var counterChallenge = 0
 
     private var statusChallenge = ""
     private var time = 0
+    private var hour = 0
+    private var minute = 0
 
 
     override fun onCreateView(
@@ -85,15 +88,27 @@ class ExerciseFragment : Fragment() {
             if (isReceivingData) {
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
                 isReceivingData = false
+                toast("keine daten empfangen")
                 binding.buttonGetData.text = getString(R.string.btn_data_graph)
             } else {
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
                 isReceivingData = true
+                toast("Daten empfangen")
                 binding.buttonGetData.text = getString(R.string.bt_data_off)
             }
         }
 
         binding.buttonStartChallenge.setOnClickListener {
+
+            val kalender: Calendar = Calendar.getInstance()
+            var zeitformat = SimpleDateFormat("HH")
+            var timeFormat = zeitformat.format(kalender.time)
+            hour = timeFormat.toInt()
+
+            zeitformat = SimpleDateFormat("mm")
+            timeFormat = zeitformat.format(kalender.time)
+            minute = timeFormat.toInt()
+
 
             val timeChallenge: String = binding.editTextChallengeTime.text.toString()
             time = timeChallenge.toInt()
@@ -109,6 +124,9 @@ class ExerciseFragment : Fragment() {
                     if (challengeStarted) {
                         obj.put("CHALLENGE", "START")
                         obj.put("TIMECHALLENGE", time)
+                        obj.put("STARTMESSUNG", "AUS")
+                        obj.put("HOUR", hour)
+                        obj.put("MINUTE", minute)
                         binding.buttonStartChallenge.text = getString(R.string.btn_stop_challenge)
                         toast("Start")
                     } else {
@@ -126,6 +144,11 @@ class ExerciseFragment : Fragment() {
                 }
             }
         }
+
+        if(viewModel.getSavedDataChallenge()) {
+            loadDbData()
+        }
+
    }
 
     override fun onDestroyView() {
@@ -201,8 +224,9 @@ class ExerciseFragment : Fragment() {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
 
-
             statusChallenge = obj.getString("challenge").toString()
+
+            toast(statusChallenge)
 
             if(statusChallenge == "geschafft") {
 
@@ -212,7 +236,8 @@ class ExerciseFragment : Fragment() {
                         .setMessage(resources.getString(R.string.message_alert_dialog_challenge))
 
                         .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
-
+                            counterChallenge++
+                            insertDataInDb()
                         }
                         .show()
                 }
@@ -252,6 +277,55 @@ class ExerciseFragment : Fragment() {
         if (isConnected) {
             bluetoothLeService!!.disconnect()
         }
+    }
+
+    private fun insertDataInDb() {
+
+        viewModel.setSavedDataChallenge(true)
+
+        val kalender: Calendar = Calendar.getInstance()
+        val zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
+
+        //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        val userData = UserDataExercise()
+        userData.setChallenge(counterChallenge)
+
+        // Schreibe Daten als Document in die Collection Messungen in DB;
+        // Eine id als Document Name wird automatisch vergeben
+        // Implementiere auch onSuccess und onFailure Listender
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection(date).document("Challenge")
+            .set(userData)
+            .addOnSuccessListener { documentReference ->
+                toast(getString(R.string.save))
+            }
+            .addOnFailureListener { e ->
+                toast(getString(R.string.not_save))
+            }
+    }
+
+    fun loadDbData() {
+
+        val kalender: Calendar = Calendar.getInstance()
+        val zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
+
+        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection(date).document("Challenge")// alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    data = task.result!!.toObject(UserDataExercise::class.java)
+
+                    counterChallenge = data!!.getChallenge()
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
     }
 
 }
