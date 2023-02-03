@@ -23,11 +23,13 @@ import com.github.aachartmodel.aainfographics.aachartcreator.AAChartType
 import com.github.aachartmodel.aainfographics.aachartcreator.AASeriesElement
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAScrollablePlotArea
 import com.github.aachartmodel.aainfographics.aaoptionsmodel.AAStyle
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
-import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
@@ -81,6 +83,7 @@ class GraphFragment : Fragment() {
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
+    private var date = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -156,6 +159,42 @@ class GraphFragment : Fragment() {
             showDialogEditTime()
         }
 
+        binding.buttonSelectDate.setOnClickListener {
+            // Makes only dates from today forward selectable.
+            val constraintsBuilder =
+                CalendarConstraints.Builder()
+                    .setValidator(DateValidatorPointBackward.now())
+
+            val datePicker =
+                MaterialDatePicker.Builder.datePicker()
+                    .setTitleText("Select date")
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .setCalendarConstraints(constraintsBuilder.build())
+                    .setTitleText("Wähle ein Datum aus")
+                    .build()
+
+            datePicker.show(parentFragmentManager, "tag")
+
+            datePicker.addOnPositiveButtonClickListener {
+                // Respond to positive button click.
+                //date = datePicker.headerText
+
+                val calendar = Calendar.getInstance()
+                calendar.timeInMillis = datePicker.selection!!
+                val format = SimpleDateFormat("yyyy-MM-dd")
+                date = format.format(calendar.time)
+
+                binding.buttonSelectDate.text = date
+
+                loadDbData(date)
+            }
+            datePicker.addOnNegativeButtonClickListener {
+                    // Respond to negative button click.
+            }
+
+            }
+
+
         for(i in 0 until 24) {
             arrayBent[i] = 0
         }
@@ -167,7 +206,11 @@ class GraphFragment : Fragment() {
         }
 
         if(viewModel.getSavedData()) {
-            loadDbData()
+            val kalender: Calendar = Calendar.getInstance()
+            val zeitformat = SimpleDateFormat("yyyy-MM-dd")
+            val date = zeitformat.format(kalender.time)
+
+            loadDbData(date)
         }
     }
 
@@ -186,20 +229,21 @@ class GraphFragment : Fragment() {
         return AAChartModel.Builder(requireContext().applicationContext)
             .setChartType(AAChartType.Column)
             .setXAxisVisible(true)
-            .setYAxisVisible(true)
             .setTitle(getString(R.string.chart_title))
             .setColorsTheme(arrayOf("#ce93d8", "#536dfe", "#7e57c2", "#81d4fa"))
             .setStacking(AAChartStackingType.Percent)
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
+            .setBackgroundColor("#682842")
             .setAxesTextColor("#FFFFFF")
-            .setBackgroundColor("#435359")
-            .setCategories("00:00", "1:00", "2:00", "3:00", "4:00", "5:00", "6:00", "7:00", "8:00", "9:00",
+            .setCategories("00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00",
                 "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00" ,"18:00",
                 "19:00", "20:00", "21:00", "22:00", "23:00", "24:00")
+            .setYAxisTitle("")
             .setScrollablePlotArea(
                 AAScrollablePlotArea()
+                    .opacity(0F)
                     .minWidth(400)
-                    .scrollPositionX(1f))
+                    .scrollPositionX(20f))
             .build()
     }
 
@@ -519,17 +563,7 @@ class GraphFragment : Fragment() {
         arrayDynamicList.clear()
     }
 
-    fun loadDbData() {
-
-        val kalender: Calendar = Calendar.getInstance()
-        var zeitformat = SimpleDateFormat("HH")
-        val hour = zeitformat.format(kalender.time)
-        time = hour.toInt()
-
-        zeitformat = SimpleDateFormat("yyyy-MM-dd")
-        val date = zeitformat.format(kalender.time)
-
-
+    private fun loadDbData(date : String) {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
@@ -540,41 +574,45 @@ class GraphFragment : Fragment() {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserData::class.java)
                     // Frage anzeigen
-                    counterReminder = data!!.getCounterBentBack()
-                    counterLeanBack = data!!.getCounterLeanBack()
-                    progressTime = data!!.getProgressTime()
-                    timeMaxProgressBar = data!!.getProgressTimeMax()
-                    arrayBentList = data!!.getArrayBentBack()
-                    arrayLeanList = data!!.getArrayLeanBack()
-                    arrayDynamicList = data!!.getArrayDynamicPhase()
-                    time = data!!.getHour()
+                    if(data != null) {
+                        counterReminder = data!!.getCounterBentBack()
+                        counterLeanBack = data!!.getCounterLeanBack()
+                        progressTime = data!!.getProgressTime()
+                        timeMaxProgressBar = data!!.getProgressTimeMax()
+                        arrayBentList = data!!.getArrayBentBack()
+                        arrayLeanList = data!!.getArrayLeanBack()
+                        arrayDynamicList = data!!.getArrayDynamicPhase()
 
-                    for(i in 0 until 24){
-                        arrayBent[i] = arrayBentList[i]
+                        for (i in 0 until 24) {
+                            arrayBent[i] = arrayBentList[i]
+                        }
+
+                        for (i in 0 until 24) {
+                            arrayLeanBack[i] = arrayLeanList[i]
+                        }
+
+                        for (i in 0 until 24) {
+                            arrayDynamic[i] = arrayDynamicList[i]
+                        }
+
+                        val seriesArr = configureChartSeriesArrayAfterLoadDb()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(
+                            seriesArr
+                        )
+
+                        binding.circularProgressBar.apply {
+                            progressMax = timeMaxProgressBar
+                            binding.textViewTime.text =
+                                getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                        }
+                        binding.circularProgressBar.progress = progressTime
+
                     }
-
-                    for(i in 0 until 24){
-                        arrayLeanBack[i] = arrayLeanList[i]
-                    }
-
-                    for(i in 0 until 24){
-                        arrayDynamic[i] = arrayDynamicList[i]
-                    }
-
-                    val seriesArr = configureChartSeriesArrayAfterLoadDb()
-                    binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
-
-                    binding.circularProgressBar.apply{
-                        progressMax = timeMaxProgressBar
-                        binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
-                    }
-                    binding.circularProgressBar.progress = progressTime
-
-
 
                 } else {
                     Log.d(TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
+
     }
 }
