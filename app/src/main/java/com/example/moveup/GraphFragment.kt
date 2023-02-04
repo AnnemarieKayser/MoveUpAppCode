@@ -63,9 +63,9 @@ class GraphFragment : Fragment() {
 
     //Circular-Progress-Bar
     private var timeMaxProgressBar = 60F
-    private var progressTime : Float = 0F
+    private var progressTime: Float = 0F
 
-    private val mHandler : Handler by lazy { Handler() }
+    private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
     private var aaChartModel = AAChartModel()
@@ -82,7 +82,7 @@ class GraphFragment : Fragment() {
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var date = ""
 
     override fun onCreateView(
@@ -143,7 +143,8 @@ class GraphFragment : Fragment() {
 
             // Set background ProgressBar Color
             backgroundProgressBarColor = Color.GRAY
-            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+            backgroundProgressBarColorDirection =
+                CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
 
             // Set Width
             progressBarWidth = 7f // in DP
@@ -189,29 +190,29 @@ class GraphFragment : Fragment() {
                 loadDbData(date)
             }
             datePicker.addOnNegativeButtonClickListener {
-                    // Respond to negative button click.
+                // Respond to negative button click.
             }
 
-            }
+        }
 
 
-        for(i in 0 until 24) {
+        for (i in 0 until 24) {
             arrayBent[i] = 0
         }
-        for(i in 0 until 24) {
+        for (i in 0 until 24) {
             arrayLeanBack[i] = 0
         }
-        for(i in 0 until 24) {
+        for (i in 0 until 24) {
             arrayDynamic[i] = 0
         }
 
-        if(viewModel.getSavedData()) {
-            val kalender: Calendar = Calendar.getInstance()
-            val zeitformat = SimpleDateFormat("yyyy-MM-dd")
-            val date = zeitformat.format(kalender.time)
+        //if(viewModel.getSavedData()) {
+        val kalender: Calendar = Calendar.getInstance()
+        val zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
 
-            loadDbData(date)
-        }
+        loadDbData(date)
+        //}
     }
 
     fun setUpAAChartView() {
@@ -235,15 +236,40 @@ class GraphFragment : Fragment() {
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
             .setBackgroundColor("#682842")
             .setAxesTextColor("#FFFFFF")
-            .setCategories("00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00",
-                "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00" ,"18:00",
-                "19:00", "20:00", "21:00", "22:00", "23:00", "24:00")
+            .setCategories(
+                "00:00",
+                "01:00",
+                "02:00",
+                "03:00",
+                "04:00",
+                "05:00",
+                "06:00",
+                "07:00",
+                "08:00",
+                "09:00",
+                "10:00",
+                "11:00",
+                "12:00",
+                "13:00",
+                "14:00",
+                "15:00",
+                "16:00",
+                "17:00",
+                "18:00",
+                "19:00",
+                "20:00",
+                "21:00",
+                "22:00",
+                "23:00",
+                "24:00"
+            )
             .setYAxisTitle("")
             .setScrollablePlotArea(
                 AAScrollablePlotArea()
                     .opacity(0F)
                     .minWidth(400)
-                    .scrollPositionX(20f))
+                    .scrollPositionX(20f)
+            )
             .build()
     }
 
@@ -256,7 +282,7 @@ class GraphFragment : Fragment() {
         time = hour.toInt()
 
 
-        if(counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
+        if (counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
             insertDataInDb()
             counterReminderBefore = counterReminder
             counterLeanBackBefore = counterLeanBack
@@ -362,7 +388,7 @@ class GraphFragment : Fragment() {
         parseJSONData(s)
     }
 
-    private fun parseJSONData(jsonString : String) {
+    private fun parseJSONData(jsonString: String) {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
@@ -373,8 +399,12 @@ class GraphFragment : Fragment() {
 
             counterLeanBack = obj.getString("counterLeanBack").toInt()
 
-            progressTime = obj.getString("sittingStraightTime").toFloat()
+            val progress = obj.getString("sittingStraightTime").toFloat()
 
+            if (progress != progressTimeBefore) {
+                progressTime++;
+                progressTimeBefore = progress
+            }
 
             val listdataBent = ArrayList<String>()
             val jArrayBent = obj.getJSONArray("arrayBentBack")
@@ -384,10 +414,11 @@ class GraphFragment : Fragment() {
                 }
             }
 
-            for(i in 0 until 24) {
-                if(listdataBent[i].toInt() != 0 && listdataBent[i].toInt() != val1[i]) {
-                        arrayBent[i] = arrayBent[i].toString().toInt() + listdataBent[i].toInt() - (val1[i] ?: 0)
-                        val1[i] = listdataBent[i].toInt()
+            for (i in 0 until 24) {
+                if (listdataBent[i].toInt() != 0 && listdataBent[i].toInt() != val1[i]) {
+                    arrayBent[i] =
+                        arrayBent[i].toString().toInt() + listdataBent[i].toInt() - (val1[i] ?: 0)
+                    val1[i] = listdataBent[i].toInt()
                 }
             }
 
@@ -399,9 +430,11 @@ class GraphFragment : Fragment() {
                 }
             }
 
-            for(i in 0 until 24) {
-                if(listdataLean[i].toInt() != 0 && listdataLean[i].toInt() != val2[i]) {
-                    arrayLeanBack[i] = arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i] ?: 0)
+            for (i in 0 until 24) {
+                if (listdataLean[i].toInt() != 0 && listdataLean[i].toInt() != val2[i]) {
+                    arrayLeanBack[i] =
+                        arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i]
+                            ?: 0)
                     val2[i] = listdataLean[i].toInt()
                 }
             }
@@ -414,9 +447,11 @@ class GraphFragment : Fragment() {
                 }
             }
 
-            for(i in 0 until 24) {
-                if(listdataDynamic[i].toInt() != 0 && listdataDynamic[i].toInt() != val3[i]) {
-                    arrayDynamic[i] = arrayDynamic[i].toString().toInt() + listdataDynamic[i].toInt() - (val3[i] ?: 0)
+            for (i in 0 until 24) {
+                if (listdataDynamic[i].toInt() != 0 && listdataDynamic[i].toInt() != val3[i]) {
+                    arrayDynamic[i] =
+                        arrayDynamic[i].toString().toInt() + listdataDynamic[i].toInt() - (val3[i]
+                            ?: 0)
                     val3[i] = listdataDynamic[i].toInt()
                 }
             }
@@ -437,13 +472,13 @@ class GraphFragment : Fragment() {
 
             showDialog()
 
-        } catch (e : JSONException) {
+        } catch (e: JSONException) {
             e.printStackTrace()
         }
     }
 
     private fun showDialog() {
-        if(statusPos == "krumm") {
+        if (statusPos == "krumm") {
 
             context?.let {
                 MaterialAlertDialogBuilder(it)
@@ -469,12 +504,16 @@ class GraphFragment : Fragment() {
                 .setNeutralButton(R.string.dialog_cancel) { dialog, which ->
                 }
                 .setPositiveButton(R.string.dialog_OK) { dialog, which ->
-                    timeMaxProgressBar = editTextView.text.toString().toFloat()
-                    binding.circularProgressBar.apply{
-                        progressMax = timeMaxProgressBar
-                        binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
+                    if (editTextView.text.toString().isEmpty()) {
+                    } else {
+                        timeMaxProgressBar = editTextView.text.toString().toFloat()
+                        binding.circularProgressBar.apply {
+                            progressMax = timeMaxProgressBar
+                            binding.textViewTime.text =
+                                getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                        }
+                        insertDataInDb()
                     }
-                    insertDataInDb()
                 }
                 .show()
         }
@@ -505,7 +544,7 @@ class GraphFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         context?.unregisterReceiver(gattUpdateReceiver)
-        if(isConnected) {
+        if (isConnected) {
             bluetoothLeService!!.disconnect()
         }
     }
@@ -522,15 +561,15 @@ class GraphFragment : Fragment() {
         zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        for(i in 0 until 24) {
+        for (i in 0 until 24) {
             arrayBentList.add(i, arrayBent[i])
         }
 
-        for(i in 0 until 24) {
+        for (i in 0 until 24) {
             arrayLeanList.add(i, arrayLeanBack[i])
         }
 
-        for(i in 0 until 24) {
+        for (i in 0 until 24) {
             arrayDynamicList.add(i, arrayDynamic[i])
         }
 
@@ -563,18 +602,19 @@ class GraphFragment : Fragment() {
         arrayDynamicList.clear()
     }
 
-    private fun loadDbData(date : String) {
+    private fun loadDbData(date: String) {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection(date).document("Daten")// alle Einträge abrufen
+        db.collection("users").document(uid).collection(date)
+            .document("Daten")// alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserData::class.java)
                     // Frage anzeigen
-                    if(data != null) {
+                    if (data != null) {
                         counterReminder = data!!.getCounterBentBack()
                         counterLeanBack = data!!.getCounterLeanBack()
                         progressTime = data!!.getProgressTime()

@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioButton
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -20,7 +21,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
 
-class SettingFragment: Fragment() {
+class SettingFragment : Fragment() {
 
     private var _binding: FragmentSettingBinding? = null
     private val viewModel: BasicViewModel by activityViewModels()
@@ -86,7 +87,7 @@ class SettingFragment: Fragment() {
 
         // To listen for a switch's checked/unchecked state changes
         binding.switchVibration.setOnCheckedChangeListener { buttonView, isChecked ->
-            if(isChecked){
+            if (isChecked) {
                 toast(getString(R.string.vibration_on))
 
                 statusVibration = true
@@ -100,8 +101,7 @@ class SettingFragment: Fragment() {
                     gattCharacteristic!!.value = obj.toString().toByteArray()
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
                 }
-            }
-            else {
+            } else {
                 toast(getString(R.string.vibration_off))
 
                 statusVibration = false
@@ -114,6 +114,50 @@ class SettingFragment: Fragment() {
                 if (gattCharacteristic != null) {
                     gattCharacteristic!!.value = obj.toString().toByteArray()
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                }
+            }
+        }
+
+        binding.toggleButton.addOnButtonCheckedListener { toggleButton, checkedId, isChecked ->
+            val obj = JSONObject()
+
+            if (isChecked) {
+                //Check which radio button is selected
+                when (checkedId) {
+                    R.id.buttonVibShort -> {
+
+                        //Sending the selected mode to the ESP via BLE
+                        obj.put("VIBLENGTH", 500)
+
+                        // send
+                        if (gattCharacteristic != null) {
+                            gattCharacteristic!!.value = obj.toString().toByteArray()
+                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                        }
+                    }
+
+                    R.id.buttonVibMedium -> {
+
+                        //Sending the selected mode to the ESP via BLE
+                        obj.put("VIBLENGTH", 1500)
+
+                        // send
+                        if (gattCharacteristic != null) {
+                            gattCharacteristic!!.value = obj.toString().toByteArray()
+                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                        }
+                    }
+
+                    R.id.buttonVibLong -> {
+
+                        obj.put("VIBLENGTH", 2500)
+
+                        // send
+                        if (gattCharacteristic != null) {
+                            gattCharacteristic!!.value = obj.toString().toByteArray()
+                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                        }
+                    }
                 }
             }
         }

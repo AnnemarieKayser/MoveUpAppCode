@@ -1,22 +1,26 @@
 package com.example.moveup
 
+import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
-import com.example.moveup.databinding.FragmentExerciseBinding
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.MediaController
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import com.example.moveup.databinding.FragmentExerciseBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
@@ -46,6 +50,10 @@ class ExerciseFragment : Fragment() {
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
+    // Create a storage reference from our app
+    private val storageReference : FirebaseStorage by lazy { FirebaseStorage.getInstance() }
+        // Create a storage reference from our app
+    private var storageRef = storageReference.reference
     private var data: UserDataExercise? = null
     private var counterChallenge = 0
 
@@ -53,6 +61,10 @@ class ExerciseFragment : Fragment() {
     private var time = 0
     private var hour = 0
     private var minute = 0
+
+    //MediaController
+    var mediaController : MediaController? = null
+    var r = Random()
 
 
     override fun onCreateView(
@@ -145,6 +157,53 @@ class ExerciseFragment : Fragment() {
             }
         }
 
+        if(mediaController == null){
+            mediaController = MediaController(activity)
+            mediaController!!.setAnchorView(binding.videoView)
+        }
+
+        binding.videoView.setMediaController(mediaController)
+
+        binding.videoView.setOnCompletionListener {
+            toast("fertig")
+            binding.videoView.start()
+        }
+
+
+        binding.buttonGetVideo.setOnClickListener {
+
+            val progressDialog = ProgressDialog(activity)
+            progressDialog.setTitle("Kotlin Progress Bar")
+            progressDialog.setMessage("Application is loading, please wait")
+            progressDialog.setCancelable(false)
+            progressDialog.show()
+
+            var videoID = r.nextInt(6 - 1) + 1
+            storageRef.child("Video/" + videoID + ".mp4").downloadUrl.addOnSuccessListener {
+
+                // Uri object to refer the
+                // resource from the videoUrl
+                // Uri object to refer the
+                // resource from the videoUrl
+                if(progressDialog.isShowing) {
+                    progressDialog.dismiss()
+                }
+
+                val uri: Uri = Uri.parse(it.toString())
+
+                binding.videoView.setVideoURI(uri)
+
+                binding.videoView.requestFocus()
+
+                binding.videoView.start()
+
+
+            }.addOnFailureListener {
+                // Handle any errors
+            }
+        }
+
+
         if(viewModel.getSavedDataChallenge()) {
             loadDbData()
         }
@@ -230,14 +289,15 @@ class ExerciseFragment : Fragment() {
 
             if(statusChallenge == "geschafft") {
 
+                counterChallenge++
+                insertDataInDb()
+
                 context?.let {
                     MaterialAlertDialogBuilder(it)
                         .setTitle(resources.getString(R.string.title_alert_challenge))
                         .setMessage(resources.getString(R.string.message_alert_dialog_challenge))
 
                         .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
-                            counterChallenge++
-                            insertDataInDb()
                         }
                         .show()
                 }

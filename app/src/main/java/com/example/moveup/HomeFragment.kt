@@ -300,26 +300,33 @@ class HomeFragment : Fragment() {
             bluetoothLeService!!.disconnect()
         }
     }
-    //ändern
+
     fun loadDbData() {
+
+        val kalender: Calendar = Calendar.getInstance()
+        val zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val date = zeitformat.format(kalender.time)
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection("Daten").document("1") // alle Einträge abrufen
+        db.collection("users").document(uid).collection(date).document("Daten") // alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserData::class.java)
                     // Frage anzeigen
-                    progressTime = data!!.getProgressTime()
-                    timeMaxProgressBar = data!!.getProgressTimeMax()
+                    if(data != null) {
+                        progressTime = data!!.getProgressTime()
+                        timeMaxProgressBar = data!!.getProgressTimeMax()
 
-                    binding.circularProgressBar.apply{
-                        progressMax = timeMaxProgressBar
-                        binding.textViewHomeProgressTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar )
+                        binding.circularProgressBar.apply {
+                            progressMax = timeMaxProgressBar
+                            binding.textViewHomeProgressTime.text =
+                                getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                        }
+                        binding.circularProgressBar.progress = progressTime
                     }
-                    binding.circularProgressBar.progress = progressTime
 
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)

@@ -99,5 +99,12 @@
     <string name="title_alert_challenge">Challenge</string>
     <string name="message_alert_dialog_challenge">Sie haben die Challenge geschafft!</string>
     <string name="btn_get_data">Daten Empfangen</string>
+    <string name="btn_select_date">Wähle eine Datum aus</string>
+    <string name="tv_practice">Übungen</string>
+    <string name="btn_get_video">Nächste Übung</string>
+    <string name="btn_short">Kurz</string>
+    <string name="btn_medium">Mittel</string>
+    <string name="btn_long">Lang</string>
+    <string name="tv_vibration_length">Länge der Vibration bei einer ungeraden Haltung:</string>
 
 </resources>
