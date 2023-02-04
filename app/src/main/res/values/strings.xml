@@ -15,7 +15,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="bt_not_available">Bluetooth nicht verfügbar</string>
-    <string name="btn_scan">Scan</string>
+    <string name="btn_scan">Suche moveUp-Sensor</string>
     <string name="ble_not_supported">BLE wird nicht unterstützt</string>
     <string name="btn_connect">Verbinden</string>
     <string name="tv_status">nicht verbunden</string>
@@ -76,8 +76,7 @@
     <string name="dialog_OK">Ok</string>
     <string name="tv_progress">Dein aktueller Stand heute: </string>
     <string name="tv_time_home">Status: %1$.0f / %2$.0f min.</string>
-    <string name="btn_config_home">Starte Konfiguration</string>
-    <string name="tv_config_home">Passe deinen Sensor auf deine individuelle Haltung an!</string>
+    <string name="btn_challenge_home">Starte Challenge</string>
     <string name="tv_status_ble">Stelle sicher, das dein moveUp-Sensor verbunden ist! \nAktueller Status: %1$s. </string>
     <string name="btn_connect_sensor">Verbindung herstellen</string>
     <string name="tv_start">Nehme nun eine gerade Haltung ein und drücke anschließend den Start-Button. Halte die gerade Haltung für 10 Sekunden.</string>
@@ -106,5 +105,8 @@
     <string name="btn_medium">Mittel</string>
     <string name="btn_long">Lang</string>
     <string name="tv_vibration_length">Länge der Vibration bei einer ungeraden Haltung:</string>
+    <string name="tv_challenge_completed">Erfolgreich abgeschlossene Challenges: %d</string>
+    <string name="tv_challenge_home">Starte eine neue Challenge!</string>
+    <string name="tv_bluetooth">Suche und Verbinde deinen moveUp-Sensor:</string>
 
 </resources>

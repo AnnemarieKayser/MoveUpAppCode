@@ -203,6 +203,7 @@ class ExerciseFragment : Fragment() {
             }
         }
 
+        binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
 
         if(viewModel.getSavedDataChallenge()) {
             loadDbData()
@@ -381,6 +382,8 @@ class ExerciseFragment : Fragment() {
                     data = task.result!!.toObject(UserDataExercise::class.java)
 
                     counterChallenge = data!!.getChallenge()
+
+                    binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
 
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)

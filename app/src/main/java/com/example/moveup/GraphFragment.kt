@@ -119,15 +119,19 @@ class GraphFragment : Fragment() {
         mHandler.postDelayed(mRunnable, 1000)
 
         binding.buttonData.setOnClickListener {
-            if (isReceivingData) {
-                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
-                isReceivingData = false
-                binding.buttonData.text = getString(R.string.btn_data_graph)
-            } else {
-                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
-                isReceivingData = true
-                binding.buttonData.text = getString(R.string.bt_data_off)
-            }
+            if (isConnected) {
+                if (isReceivingData) {
+                    bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
+                    isReceivingData = false
+                    binding.buttonData.text = getString(R.string.btn_data_graph)
+                } else {
+                    bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
+                    isReceivingData = true
+                    binding.buttonData.text = getString(R.string.bt_data_off)
+                }
+            }else {
+                toast("Verbinde zunächst den Sensor!")}
+
         }
 
         setUpAAChartView()
@@ -276,18 +280,6 @@ class GraphFragment : Fragment() {
 
     private fun configureChartSeriesArray(): Array<AASeriesElement> {
 
-        val kalender: Calendar = Calendar.getInstance()
-        val zeitformat = SimpleDateFormat("HH")
-        val hour = zeitformat.format(kalender.time)
-        time = hour.toInt()
-
-
-        if (counterReminder != counterReminderBefore || counterLeanBack != counterLeanBackBefore || progressTime != progressTimeBefore) {
-            insertDataInDb()
-            counterReminderBefore = counterReminder
-            counterLeanBackBefore = counterLeanBack
-            progressTimeBefore = progressTime
-        }
         return arrayOf(
             AASeriesElement()
                 .name("Aufrecht")
@@ -305,6 +297,16 @@ class GraphFragment : Fragment() {
     }
 
     private fun configureChartSeriesArrayAfterLoadDb(): Array<AASeriesElement> {
+
+        for (i in 0 until 24) {
+            arrayBent[i] = 0
+        }
+        for (i in 0 until 24) {
+            arrayLeanBack[i] = 0
+        }
+        for (i in 0 until 24) {
+            arrayDynamic[i] = 0
+        }
 
         return arrayOf(
             AASeriesElement()
@@ -402,7 +404,7 @@ class GraphFragment : Fragment() {
             val progress = obj.getString("sittingStraightTime").toFloat()
 
             if (progress != progressTimeBefore) {
-                progressTime++;
+                progressTime++
                 progressTimeBefore = progress
             }
 
@@ -456,10 +458,7 @@ class GraphFragment : Fragment() {
                 }
             }
 
-
-
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
-
 
             val seriesArr = configureChartSeriesArray()
             binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
@@ -471,6 +470,8 @@ class GraphFragment : Fragment() {
             }
 
             showDialog()
+
+            insertDataInDb()
 
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -554,11 +555,7 @@ class GraphFragment : Fragment() {
         viewModel.setSavedData(true)
 
         val kalender: Calendar = Calendar.getInstance()
-        var zeitformat = SimpleDateFormat("HH")
-        val hour = zeitformat.format(kalender.time)
-        time = hour.toInt()
-
-        zeitformat = SimpleDateFormat("yyyy-MM-dd")
+        val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
         for (i in 0 until 24) {
@@ -576,7 +573,6 @@ class GraphFragment : Fragment() {
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
-        userData.setHour(time)
         userData.setCounterBentBack(counterReminder)
         userData.setCounterLeanBack(counterLeanBack)
         userData.setProgressTime(progressTime)
@@ -635,10 +631,8 @@ class GraphFragment : Fragment() {
                             arrayDynamic[i] = arrayDynamicList[i]
                         }
 
-                        val seriesArr = configureChartSeriesArrayAfterLoadDb()
-                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(
-                            seriesArr
-                        )
+                        val seriesArr = configureChartSeriesArray()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
                         binding.circularProgressBar.apply {
                             progressMax = timeMaxProgressBar
@@ -647,6 +641,15 @@ class GraphFragment : Fragment() {
                         }
                         binding.circularProgressBar.progress = progressTime
 
+                    } else{
+                        val seriesArr = configureChartSeriesArrayAfterLoadDb()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+                        binding.circularProgressBar.apply {
+                            progressMax = 0F
+                            binding.textViewTime.text =
+                                getString(R.string.tv_time, 0F, 0F)
+                        }
+                        binding.circularProgressBar.progress = 0F
                     }
 
                 } else {

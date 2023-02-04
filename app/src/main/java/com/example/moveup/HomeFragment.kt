@@ -57,6 +57,9 @@ class HomeFragment : Fragment() {
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
     private var data: UserData? = null
+    private var dataSetting: UserDataSetting? = null
+    private var statusVibration = "VIBON"
+    private var vibrationLength = 1000
 
 
     override fun onCreateView(
@@ -107,8 +110,8 @@ class HomeFragment : Fragment() {
             }
         }
 
-        binding.buttonConfig.setOnClickListener {
-            findNavController().navigate(R.id.action_navigation_home_to_configFragment)
+        binding.buttonConfigStartChallengeHome.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
         }
 
         binding.buttonLogOutHome.setOnClickListener {
@@ -137,6 +140,8 @@ class HomeFragment : Fragment() {
                 obj.put("STARTMESSUNG", "AN")
                 obj.put("HOUR", hour)
                 obj.put("MINUTE", minute)
+                obj.put("VIBRATION", statusVibration)
+                obj.put("VIBLENGTH", vibrationLength)
                 binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
             }
             else{
@@ -326,6 +331,23 @@ class HomeFragment : Fragment() {
                                 getString(R.string.tv_time, progressTime, timeMaxProgressBar)
                         }
                         binding.circularProgressBar.progress = progressTime
+                    }
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
+
+        db.collection("users").document(uid).collection("Einstellungen").document("Vibration")// alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    dataSetting = task.result!!.toObject(UserDataSetting::class.java)
+
+                    if(data != null) {
+                        vibrationLength = dataSetting!!.getVibrationLength()
+                        statusVibration = dataSetting!!.getVibration()
                     }
 
                 } else {

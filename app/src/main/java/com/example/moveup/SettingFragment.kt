@@ -17,9 +17,12 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentSettingBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
+import java.text.SimpleDateFormat
+import java.util.*
 
 class SettingFragment : Fragment() {
 
@@ -31,16 +34,19 @@ class SettingFragment : Fragment() {
     private lateinit var scanner: BluetoothLeScanner
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
-    private var isReceivingData = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
-    private var statusVibration = true
+    private var statusVibration = "VIBON"
+    private var vibrationLength = 1000
 
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private var data: UserDataSetting? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,17 +90,19 @@ class SettingFragment : Fragment() {
             findNavController().navigate(R.id.action_navigation_setting_to_configFragment)
         }
 
+        loadDbData()
+
 
         // To listen for a switch's checked/unchecked state changes
         binding.switchVibration.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
                 toast(getString(R.string.vibration_on))
 
-                statusVibration = true
+                statusVibration = "VIBON"
 
                 val obj = JSONObject()
                 // Werte setzen
-                obj.put("VIBRATION", "VIBON")
+                obj.put("VIBRATION", statusVibration)
 
                 // Senden
                 if (gattCharacteristic != null) {
@@ -104,11 +112,11 @@ class SettingFragment : Fragment() {
             } else {
                 toast(getString(R.string.vibration_off))
 
-                statusVibration = false
+                statusVibration = "VIBOFF"
 
                 val obj = JSONObject()
                 // Werte setzen
-                obj.put("VIBRATION", "VIBOFF")
+                obj.put("VIBRATION", statusVibration)
 
                 // Senden
                 if (gattCharacteristic != null) {
@@ -116,6 +124,7 @@ class SettingFragment : Fragment() {
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
                 }
             }
+            insertDataInDb()
         }
 
         binding.toggleButton.addOnButtonCheckedListener { toggleButton, checkedId, isChecked ->
@@ -125,9 +134,9 @@ class SettingFragment : Fragment() {
                 //Check which radio button is selected
                 when (checkedId) {
                     R.id.buttonVibShort -> {
-
+                        vibrationLength = 500
                         //Sending the selected mode to the ESP via BLE
-                        obj.put("VIBLENGTH", 500)
+                        obj.put("VIBLENGTH", vibrationLength)
 
                         // send
                         if (gattCharacteristic != null) {
@@ -138,8 +147,10 @@ class SettingFragment : Fragment() {
 
                     R.id.buttonVibMedium -> {
 
+                        vibrationLength = 1000
+
                         //Sending the selected mode to the ESP via BLE
-                        obj.put("VIBLENGTH", 1500)
+                        obj.put("VIBLENGTH", vibrationLength)
 
                         // send
                         if (gattCharacteristic != null) {
@@ -150,7 +161,9 @@ class SettingFragment : Fragment() {
 
                     R.id.buttonVibLong -> {
 
-                        obj.put("VIBLENGTH", 2500)
+                        vibrationLength = 2000
+
+                        obj.put("VIBLENGTH", vibrationLength)
 
                         // send
                         if (gattCharacteristic != null) {
@@ -160,6 +173,7 @@ class SettingFragment : Fragment() {
                     }
                 }
             }
+            insertDataInDb()
         }
     }
 
@@ -275,4 +289,61 @@ class SettingFragment : Fragment() {
             bluetoothLeService!!.disconnect()
         }
     }
+
+    private fun insertDataInDb() {
+
+        //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        val userData = UserDataSetting()
+        userData.setVibration(statusVibration)
+        userData.setVibrationLength(vibrationLength)
+
+        // Schreibe Daten als Document in die Collection Messungen in DB;
+        // Eine id als Document Name wird automatisch vergeben
+        // Implementiere auch onSuccess und onFailure Listender
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Einstellungen").document("Vibration")
+            .set(userData)
+            .addOnSuccessListener { documentReference ->
+                toast(getString(R.string.save))
+            }
+            .addOnFailureListener { e ->
+                toast(getString(R.string.not_save))
+            }
+    }
+
+    fun loadDbData() {
+
+        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Einstellungen").document("Vibration")// alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    data = task.result!!.toObject(UserDataSetting::class.java)
+
+                    if(data != null) {
+                        vibrationLength = data!!.getVibrationLength()
+                        statusVibration = data!!.getVibration()
+
+                        binding.switchVibration.isChecked = statusVibration == "VIBON"
+
+                        if(vibrationLength == 500){
+                            binding.toggleButton.check(R.id.buttonVibShort)
+                        }
+                        if(vibrationLength == 1000){
+                            binding.toggleButton.check(R.id.buttonVibMedium)
+                        }
+                        if(vibrationLength == 2000){
+                            binding.toggleButton.check(R.id.buttonVibLong)
+                        }
+
+                    }
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
+    }
+
 }

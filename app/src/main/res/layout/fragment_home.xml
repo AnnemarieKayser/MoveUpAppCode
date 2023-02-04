@@ -129,25 +129,25 @@
                 android:layout_height="match_parent">
 
                 <Button
-                    android:id="@+id/buttonConfig"
+                    android:id="@+id/buttonConfigStartChallengeHome"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:backgroundTint="@color/blue_grey"
                     android:elevation="8dp"
-                    android:text="@string/btn_config_home"
+                    android:text="@string/btn_challenge_home"
                     app:cornerRadius="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.498"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewConfig" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewChallengeHome" />
 
                 <TextView
-                    android:id="@+id/textViewConfig"
+                    android:id="@+id/textViewChallengeHome"
                     android:layout_width="345dp"
-                    android:layout_height="54dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="@string/tv_config_home"
+                    android:text="@string/tv_challenge_home"
                     android:textAlignment="center"
                     android:textSize="20sp"
                     android:textStyle="italic"

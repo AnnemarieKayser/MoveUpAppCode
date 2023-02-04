@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_navigation_home_to_configFragment"
             app:destination="@id/navigation_config" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_exercise"
+            app:destination="@id/navigation_exercise" />
     </fragment>
     <fragment
         android:id="@+id/navigation_graph"

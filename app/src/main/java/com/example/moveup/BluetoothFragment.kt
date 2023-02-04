@@ -37,8 +37,6 @@ class BluetoothFragment : Fragment() {
     private var isScanning = false
     private var deviceIsSelected = false
     private var isConnected = false
-    private var isOnLED = false
-    private var isReceivingData = false
     private var discoveredDevices = arrayListOf<String>()
     private lateinit var selectedDevice: String
     private var bluetoothLeService: BluetoothLeService? = null
@@ -57,8 +55,6 @@ class BluetoothFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.buttonConnect.isEnabled = false
-        binding.buttonLed.isEnabled = false
-
 
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
@@ -92,39 +88,6 @@ class BluetoothFragment : Fragment() {
                 binding.textViewStatus.text = getString(R.string.bt_connect_off)
             } else {
                 bluetoothLeService!!.connect(viewModel.getDeviceAddress())
-            }
-        }
-
-        binding.buttonLed.setOnClickListener {
-
-            val obj = JSONObject()
-            isOnLED = !isOnLED
-            // Werte setzen
-            if (isOnLED) {
-                binding.buttonLed.text = getString(R.string.bt_led_off)
-                obj.put("LED", "H")
-            } else {
-                binding.buttonLed.text = getString(R.string.bt_led_on)
-                obj.put("LED", "L")
-            }
-
-            // Senden
-            if (gattCharacteristic != null) {
-                gattCharacteristic!!.value = obj.toString().toByteArray()
-                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-            }
-        }
-
-        binding.buttonDaten.setOnClickListener {
-            if (isReceivingData) {
-                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false);
-                isReceivingData = false;
-                binding.buttonDaten.text = getString(R.string.btn_data)
-
-            } else {
-                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true);
-                isReceivingData = true;
-                binding.buttonDaten.text = getString(R.string.bt_data_off)
             }
         }
 
@@ -215,7 +178,6 @@ class BluetoothFragment : Fragment() {
                 BluetoothLeService.ACTION_GATT_DISCONNECTED -> onDisconnect()
                 BluetoothLeService.ACTION_GATT_ESP32_CHARACTERISTIC_DISCOVERED
                 -> onGattCharacteristicDiscovered()
-                BluetoothLeService.ACTION_DATA_AVAILABLE -> onDataAvailable()
             }
         }
     }
@@ -223,7 +185,6 @@ class BluetoothFragment : Fragment() {
     private fun onConnect() {
         isConnected = true
         binding.textViewStatus.setText(R.string.connected)
-        binding.buttonLed.isEnabled = true
         Log.i(TAG, "connected")
         toast("connected")
     }
@@ -231,35 +192,12 @@ class BluetoothFragment : Fragment() {
     private fun onDisconnect() {
         isConnected = false
         binding.textViewStatus.setText(R.string.disconnected)
-        binding.buttonLed.isEnabled = false
         Log.i(TAG, "disconnected")
     }
 
     private fun onGattCharacteristicDiscovered() {
         gattCharacteristic = bluetoothLeService?.getGattCharacteristic()
     }
-
-    private fun onDataAvailable() {
-        // neue Daten verfügbar
-        Log.i(TAG, "Data available")
-        val bytes: ByteArray = gattCharacteristic!!.value
-        // byte[] to string
-        val s = String(bytes)
-        parseJSONData(s)
-    }
-
-    private fun parseJSONData(jsonString : String) {
-        try {
-            val obj = JSONObject(jsonString)
-            //extrahieren des Objektes data
-            binding.textViewLed.text = obj.getString("s").toString()
-            //Array Ausgabe
-
-        } catch (e : JSONException) {
-            e.printStackTrace()
-        }
-    }
-
 
     override fun onResume() {
         super.onResume()
