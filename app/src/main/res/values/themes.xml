@@ -54,11 +54,15 @@
 
     <style name="Widget.App.Button" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:textColor">@color/white</item>
+        <item name="elevation">10dp</item>
+
     </style>
 
     <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">5dp</item>
+        <item name="elevation">10dp</item>
+
     </style>
 
 

@@ -14,20 +14,6 @@
         android:layout_height="wrap_content"
         android:backgroundTint="#360E30">
 
-        <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
-            android:id="@+id/chartView"
-            android:layout_width="match_parent"
-            android:layout_height="350dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/buttonData">
-
-        </com.github.aachartmodel.aainfographics.aachartcreator.AAChartView>
-
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
@@ -85,7 +71,7 @@
             android:text="@string/tv_time"
             android:textColor="@color/white"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/chartView" />
+            app:layout_constraintTop_toBottomOf="@+id/cardViewGraph" />
 
         <Button
             android:id="@+id/buttonSetGoal"
@@ -96,13 +82,14 @@
             android:text="@string/btn_time_goal"
             app:layout_constraintEnd_toStartOf="@+id/textViewTime"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/chartView" />
+            app:layout_constraintTop_toBottomOf="@+id/cardViewGraph" />
 
         <Button
             android:id="@+id/buttonData"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="100dp"
+            android:elevation="50dp"
             android:text="@string/btn_data_graph"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.497"
@@ -126,11 +113,43 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:elevation="8dp"
             android:text="@string/btn_select_date"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewGraph"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="19dp"
+            android:layout_marginEnd="8dp"
+            app:cardBackgroundColor="#682842"
+            app:cardCornerRadius="5dp"
+            app:cardElevation="7dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/buttonData">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+
+                <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
+                    android:id="@+id/chartView"
+                    android:layout_width="match_parent"
+                    android:layout_height="350dp"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                </com.github.aachartmodel.aainfographics.aachartcreator.AAChartView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

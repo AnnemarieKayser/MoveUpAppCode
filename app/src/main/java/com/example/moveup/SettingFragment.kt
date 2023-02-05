@@ -103,7 +103,7 @@ class SettingFragment : Fragment() {
                 val obj = JSONObject()
                 // Werte setzen
                 obj.put("VIBRATION", statusVibration)
-
+                obj.put("VIBLENGTH", vibrationLength)
                 // Senden
                 if (gattCharacteristic != null) {
                     gattCharacteristic!!.value = obj.toString().toByteArray()

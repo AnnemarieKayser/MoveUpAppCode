@@ -329,9 +329,9 @@ class ExerciseFragment : Fragment() {
                 hour = timeFormat.toInt()
 
                 counterChallenge++
-                arrayChallenge[hour] = counterChallenge
-                binding.textViewChallengesCompleted.text =
-                    getString(R.string.tv_challenge_completed, counterChallenge)
+
+                arrayChallenge[hour] = arrayChallenge[hour].toString().toInt() + time
+                binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
                 binding.buttonStartChallenge.text = getString(R.string.btn_start_challenge)
                 insertDataInDb()
 
