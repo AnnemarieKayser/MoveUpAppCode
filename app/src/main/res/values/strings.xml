@@ -31,7 +31,7 @@
     <string name="bt_led_on">Led anschalten</string>
     <string name="led_off">Led aus</string>
     <string name="btn_data">Daten</string>
-    <string name="bt_data_off">keine daten</string>
+    <string name="bt_data_off">Aktualisierung beenden</string>
     <string name="tv_move_up">moveUp</string>
     <string name="chart_title">Tagesübersicht</string>
     <string name="title_alert_dialog">Hinweis</string>
@@ -85,7 +85,7 @@
     <string name="tv_config2">Nehme nun eine ungerade Haltung ein und drücke erneuert den Start-Button. Halte die Position für 10 Sekunden</string>
     <string name="btn_start_sensor">Starte die Messung!</string>
     <string name="btn_stop_sensor">Beende die Messung</string>
-    <string name="btn_data_graph">Daten empfangen</string>
+    <string name="btn_data_graph">Daten aktualisieren</string>
     <string name="tv_data">Daten</string>
     <string name="alert_dialog_message_wifi">Für die Nutzung dieser App wird W-lan benötigt. Bitte verbinde dein Smartphone zunächst mit dem W-lan.</string>
     <string name="alert_dialog_title_reminder">Erinnerung:</string>

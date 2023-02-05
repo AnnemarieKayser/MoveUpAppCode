@@ -51,11 +51,11 @@ class HomeFragment : Fragment() {
 
     //Circular-Progress-Bar
     private var timeMaxProgressBar = 0F
-    private var progressTime : Float = 0F
+    private var progressTime: Float = 0F
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var data: UserData? = null
     private var dataSetting: UserDataSetting? = null
     private var statusVibration = "VIBON"
@@ -102,10 +102,9 @@ class HomeFragment : Fragment() {
         mHandler.postDelayed(mRunnable, 1000)
 
         binding.buttonNavigate.setOnClickListener {
-            if(isConnected){
+            if (isConnected) {
                 findNavController().navigate(R.id.action_navigation_home_to_navigation_graph)
-            }
-            else {
+            } else {
                 findNavController().navigate(R.id.action_navigation_home_to_navigation_bluetooth)
             }
         }
@@ -122,37 +121,39 @@ class HomeFragment : Fragment() {
 
         binding.buttonStartSensor.setOnClickListener {
 
+            if (isConnected) {
+                val obj = JSONObject()
+                sensorStarted = !sensorStarted
 
-            val obj = JSONObject()
-            sensorStarted = !sensorStarted
+                val kalender: Calendar = Calendar.getInstance()
+                var zeitformat = SimpleDateFormat("HH")
+                var time = zeitformat.format(kalender.time)
+                hour = time.toInt()
 
-            val kalender: Calendar = Calendar.getInstance()
-            var zeitformat = SimpleDateFormat("HH")
-            var time = zeitformat.format(kalender.time)
-            hour = time.toInt()
+                zeitformat = SimpleDateFormat("mm")
+                time = zeitformat.format(kalender.time)
+                minute = time.toInt()
 
-            zeitformat = SimpleDateFormat("mm")
-            time = zeitformat.format(kalender.time)
-            minute = time.toInt()
+                // Werte setzen
+                if (sensorStarted) {
+                    obj.put("STARTMESSUNG", "AN")
+                    obj.put("HOUR", hour)
+                    obj.put("MINUTE", minute)
+                    obj.put("VIBRATION", statusVibration)
+                    obj.put("VIBLENGTH", vibrationLength)
+                    binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
+                } else {
+                    obj.put("STARTMESSUNG", "AUS")
+                    binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
+                }
 
-            // Werte setzen
-            if(sensorStarted){
-                obj.put("STARTMESSUNG", "AN")
-                obj.put("HOUR", hour)
-                obj.put("MINUTE", minute)
-                obj.put("VIBRATION", statusVibration)
-                obj.put("VIBLENGTH", vibrationLength)
-                binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
-            }
-            else{
-                obj.put("STARTMESSUNG", "AUS")
-                binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
-            }
-
-            // Senden
-            if (gattCharacteristic != null) {
-                gattCharacteristic!!.value = obj.toString().toByteArray()
-                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                // Senden
+                if (gattCharacteristic != null) {
+                    gattCharacteristic!!.value = obj.toString().toByteArray()
+                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                }
+            } else {
+                toast("verbinde zunächst den Sensor")
             }
         }
 
@@ -167,7 +168,8 @@ class HomeFragment : Fragment() {
 
             // Set background ProgressBar Color
             backgroundProgressBarColor = Color.GRAY
-            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+            backgroundProgressBarColorDirection =
+                CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
 
             // Set Width
             progressBarWidth = 7f // in DP
@@ -183,7 +185,7 @@ class HomeFragment : Fragment() {
         var zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        if(viewModel.getDate() != date) {
+        if (viewModel.getDate() != date) {
             viewModel.setSavedData(false)
             viewModel.setSavedDataChallenge(false)
             viewModel.setDate(date)
@@ -314,14 +316,15 @@ class HomeFragment : Fragment() {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection(date).document("Daten") // alle Einträge abrufen
+        db.collection("users").document(uid).collection(date)
+            .document("Daten") // alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserData::class.java)
                     // Frage anzeigen
-                    if(data != null) {
+                    if (data != null) {
                         progressTime = data!!.getProgressTime()
                         timeMaxProgressBar = data!!.getProgressTimeMax()
 
@@ -338,14 +341,15 @@ class HomeFragment : Fragment() {
                 }
             }
 
-        db.collection("users").document(uid).collection("Einstellungen").document("Vibration")// alle Einträge abrufen
+        db.collection("users").document(uid).collection("Einstellungen")
+            .document("Vibration")// alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     dataSetting = task.result!!.toObject(UserDataSetting::class.java)
 
-                    if(data != null) {
+                    if (data != null) {
                         vibrationLength = dataSetting!!.getVibrationLength()
                         statusVibration = dataSetting!!.getVibration()
                     }

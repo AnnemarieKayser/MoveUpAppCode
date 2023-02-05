@@ -57,8 +57,8 @@ class GraphFragment : Fragment() {
     private var counterReminderBefore = 0
     private var counterLeanBackBefore = 0
     private var progressTimeBefore = 0F
-    private var time = 0
     private var data: UserData? = null
+    private var dataExercise: UserDataExercise? = null
     private var isReceivingData = false
 
     //Circular-Progress-Bar
@@ -73,12 +73,18 @@ class GraphFragment : Fragment() {
     private var arrayLeanBack = arrayOfNulls<Any>(24)
     private var arrayDynamic = arrayOfNulls<Any>(24)
     private var arrayStraight = arrayOfNulls<Any>(24)
+    private var arrayChallenge= arrayOfNulls<Any>(24)
+    private var arrayMovementBreak = arrayOfNulls<Any>(24)
     private var arrayBentList = arrayListOf<Any?>()
+    private var arrayStraightList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
+    private var arrayChallengeDb = arrayListOf<Any?>()
+    private var arrayMovementBreakDb = arrayListOf<Any?>()
     private var val1 = arrayOfNulls<Int>(24)
     private var val2 = arrayOfNulls<Int>(24)
     private var val3 = arrayOfNulls<Int>(24)
+    private var val4 = arrayOfNulls<Int>(24)
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -134,7 +140,6 @@ class GraphFragment : Fragment() {
 
         }
 
-        setUpAAChartView()
 
         binding.circularProgressBar.apply {
             // Set Progress Max
@@ -209,6 +214,17 @@ class GraphFragment : Fragment() {
         for (i in 0 until 24) {
             arrayDynamic[i] = 0
         }
+        for (i in 0 until 24) {
+            arrayChallenge[i] = 0
+        }
+        for (i in 0 until 24) {
+            arrayMovementBreak[i] = 0
+        }
+        for (i in 0 until 24) {
+            arrayStraight[i] = 0
+        }
+
+        setUpAAChartView()
 
         //if(viewModel.getSavedData()) {
         val kalender: Calendar = Calendar.getInstance()
@@ -235,8 +251,8 @@ class GraphFragment : Fragment() {
             .setChartType(AAChartType.Column)
             .setXAxisVisible(true)
             .setTitle(getString(R.string.chart_title))
-            .setColorsTheme(arrayOf("#ce93d8", "#536dfe", "#7e57c2", "#81d4fa"))
-            .setStacking(AAChartStackingType.Percent)
+            .setColorsTheme(arrayOf("#ce93d8", "#536dfe", "#7e57c2", "#d3b8ae", "#CDBCCB", "#BC1A53"))
+            .setStacking(AAChartStackingType.Normal)
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
             .setBackgroundColor("#682842")
             .setAxesTextColor("#FFFFFF")
@@ -267,7 +283,7 @@ class GraphFragment : Fragment() {
                 "23:00",
                 "24:00"
             )
-            .setYAxisTitle("")
+            .setYAxisTitle("Minuten")
             .setScrollablePlotArea(
                 AAScrollablePlotArea()
                     .opacity(0F)
@@ -285,14 +301,37 @@ class GraphFragment : Fragment() {
                 .name("Aufrecht")
                 .data(arrayStraight as Array<Any>),
             AASeriesElement()
-                .name("zurückgelehnt")
+                .name("zurückgelehnte Phase")
                 .data(arrayLeanBack as Array<Any>),
             AASeriesElement()
-                .name("krumm")
+                .name("Erinnerung gerade Haltung")
                 .data(arrayBent as Array<Any>),
             AASeriesElement()
-                .name("dynamisch")
+                .name("dynamische Phase")
                 .data(arrayDynamic as Array<Any>),
+            AASeriesElement()
+                .name("Challenges")
+                .data(arrayChallenge as Array<Any>),
+            AASeriesElement()
+                .name("Bewegungspausen")
+                .data(arrayMovementBreak as Array<Any>),
+        )
+    }
+
+    private fun configureChartSeriesArrayExercise(): Array<AASeriesElement> {
+        for (i in 0 until 24) {
+            arrayChallenge[i] = 0
+        }
+        for (i in 0 until 24) {
+            arrayMovementBreak[i] = 0
+        }
+        return arrayOf(
+            AASeriesElement()
+                .name("Challenges")
+                .data(arrayChallenge as Array<Any>),
+            AASeriesElement()
+                .name("Bewegungspausen")
+                .data(arrayMovementBreak as Array<Any>),
         )
     }
 
@@ -307,6 +346,11 @@ class GraphFragment : Fragment() {
         for (i in 0 until 24) {
             arrayDynamic[i] = 0
         }
+        for (i in 0 until 24) {
+            arrayStraight[i] = 0
+        }
+
+
 
         return arrayOf(
             AASeriesElement()
@@ -321,6 +365,12 @@ class GraphFragment : Fragment() {
             AASeriesElement()
                 .name("dynamisch")
                 .data(arrayDynamic as Array<Any>),
+            AASeriesElement()
+                .name("Challenges")
+                .data(arrayChallenge as Array<Any>),
+            AASeriesElement()
+                .name("Bewegungspausen")
+                .data(arrayMovementBreak as Array<Any>),
         )
     }
 
@@ -394,7 +444,7 @@ class GraphFragment : Fragment() {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
-
+            toast("Daten empfangen")
             statusPos = obj.getString("statusPosition").toString()
 
             counterReminder = obj.getString("counterReminder").toInt()
@@ -435,8 +485,7 @@ class GraphFragment : Fragment() {
             for (i in 0 until 24) {
                 if (listdataLean[i].toInt() != 0 && listdataLean[i].toInt() != val2[i]) {
                     arrayLeanBack[i] =
-                        arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i]
-                            ?: 0)
+                        arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i] ?: 0)
                     val2[i] = listdataLean[i].toInt()
                 }
             }
@@ -452,11 +501,30 @@ class GraphFragment : Fragment() {
             for (i in 0 until 24) {
                 if (listdataDynamic[i].toInt() != 0 && listdataDynamic[i].toInt() != val3[i]) {
                     arrayDynamic[i] =
-                        arrayDynamic[i].toString().toInt() + listdataDynamic[i].toInt() - (val3[i]
-                            ?: 0)
+                        arrayDynamic[i].toString().toInt() + listdataDynamic[i].toInt() - (val3[i] ?: 0)
                     val3[i] = listdataDynamic[i].toInt()
                 }
             }
+
+
+
+            val listdataUpright = ArrayList<String>()
+            val jArrayUpright = obj.getJSONArray("arraySittingStraight")
+            if (jArrayUpright != null) {
+                for (i in 0 until jArrayUpright.length()) {
+                    listdataUpright.add(jArrayUpright.getString(i))
+                }
+            }
+
+            for (i in 0 until 24) {
+                if (listdataUpright[i].toInt() != 0 && listdataUpright[i].toInt() != val4[i]) {
+                    arrayStraight[i] =
+                        arrayStraight[i].toString().toInt() + listdataUpright[i].toInt() - (val4[i] ?: 0)
+                    val4[i] = listdataUpright[i].toInt()
+                }
+            }
+
+
 
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
 
@@ -570,6 +638,10 @@ class GraphFragment : Fragment() {
             arrayDynamicList.add(i, arrayDynamic[i])
         }
 
+        for (i in 0 until 24) {
+            arrayStraightList.add(i, arrayStraight[i])
+        }
+
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
@@ -580,6 +652,7 @@ class GraphFragment : Fragment() {
         userData.setArrayBentBack(arrayBentList)
         userData.setArrayLeanBack(arrayLeanList)
         userData.setArrayDynamicPhase(arrayDynamicList)
+        userData.setArrayUpright(arrayStraightList)
 
         // Schreibe Daten als Document in die Collection Messungen in DB;
         // Eine id als Document Name wird automatisch vergeben
@@ -596,6 +669,7 @@ class GraphFragment : Fragment() {
         arrayBentList.clear()
         arrayLeanList.clear()
         arrayDynamicList.clear()
+        arrayStraightList.clear()
     }
 
     private fun loadDbData(date: String) {
@@ -618,6 +692,7 @@ class GraphFragment : Fragment() {
                         arrayBentList = data!!.getArrayBentBack()
                         arrayLeanList = data!!.getArrayLeanBack()
                         arrayDynamicList = data!!.getArrayDynamicPhase()
+                        arrayStraightList = data!!.getArrayUpright()
 
                         for (i in 0 until 24) {
                             arrayBent[i] = arrayBentList[i]
@@ -629,6 +704,10 @@ class GraphFragment : Fragment() {
 
                         for (i in 0 until 24) {
                             arrayDynamic[i] = arrayDynamicList[i]
+                        }
+
+                        for (i in 0 until 24) {
+                            arrayStraight[i] = arrayStraightList[i]
                         }
 
                         val seriesArr = configureChartSeriesArray()
@@ -654,6 +733,38 @@ class GraphFragment : Fragment() {
 
                 } else {
                     Log.d(TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
+
+        //Daten zu Challenges und Bewegungspausen einlesen
+        db.collection("users").document(uid).collection(date).document("Challenge")// alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    dataExercise = task.result!!.toObject(UserDataExercise::class.java)
+
+                    if (data != null) {
+                        arrayChallengeDb = dataExercise!!.getChallengeArray()
+                        arrayMovementBreakDb = dataExercise!!.getMovementBreakArray()
+
+                        for (i in 0 until 24) {
+                            arrayChallenge[i] = arrayChallengeDb[i]
+                        }
+
+                        for (i in 0 until 24) {
+                            arrayMovementBreak[i] = arrayMovementBreakDb[i].toString().toInt() * 3
+                        }
+
+                        val seriesArr = configureChartSeriesArray()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+                    } else{
+                        val seriesArr = configureChartSeriesArrayExercise()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+                    }
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
 

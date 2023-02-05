@@ -26,6 +26,8 @@ import org.json.JSONObject
 import splitties.toast.toast
 import java.text.SimpleDateFormat
 import java.util.*
+import com.google.firebase.storage.ktx.component1
+import com.google.firebase.storage.ktx.component2
 
 
 class ExerciseFragment : Fragment() {
@@ -49,13 +51,18 @@ class ExerciseFragment : Fragment() {
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val db : FirebaseFirestore by lazy { FirebaseFirestore.getInstance()  }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+
     // Create a storage reference from our app
-    private val storageReference : FirebaseStorage by lazy { FirebaseStorage.getInstance() }
-        // Create a storage reference from our app
+    private val storageReference: FirebaseStorage by lazy { FirebaseStorage.getInstance() }
+
+    // Create a storage reference from our app
     private var storageRef = storageReference.reference
     private var data: UserDataExercise? = null
     private var counterChallenge = 0
+    private var counterMovementBreak = 0
+    private var arrayChallenge = arrayListOf<Any?>()
+    private var arrayMovementBreak = arrayListOf<Any?>()
 
     private var statusChallenge = ""
     private var time = 0
@@ -63,8 +70,10 @@ class ExerciseFragment : Fragment() {
     private var minute = 0
 
     //MediaController
-    var mediaController : MediaController? = null
+    var mediaController: MediaController? = null
     var r = Random()
+    var counterVideo = 1
+    private var counterVideoMax = 1
 
 
     override fun onCreateView(
@@ -157,7 +166,7 @@ class ExerciseFragment : Fragment() {
             }
         }
 
-        if(mediaController == null){
+        if (mediaController == null) {
             mediaController = MediaController(activity)
             mediaController!!.setAnchorView(binding.videoView)
         }
@@ -169,8 +178,26 @@ class ExerciseFragment : Fragment() {
             binding.videoView.start()
         }
 
+        // com.google.firebase.storage.ktx.component2
+        storageRef.child("Video").listAll()
+            .addOnSuccessListener { (items) ->
+                counterVideoMax = items.size
+                //toast(counterVideoMax.toString())
+            }
+            .addOnFailureListener {
+                // Uh-oh, an error occurred!
+            }
 
         binding.buttonGetVideo.setOnClickListener {
+
+            val kalender: Calendar = Calendar.getInstance()
+            val zeitformat = SimpleDateFormat("HH")
+            val timeFormat = zeitformat.format(kalender.time)
+            hour = timeFormat.toInt()
+
+            counterMovementBreak++
+            arrayMovementBreak[hour] = counterMovementBreak
+            insertDataInDb()
 
             val progressDialog = ProgressDialog(activity)
             progressDialog.setTitle("Kotlin Progress Bar")
@@ -178,17 +205,17 @@ class ExerciseFragment : Fragment() {
             progressDialog.setCancelable(false)
             progressDialog.show()
 
-            var videoID = r.nextInt(6 - 1) + 1
+            var videoID = r.nextInt(counterVideoMax - 1) + 1
             storageRef.child("Video/" + videoID + ".mp4").downloadUrl.addOnSuccessListener {
 
+                //counterVideo++
                 // Uri object to refer the
                 // resource from the videoUrl
                 // Uri object to refer the
                 // resource from the videoUrl
-                if(progressDialog.isShowing) {
+                if (progressDialog.isShowing) {
                     progressDialog.dismiss()
                 }
-
                 val uri: Uri = Uri.parse(it.toString())
 
                 binding.videoView.setVideoURI(uri)
@@ -197,19 +224,25 @@ class ExerciseFragment : Fragment() {
 
                 binding.videoView.start()
 
-
-            }.addOnFailureListener {
-                // Handle any errors
             }
+                .addOnFailureListener {
+                    // Handle any errors
+                }
         }
 
-        binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
+        binding.textViewChallengesCompleted.text =
+            getString(R.string.tv_challenge_completed, counterChallenge)
 
-        if(viewModel.getSavedDataChallenge()) {
-            loadDbData()
+        for (i in 0 until 24) {
+            arrayChallenge.add(i, 0)
         }
 
-   }
+        for (i in 0 until 24) {
+            arrayMovementBreak.add(i, 0)
+        }
+
+        loadDbData()
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -288,9 +321,18 @@ class ExerciseFragment : Fragment() {
 
             toast(statusChallenge)
 
-            if(statusChallenge == "geschafft") {
+            if (statusChallenge == "geschafft") {
+
+                val kalender: Calendar = Calendar.getInstance()
+                val zeitformat = SimpleDateFormat("HH")
+                val timeFormat = zeitformat.format(kalender.time)
+                hour = timeFormat.toInt()
 
                 counterChallenge++
+                arrayChallenge[hour] = counterChallenge
+                binding.textViewChallengesCompleted.text =
+                    getString(R.string.tv_challenge_completed, counterChallenge)
+                binding.buttonStartChallenge.text = getString(R.string.btn_start_challenge)
                 insertDataInDb()
 
                 context?.let {
@@ -351,6 +393,9 @@ class ExerciseFragment : Fragment() {
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserDataExercise()
         userData.setChallenge(counterChallenge)
+        userData.setChallengeArray(arrayChallenge)
+        userData.setMovementBreak(counterMovementBreak)
+        userData.setMovementBreakArray(arrayMovementBreak)
 
         // Schreibe Daten als Document in die Collection Messungen in DB;
         // Eine id als Document Name wird automatisch vergeben
@@ -374,16 +419,23 @@ class ExerciseFragment : Fragment() {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection(date).document("Challenge")// alle Einträge abrufen
+        db.collection("users").document(uid).collection(date)
+            .document("Challenge")// alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserDataExercise::class.java)
 
-                    counterChallenge = data!!.getChallenge()
+                    if (data != null) {
+                        counterChallenge = data!!.getChallenge()
+                        counterMovementBreak = data!!.getMovementBreak()
+                        arrayChallenge = data!!.getChallengeArray()
+                        arrayMovementBreak = data!!.getMovementBreakArray()
 
-                    binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
+                        binding.textViewChallengesCompleted.text =
+                            getString(R.string.tv_challenge_completed, counterChallenge)
+                    }
 
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)

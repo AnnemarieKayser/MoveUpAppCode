@@ -16,6 +16,8 @@ class UserData {
     private var arrayDynamicPhase = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
     private var arrayBentBack = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
     private var arrayLeanBack = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+    private var arrayUpright = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+
 
     // serverTimestamp soll automatisch vom Server gesetzt werden
     @ServerTimestamp
@@ -102,6 +104,14 @@ class UserData {
         this.arrayDynamicPhase = arrayDynamicPhase
     }
 
+    fun getArrayUpright(): ArrayList<Any?> {
+        return arrayUpright
+    }
+
+    fun setArrayUpright(arrayUpright: ArrayList<Any?>) {
+        this.arrayUpright= arrayUpright
+    }
+
 
     override fun toString(): String {
         return "UserData{" +
@@ -114,6 +124,7 @@ class UserData {
                 ", progressTimeMax='" + progressTimeMax +
                 ", arrayBentBack='" + arrayBentBack +
                 ", arrayLeanBack='" + arrayLeanBack +
+                ", arrayUpright='" + arrayUpright +
                 '}'
     }
 }
