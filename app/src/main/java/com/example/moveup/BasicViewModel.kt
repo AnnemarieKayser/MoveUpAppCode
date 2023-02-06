@@ -22,6 +22,10 @@ class BasicViewModel : ViewModel() {
     val date: LiveData<String>
         get() = _date
 
+    private val _timeChallenge = MutableLiveData<Int>()
+    val timeChallenge: LiveData<Int>
+        get() = _timeChallenge
+
     private val _savedData = MutableLiveData<Boolean>()
     val savedData: LiveData<Boolean>
         get() = _savedData
@@ -36,6 +40,7 @@ class BasicViewModel : ViewModel() {
         _date.value = ""
         _savedData.value = false
         _savedDataChallenge.value = false
+        _timeChallenge.value = 0
     }
 
 
@@ -64,6 +69,14 @@ class BasicViewModel : ViewModel() {
 
     fun setDate(date: String) {
         _date.value = date
+    }
+
+    fun getTimeChallenge(): Int {
+        return _timeChallenge.value!!
+    }
+
+    fun setTimeChallenge(timeChallenge: Int) {
+        _timeChallenge.value = timeChallenge
     }
 
     fun getSavedData(): Boolean {

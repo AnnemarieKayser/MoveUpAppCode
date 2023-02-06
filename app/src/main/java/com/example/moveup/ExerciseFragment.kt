@@ -65,6 +65,7 @@ class ExerciseFragment : Fragment() {
     private var arrayMovementBreak = arrayListOf<Any?>()
 
     private var statusChallenge = ""
+    private var statusReceived = false
     private var time = 0
     private var hour = 0
     private var minute = 0
@@ -133,19 +134,20 @@ class ExerciseFragment : Fragment() {
 
             val timeChallenge: String = binding.editTextChallengeTime.text.toString()
             time = timeChallenge.toInt()
+            viewModel.setTimeChallenge(time)
 
             if (timeChallenge.isEmpty()) {
                 binding.editTextChallengeTime.error = getString(R.string.required)
             } else {
                 if (isConnected) {
-
+                    statusReceived = false
                     val obj = JSONObject()
                     challengeStarted = !challengeStarted
                     // Werte setzen
                     if (challengeStarted) {
+                        obj.put("STARTMESSUNG", "AUS")
                         obj.put("CHALLENGE", "START")
                         obj.put("TIMECHALLENGE", time)
-                        obj.put("STARTMESSUNG", "AUS")
                         obj.put("HOUR", hour)
                         obj.put("MINUTE", minute)
                         binding.buttonStartChallenge.text = getString(R.string.btn_stop_challenge)
@@ -321,7 +323,19 @@ class ExerciseFragment : Fragment() {
 
             toast(statusChallenge)
 
-            if (statusChallenge == "geschafft") {
+            if (statusChallenge == "geschafft" && !statusReceived) {
+
+                statusReceived = true
+
+                val obj = JSONObject()
+                // Werte setzen
+                obj.put("CHALLENGERECEIVED", true)
+
+                // Senden
+                if (gattCharacteristic != null) {
+                    gattCharacteristic!!.value = obj.toString().toByteArray()
+                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                }
 
                 val kalender: Calendar = Calendar.getInstance()
                 val zeitformat = SimpleDateFormat("HH")
@@ -330,10 +344,11 @@ class ExerciseFragment : Fragment() {
 
                 counterChallenge++
 
-                arrayChallenge[hour] = arrayChallenge[hour].toString().toInt() + time
+                arrayChallenge[hour] = arrayChallenge[hour].toString().toInt() + viewModel.getTimeChallenge()
                 binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
                 binding.buttonStartChallenge.text = getString(R.string.btn_start_challenge)
                 insertDataInDb()
+                viewModel.setTimeChallenge(0)
 
                 context?.let {
                     MaterialAlertDialogBuilder(it)
@@ -341,6 +356,7 @@ class ExerciseFragment : Fragment() {
                         .setMessage(resources.getString(R.string.message_alert_dialog_challenge))
 
                         .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
+
                         }
                         .show()
                 }
