@@ -23,7 +23,7 @@ class UserDataSetting {
     }
 
     override fun toString(): String {
-        return "UserDataChallenge{" +
+        return "UserDataEinstellungen{" +
                 ", vibration='" + vibration +
                 ", vibrationLength='" + vibrationLength +
                 '}'

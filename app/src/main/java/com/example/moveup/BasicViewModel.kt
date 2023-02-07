@@ -6,10 +6,6 @@ import androidx.lifecycle.ViewModel
 
 class BasicViewModel : ViewModel() {
 
-    private var _someTestData = "Hello ViewModel"
-    val someTestData: String
-        get() = _someTestData
-
     private val _discoveredDevices = MutableLiveData<MutableList<String>>()
     val discoveredDevices: LiveData<MutableList<String>>
         get() = _discoveredDevices
@@ -26,20 +22,10 @@ class BasicViewModel : ViewModel() {
     val timeChallenge: LiveData<Int>
         get() = _timeChallenge
 
-    private val _savedData = MutableLiveData<Boolean>()
-    val savedData: LiveData<Boolean>
-        get() = _savedData
-
-    private val _savedDataChallenge = MutableLiveData<Boolean>()
-    val savedDataChallenge: LiveData<Boolean>
-        get() = _savedDataChallenge
-
     init {
         _discoveredDevices.value = mutableListOf()
         _deviceAddress.value = ""
         _date.value = ""
-        _savedData.value = false
-        _savedDataChallenge.value = false
         _timeChallenge.value = 0
     }
 
@@ -79,21 +65,6 @@ class BasicViewModel : ViewModel() {
         _timeChallenge.value = timeChallenge
     }
 
-    fun getSavedData(): Boolean {
-        return _savedData.value!!
-    }
-
-    fun setSavedData(savedData: Boolean) {
-        _savedData.value = savedData
-    }
-
-    fun getSavedDataChallenge(): Boolean {
-        return _savedDataChallenge.value!!
-    }
-
-    fun setSavedDataChallenge(savedDataChallenge: Boolean) {
-        _savedDataChallenge.value = savedDataChallenge
-    }
 
     // Extension Function, um Änderung in den Einträgen von Listen
     // dem Observer anzeigen zu können

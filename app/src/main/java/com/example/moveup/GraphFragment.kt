@@ -54,9 +54,6 @@ class GraphFragment : Fragment() {
     private var statusPos = "Haltung gerade"
     private var counterReminder = 0
     private var counterLeanBack = 0
-    private var counterReminderBefore = 0
-    private var counterLeanBackBefore = 0
-    private var progressTimeBefore = 0F
     private var data: UserData? = null
     private var dataExercise: UserDataExercise? = null
     private var isReceivingData = false
@@ -81,10 +78,7 @@ class GraphFragment : Fragment() {
     private var arrayDynamicList = arrayListOf<Any?>()
     private var arrayChallengeDb = arrayListOf<Any?>()
     private var arrayMovementBreakDb = arrayListOf<Any?>()
-    private var val1 = arrayOfNulls<Int>(24)
-    private var val2 = arrayOfNulls<Int>(24)
-    private var val3 = arrayOfNulls<Int>(24)
-    private var val4 = arrayOfNulls<Int>(24)
+
 
     //Datenbank
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -241,15 +235,12 @@ class GraphFragment : Fragment() {
 
         setUpAAChartView()
 
-        //if(viewModel.getSavedData()) {
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
         loadDbData(date)
         loadDbExerciseData(date)
-
-        //}
     }
 
     fun setUpAAChartView() {
@@ -651,8 +642,6 @@ class GraphFragment : Fragment() {
 
     private fun insertDataInDb() {
 
-        viewModel.setSavedData(true)
-
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
@@ -798,7 +787,7 @@ class GraphFragment : Fragment() {
                         }
 
                         for (i in 0 until 24) {
-                            arrayMovementBreak[i] = arrayMovementBreakDb[i].toString().toInt() * 3
+                            arrayMovementBreak[i] = arrayMovementBreakDb[i]
                         }
 
                         val seriesArr = configureChartSeriesArray()

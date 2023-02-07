@@ -124,6 +124,7 @@ class SettingFragment : Fragment() {
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
                 }
             }
+
             insertDataInDb()
         }
 

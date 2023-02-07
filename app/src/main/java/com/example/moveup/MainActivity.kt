@@ -20,6 +20,8 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.moveup.databinding.ActivityMainBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import splitties.toast.toast
 
 class MainActivity : AppCompatActivity() {
@@ -133,10 +135,8 @@ class MainActivity : AppCompatActivity() {
         val edit = sp.edit()
         val address = viewModel.getDeviceAddress()
         val day = viewModel.getDate()
-        val savedData = viewModel.getSavedData()
         edit.putString(DEVICEADDRESS, address)
         edit.putString("DAY", day)
-        edit.putBoolean("SAVEDDATA", savedData)
         edit.commit()
     }
 
@@ -146,7 +146,6 @@ class MainActivity : AppCompatActivity() {
         val sp = getPreferences(Context.MODE_PRIVATE)
         viewModel.setDeviceAddress(sp.getString(DEVICEADDRESS, "").toString())
         viewModel.setDate(sp.getString("DAY", "").toString())
-        viewModel.setSavedData(sp.getBoolean("SAVEDDATA", false))
     }
 
 }

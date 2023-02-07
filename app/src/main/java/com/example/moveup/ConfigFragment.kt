@@ -16,6 +16,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentConfigBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
@@ -36,12 +37,13 @@ class ConfigFragment : Fragment() {
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var statusVibration = true
-    private var threshold = -40F
+    private var threshold = -40
 
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -85,6 +87,7 @@ class ConfigFragment : Fragment() {
             val obj = JSONObject()
             // Werte setzen
             obj.put("STATUSKONFIG", true)
+            obj.put("START", true)
 
             // Senden
             if (gattCharacteristic != null) {
@@ -105,16 +108,6 @@ class ConfigFragment : Fragment() {
                     } else {
                         binding.textViewCountdown.text = getString(R.string.tv_countdown)
 
-                        val obj = JSONObject()
-                        // Werte setzen
-                        obj.put("STATUSKONFIG", false)
-
-                        // Senden
-                        if (gattCharacteristic != null) {
-                            gattCharacteristic!!.value = obj.toString().toByteArray()
-                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                        }
-
                     }
                 }
             }
@@ -126,6 +119,8 @@ class ConfigFragment : Fragment() {
             val obj = JSONObject()
             // Werte setzen
             obj.put("STATUSKONFIG2", true)
+            obj.put("START", true)
+
 
             // Senden
             if (gattCharacteristic != null) {
@@ -146,22 +141,45 @@ class ConfigFragment : Fragment() {
                     } else {
 
                         binding.textViewCountdown2.text = getString(R.string.tv_countdown)
-
-                        val obj = JSONObject()
-                        // Werte setzen
-                        obj.put("STATUSKONFIG2", false)
-
-                        // Senden
-                        if (gattCharacteristic != null) {
-                            gattCharacteristic!!.value = obj.toString().toByteArray()
-                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                        }
-
                     }
                 }
             }
             handler.postDelayed(counter, 0)
         }
+
+        binding.buttonGetConfigData.setOnClickListener {
+            if (isConnected) {
+                if (isReceivingData) {
+                    bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
+                    isReceivingData = false
+                    binding.buttonGetConfigData.text = getString(R.string.btn_data_graph)
+                } else {
+                    bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
+                    isReceivingData = true
+                    binding.buttonGetConfigData.text = getString(R.string.bt_data_off)
+                }
+            }
+        }
+    }
+
+    private fun insertDataInDb() {
+
+        //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        val userData = UserDataConfig()
+        userData.setThresholdBentBack(threshold)
+
+        // Schreibe Daten als Document in die Collection Messungen in DB;
+        // Eine id als Document Name wird automatisch vergeben
+        // Implementiere auch onSuccess und onFailure Listender
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Einstellungen").document("Konfiguration")
+            .set(userData)
+            .addOnSuccessListener { documentReference ->
+                toast(getString(R.string.save))
+            }
+            .addOnFailureListener { e ->
+                toast(getString(R.string.not_save))
+            }
     }
 
     override fun onDestroyView() {
@@ -246,9 +264,12 @@ class ConfigFragment : Fragment() {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
 
-            threshold = obj.getString("threshold").toFloat()
-            toast(threshold.toInt())
+            toast("Daten empfangen")
+            threshold = obj.getString("thresholdBentBack").toInt()
+            binding.textView2.text = threshold.toString()
+            toast(threshold.toString())
 
+            insertDataInDb()
 
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -285,4 +306,6 @@ class ConfigFragment : Fragment() {
             bluetoothLeService!!.disconnect()
         }
     }
+
+
 }

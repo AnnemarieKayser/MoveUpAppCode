@@ -75,6 +75,7 @@ class ExerciseFragment : Fragment() {
     var r = Random()
     var counterVideo = 1
     private var counterVideoMax = 1
+    private var counterShowVideo = 0
 
 
     override fun onCreateView(
@@ -177,7 +178,12 @@ class ExerciseFragment : Fragment() {
 
         binding.videoView.setOnCompletionListener {
             toast("fertig")
-            binding.videoView.start()
+            counterShowVideo++
+            if(counterShowVideo < 5) {
+                binding.videoView.start()
+            }else {
+                toast("Starte neues Video")
+            }
         }
 
         // com.google.firebase.storage.ktx.component2
@@ -190,6 +196,19 @@ class ExerciseFragment : Fragment() {
                 // Uh-oh, an error occurred!
             }
 
+        binding.buttonShowDirections.setOnClickListener {
+            context?.let {
+                MaterialAlertDialogBuilder(it)
+                    .setTitle(resources.getString(R.string.title_alert_dialog))
+                    .setMessage(resources.getString(R.string.message_alert_dialog_exercise))
+
+                    .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
+
+                    }
+                    .show()
+            }
+        }
+
         binding.buttonGetVideo.setOnClickListener {
 
             val kalender: Calendar = Calendar.getInstance()
@@ -197,6 +216,7 @@ class ExerciseFragment : Fragment() {
             val timeFormat = zeitformat.format(kalender.time)
             hour = timeFormat.toInt()
 
+            counterShowVideo = 0
             counterMovementBreak++
             arrayMovementBreak[hour] = counterMovementBreak
             insertDataInDb()
@@ -400,7 +420,6 @@ class ExerciseFragment : Fragment() {
 
     private fun insertDataInDb() {
 
-        viewModel.setSavedDataChallenge(true)
 
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")

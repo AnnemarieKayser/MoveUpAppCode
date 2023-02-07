@@ -58,8 +58,10 @@ class HomeFragment : Fragment() {
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var data: UserData? = null
     private var dataSetting: UserDataSetting? = null
+    private var dataConfig: UserDataConfig? = null
     private var statusVibration = "VIBON"
     private var vibrationLength = 1000
+    private var threshold = -50
 
 
     override fun onCreateView(
@@ -91,6 +93,7 @@ class HomeFragment : Fragment() {
 
 
         loadDbData()
+        loadDbDataConfig()
 
         //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
         mRunnable = Runnable {
@@ -141,6 +144,7 @@ class HomeFragment : Fragment() {
                     obj.put("MINUTE", minute)
                     obj.put("VIBRATION", statusVibration)
                     obj.put("VIBLENGTH", vibrationLength)
+                    obj.put("THRESHOLDBENTBACK", threshold)
                     binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
                 } else {
                     obj.put("STARTMESSUNG", "AUS")
@@ -181,15 +185,6 @@ class HomeFragment : Fragment() {
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
 
-        val kalender: Calendar = Calendar.getInstance()
-        var zeitformat = SimpleDateFormat("yyyy-MM-dd")
-        val date = zeitformat.format(kalender.time)
-
-        if (viewModel.getDate() != date) {
-            viewModel.setSavedData(false)
-            viewModel.setSavedDataChallenge(false)
-            viewModel.setDate(date)
-        }
     }
 
     // BluetoothLE Service Anbindung
@@ -307,8 +302,28 @@ class HomeFragment : Fragment() {
             bluetoothLeService!!.disconnect()
         }
     }
+    private fun loadDbDataConfig() {
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Einstellungen")
+            .document("Konfiguration")// alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    dataConfig = task.result!!.toObject(UserDataConfig::class.java)
 
-    fun loadDbData() {
+                    if (data != null) {
+                        threshold = dataConfig!!.getThresholdBentBack()
+                        toast(threshold.toString())
+                    }
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
+    }
+
+    private fun loadDbData() {
 
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")

@@ -108,5 +108,10 @@
     <string name="tv_challenge_completed">Erfolgreich abgeschlossene Challenges: %d</string>
     <string name="tv_challenge_home">Starte eine neue Challenge!</string>
     <string name="tv_bluetooth">Suche und Verbinde deinen moveUp-Sensor:</string>
+    <string name="tv_start_exercise">Starte eine neue Bewegungspause! </string>
+    <string name="message_alert_dialog_exercise">Eine Übung wird für insgesamt 1 Minute angezeigt.
+        Wiederhole diese Übung so oft wie möglich in dieser Zeit. Anschließend kannst du die
+        nächste Übung über den Button starten. Die Videos werden zufällig ausgweählt. Mache so viele Übungen wie du möchtest. Viel Erfolg!</string>
+    <string name="btn_show_directions">Erklärung Bewegungspause</string>
 
 </resources>
