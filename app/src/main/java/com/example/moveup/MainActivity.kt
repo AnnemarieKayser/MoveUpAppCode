@@ -2,6 +2,7 @@ package com.example.moveup
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
@@ -89,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.mainActionBluetooth -> {
-                findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.action_navigation_home_to_navigation_bluetooth)
+                findNavController(R.id.nav_host_fragment_content_main).navigate(R.id.navigation_bluetooth)
                 true
             }
             else -> super.onOptionsItemSelected(item)

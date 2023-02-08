@@ -22,6 +22,8 @@ class BasicViewModel : ViewModel() {
     val timeChallenge: LiveData<Int>
         get() = _timeChallenge
 
+
+
     init {
         _discoveredDevices.value = mutableListOf()
         _deviceAddress.value = ""
@@ -64,6 +66,7 @@ class BasicViewModel : ViewModel() {
     fun setTimeChallenge(timeChallenge: Int) {
         _timeChallenge.value = timeChallenge
     }
+
 
 
     // Extension Function, um Änderung in den Einträgen von Listen

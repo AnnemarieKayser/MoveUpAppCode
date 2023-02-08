@@ -113,5 +113,11 @@
         Wiederhole diese Übung so oft wie möglich in dieser Zeit. Anschließend kannst du die
         nächste Übung über den Button starten. Die Videos werden zufällig ausgweählt. Mache so viele Übungen wie du möchtest. Viel Erfolg!</string>
     <string name="btn_show_directions">Erklärung Bewegungspause</string>
+    <string name="tv_get_data_config">Aktiviere den Empfang von Daten, damit die Konfigurationsdaten des moveUp Sensors eingelesen werden können.</string>
+    <string name="tv_config_3">Nehme nun eine zurückgelehnte Haltung ein und starte die Messung. Halte die Position für 10 Sekunden.</string>
+    <string name="message_alert_dialog_config">Konfiguriere den Sensor zunächst auf deine individuelle Haltung nachdem du ihn an deiner Kleidung befestigt hast. Wenn du die Position des Sensors änderst, führe erneurt eine Konfiguration durch, um bestmögliche Ergebnisse zu erhalten!</string>
+    <string name="change_to_config">Wechsel zur Konfiguration</string>
+    <string name="tv_home_intro">Befestige den moveUp-Sensor am Rücken an deinem Oberteil. Konfiguriere den Sensor anschließend und starte die Messung!</string>
+    <string name="change_to_exercise">Bewegungspause starten</string>
 
 </resources>

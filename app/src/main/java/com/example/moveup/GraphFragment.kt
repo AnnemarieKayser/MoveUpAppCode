@@ -120,35 +120,22 @@ class GraphFragment : Fragment() {
 
         binding.buttonData.setOnClickListener {
             if (isConnected) {
-                if (isReceivingData) {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
+                isReceivingData = true
+                binding.buttonData.text = getString(R.string.bt_data_off)
+
+                mRunnable = Runnable {
                     bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
                     isReceivingData = false
                     binding.buttonData.text = getString(R.string.btn_data_graph)
-                } else {
-                    bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
-                    isReceivingData = true
-                    binding.buttonData.text = getString(R.string.bt_data_off)
-                    //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
-                    /*mRunnable = Runnable {
-                        insertDataInDb()
-                    }
-                    mHandler.postDelayed(mRunnable, 3000)*/
-
-                    mRunnable = Runnable {
-                        insertDataInDb()
-                        bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
-                        isReceivingData = false
-                        binding.buttonData.text = getString(R.string.btn_data_graph)
-                    }
-                    mHandler.postDelayed(mRunnable, 10000)
-
+                    insertDataInDb()
                 }
+                mHandler.postDelayed(mRunnable, 3000)
+
             } else {
                 toast("Verbinde zunächst den Sensor!")
             }
-
         }
-
 
         binding.circularProgressBar.apply {
             // Set Progress Max
@@ -468,13 +455,6 @@ class GraphFragment : Fragment() {
 
             counterLeanBack = obj.getString("counterLeanBack").toInt()
 
-            //val progress = obj.getString("sittingStraightTime").toFloat()
-
-
-            /*if (progress != progressTimeBefore) {
-
-                progressTimeBefore = progress
-            }*/
 
             val listdataBent = ArrayList<String>()
             val jArrayBent = obj.getJSONArray("arrayBentBack")
@@ -503,7 +483,7 @@ class GraphFragment : Fragment() {
 
             for (i in 0 until 24) {
                 if (listdataLean[i].toInt() != 0) {
-                    arrayLeanBack[i] = listdataLean[i].toInt()
+                    arrayLeanBack[i] = listdataLean[i].toInt()/2
                     //arrayLeanBack[i] = arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i] ?: 0)
                     //val2[i] = listdataLean[i].toInt()
                 }
@@ -651,7 +631,7 @@ class GraphFragment : Fragment() {
         }
 
         for (i in 0 until 24) {
-            arrayLeanList.add(i, arrayLeanBack[i])
+            arrayLeanList.add(i, arrayLeanBack[i].toString().toInt()/2)
         }
 
         for (i in 0 until 24) {

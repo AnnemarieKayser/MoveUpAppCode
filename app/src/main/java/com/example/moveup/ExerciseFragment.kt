@@ -11,9 +11,13 @@ import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.MediaController
+import android.widget.Toolbar
+import androidx.core.view.get
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentExerciseBinding
@@ -21,13 +25,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.component1
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
 import java.text.SimpleDateFormat
 import java.util.*
-import com.google.firebase.storage.ktx.component1
-import com.google.firebase.storage.ktx.component2
 
 
 class ExerciseFragment : Fragment() {
@@ -76,7 +79,7 @@ class ExerciseFragment : Fragment() {
     var counterVideo = 1
     private var counterVideoMax = 1
     private var counterShowVideo = 0
-
+    var myMenu: Menu? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -89,6 +92,7 @@ class ExerciseFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        (requireActivity() as MainActivity).supportActionBar!!.hide()
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
         scanner = mBluetooth.bluetoothLeScanner
@@ -230,7 +234,6 @@ class ExerciseFragment : Fragment() {
             var videoID = r.nextInt(counterVideoMax - 1) + 1
             storageRef.child("Video/" + videoID + ".mp4").downloadUrl.addOnSuccessListener {
 
-                //counterVideo++
                 // Uri object to refer the
                 // resource from the videoUrl
                 // Uri object to refer the

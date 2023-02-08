@@ -23,6 +23,7 @@ import org.json.JSONObject
 import splitties.toast.toast
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 class SettingFragment : Fragment() {
 
@@ -34,13 +35,18 @@ class SettingFragment : Fragment() {
     private lateinit var scanner: BluetoothLeScanner
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
+    private var isReceivingData = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var statusVibration = "VIBON"
     private var vibrationLength = 1000
 
+    //Konfiguration
+    private var thresholdBent = -50
+    private var thresholdLean = 30
 
-    private val mHandler: Handler by lazy { Handler() }
+    //Countdown
+    private val handler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -61,6 +67,11 @@ class SettingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.buttonStart.isEnabled = false
+        binding.buttonStart2.isEnabled = false
+        binding.buttonStart3.isEnabled = false
+        binding.buttonGetConfigData.isEnabled = false
+
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
         scanner = mBluetooth.bluetoothLeScanner
@@ -78,7 +89,13 @@ class SettingFragment : Fragment() {
                 bluetoothLeService!!.connect(viewModel.getDeviceAddress());
             }
         }
-        mHandler.postDelayed(mRunnable, 1000)
+        handler.postDelayed(mRunnable, 1000)
+
+        binding.buttonConnectSensor.setOnClickListener {
+            bluetoothLeService!!.connect(viewModel.getDeviceAddress())
+        }
+
+        loadDbData()
 
         binding.buttonLogOut.setOnClickListener {
             mFirebaseAuth.signOut()
@@ -86,45 +103,31 @@ class SettingFragment : Fragment() {
             getActivity()?.startActivity(intent)
         }
 
-        binding.buttonConfig.setOnClickListener {
-            findNavController().navigate(R.id.action_navigation_setting_to_configFragment)
-        }
-
-        loadDbData()
-
-
         // To listen for a switch's checked/unchecked state changes
         binding.switchVibration.setOnCheckedChangeListener { buttonView, isChecked ->
+            val obj = JSONObject()
+
             if (isChecked) {
                 toast(getString(R.string.vibration_on))
-
+                vibrationLength = 1000
                 statusVibration = "VIBON"
 
-                val obj = JSONObject()
-                // Werte setzen
-                obj.put("VIBRATION", statusVibration)
-                obj.put("VIBLENGTH", vibrationLength)
-                // Senden
-                if (gattCharacteristic != null) {
-                    gattCharacteristic!!.value = obj.toString().toByteArray()
-                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                }
             } else {
                 toast(getString(R.string.vibration_off))
-
                 statusVibration = "VIBOFF"
+                vibrationLength = 0
+            }
 
-                val obj = JSONObject()
-                // Werte setzen
-                obj.put("VIBRATION", statusVibration)
+            obj.put("VIBRATION", statusVibration)
+            obj.put("VIBLENGTH", vibrationLength)
 
+            if(isConnected) {
                 // Senden
                 if (gattCharacteristic != null) {
                     gattCharacteristic!!.value = obj.toString().toByteArray()
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
                 }
             }
-
             insertDataInDb()
         }
 
@@ -136,47 +139,168 @@ class SettingFragment : Fragment() {
                 when (checkedId) {
                     R.id.buttonVibShort -> {
                         vibrationLength = 500
-                        //Sending the selected mode to the ESP via BLE
-                        obj.put("VIBLENGTH", vibrationLength)
-
-                        // send
-                        if (gattCharacteristic != null) {
-                            gattCharacteristic!!.value = obj.toString().toByteArray()
-                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                        }
                     }
 
                     R.id.buttonVibMedium -> {
-
                         vibrationLength = 1000
-
-                        //Sending the selected mode to the ESP via BLE
-                        obj.put("VIBLENGTH", vibrationLength)
-
-                        // send
-                        if (gattCharacteristic != null) {
-                            gattCharacteristic!!.value = obj.toString().toByteArray()
-                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                        }
                     }
 
                     R.id.buttonVibLong -> {
-
                         vibrationLength = 2000
-
-                        obj.put("VIBLENGTH", vibrationLength)
-
-                        // send
-                        if (gattCharacteristic != null) {
-                            gattCharacteristic!!.value = obj.toString().toByteArray()
-                            bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                        }
                     }
+                }
+            }
+            obj.put("VIBLENGTH", vibrationLength)
+
+            if(isConnected) {
+                // send
+                if (gattCharacteristic != null) {
+                    gattCharacteristic!!.value = obj.toString().toByteArray()
+                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
                 }
             }
             insertDataInDb()
         }
+
+        binding.buttonStart.setOnClickListener {
+
+            handler.removeCallbacksAndMessages(null)
+
+
+            val obj = JSONObject()
+            // Werte setzen
+            obj.put("STATUSKONFIG", true)
+            obj.put("START", true)
+            obj.put("STARTMESSUNG", "AUS")
+
+            // Senden
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+            }
+
+            //Start Countdown
+            val n = AtomicInteger(10) // initialisiere mit 10.
+            val counter: Runnable = object : Runnable {
+                override fun run() {
+                    //Textfeld mit aktuellem n füllen.
+                    binding.textViewCountdown.text = Integer.toString(n.get())
+                    //wenn n >= 1, sekündlich runterzählen
+                    if (n.getAndDecrement() >= 1) {
+                        handler.postDelayed(this, 1000)
+                    } else {
+                        binding.textViewCountdown.text = getString(R.string.tv_countdown)
+                        binding.buttonStart2.isEnabled = true
+
+                    }
+                }
+            }
+            handler.postDelayed(counter, 0)
+        }
+
+        binding.buttonStart2.setOnClickListener {
+
+            handler.removeCallbacksAndMessages(null)
+
+            val obj = JSONObject()
+            // Werte setzen
+            obj.put("STATUSKONFIG2", true)
+            obj.put("START", true)
+
+
+            // Senden
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+            }
+
+            //Start Countdown
+            val n = AtomicInteger(10) // initialisiere mit 10.
+            val counter: Runnable = object : Runnable {
+                override fun run() {
+                    //Textfeld mit aktuellem n füllen.
+                    binding.textViewCountdown2.text = Integer.toString(n.get())
+                    //wenn n >= 1, sekündlich runterzählen
+                    if (n.getAndDecrement() >= 1) {
+                        handler.postDelayed(this, 1000)
+                    } else {
+
+                        binding.textViewCountdown2.text = getString(R.string.tv_countdown)
+                        binding.buttonStart3.isEnabled = true
+                    }
+                }
+            }
+            handler.postDelayed(counter, 0)
+        }
+
+        binding.buttonStart3.setOnClickListener {
+
+            handler.removeCallbacksAndMessages(null)
+
+            val obj = JSONObject()
+            // Werte setzen
+            obj.put("STATUSKONFIG3", true)
+            obj.put("START", true)
+
+
+            // Senden
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+            }
+
+            //Start Countdown
+            val n = AtomicInteger(10) // initialisiere mit 10.
+            val counter: Runnable = object : Runnable {
+                override fun run() {
+                    //Textfeld mit aktuellem n füllen.
+                    binding.textViewCountdown3.text = Integer.toString(n.get())
+                    //wenn n >= 1, sekündlich runterzählen
+                    if (n.getAndDecrement() >= 1) {
+                        handler.postDelayed(this,1000)
+                    } else {
+
+                        binding.textViewCountdown3.text = getString(R.string.tv_countdown)
+                    }
+                }
+            }
+            handler.postDelayed(counter, 0)
+        }
+
+        binding.buttonGetConfigData.setOnClickListener {
+            if (isReceivingData) {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
+                isReceivingData = false
+                binding.buttonGetConfigData.text = getString(R.string.btn_data_graph)
+            } else {
+                bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
+                isReceivingData = true
+                binding.buttonGetConfigData.text = getString(R.string.bt_data_off)
+            }
+        }
     }
+
+    private fun insertConfigDataInDb() {
+
+        //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        val userData = UserDataConfig()
+        userData.setThresholdBentBack(thresholdBent)
+        userData.setThresholdLeanBack(thresholdLean)
+
+        // Schreibe Daten als Document in die Collection Messungen in DB;
+        // Eine id als Document Name wird automatisch vergeben
+        // Implementiere auch onSuccess und onFailure Listender
+        val uid = mFirebaseAuth.currentUser!!.uid
+        db.collection("users").document(uid).collection("Einstellungen").document("Konfiguration")
+            .set(userData)
+            .addOnSuccessListener { documentReference ->
+                toast(getString(R.string.save))
+            }
+            .addOnFailureListener { e ->
+                toast(getString(R.string.not_save))
+            }
+    }
+
 
 
     // BluetoothLE Service Anbindung
@@ -222,6 +346,10 @@ class SettingFragment : Fragment() {
         //binding.textViewConnected.setText(R.string.connected)
         Log.i(ContentValues.TAG, "connected")
         toast("connected")
+        binding.textViewStatusBLE.text = getString(R.string.tv_status_ble, "verbunden")
+        binding.buttonConnectSensor.visibility = View.INVISIBLE
+        binding.buttonStart.isEnabled = true
+        binding.buttonGetConfigData.isEnabled = true
     }
 
     private fun onDisconnect() {
@@ -229,6 +357,12 @@ class SettingFragment : Fragment() {
         //binding.textViewConnected.setText(R.string.disconnected)
         Log.i(ContentValues.TAG, "disconnected")
         toast("disconnected")
+        binding.buttonConnectSensor.visibility = View.VISIBLE
+        binding.buttonStart.isEnabled = false
+        binding.buttonStart2.isEnabled = false
+        binding.buttonStart3.isEnabled = false
+        binding.buttonGetConfigData.isEnabled = false
+        binding.textViewStatusBLE.text = getString(R.string.tv_status_ble, "Nicht verbunden")
     }
 
     private fun onGattCharacteristicDiscovered() {
@@ -248,6 +382,14 @@ class SettingFragment : Fragment() {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
+
+
+            toast("Daten empfangen")
+            thresholdBent = obj.getString("thresholdBentBack").toInt()
+            thresholdLean = obj.getString("thresholdLeanBack").toInt()
+            toast(thresholdBent.toString() + thresholdLean.toString())
+
+            insertConfigDataInDb()
 
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -289,6 +431,7 @@ class SettingFragment : Fragment() {
         if (isConnected) {
             bluetoothLeService!!.disconnect()
         }
+        handler.removeCallbacksAndMessages(null)
     }
 
     private fun insertDataInDb() {
@@ -316,29 +459,29 @@ class SettingFragment : Fragment() {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
         val uid = mFirebaseAuth.currentUser!!.uid
-        db.collection("users").document(uid).collection("Einstellungen").document("Vibration")// alle Einträge abrufen
+        db.collection("users").document(uid).collection("Einstellungen")
+            .document("Vibration")// alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserDataSetting::class.java)
 
-                    if(data != null) {
+                    if (data != null) {
                         vibrationLength = data!!.getVibrationLength()
                         statusVibration = data!!.getVibration()
 
                         binding.switchVibration.isChecked = statusVibration == "VIBON"
 
-                        if(vibrationLength == 500){
+                        if (vibrationLength == 500) {
                             binding.toggleButton.check(R.id.buttonVibShort)
                         }
-                        if(vibrationLength == 1000){
+                        if (vibrationLength == 1000) {
                             binding.toggleButton.check(R.id.buttonVibMedium)
                         }
-                        if(vibrationLength == 2000){
+                        if (vibrationLength == 2000) {
                             binding.toggleButton.check(R.id.buttonVibLong)
                         }
-
                     }
 
                 } else {

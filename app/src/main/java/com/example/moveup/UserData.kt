@@ -9,7 +9,7 @@ class UserData {
 
     private var counterLeanBack = 0
     private var progressTime = 0F
-    private var progressTimeMax = 0F
+    private var progressTimeMax = 60F
     private var hour = 0
     private var counterBentBack = 0
     private var counterStraightBack = 0

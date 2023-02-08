@@ -17,11 +17,11 @@
             android:id="@+id/action_navigation_home_to_navigation_graph"
             app:destination="@id/navigation_graph" />
         <action
-            android:id="@+id/action_navigation_home_to_configFragment"
-            app:destination="@id/navigation_config" />
-        <action
             android:id="@+id/action_navigation_home_to_navigation_exercise"
             app:destination="@id/navigation_exercise" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_setting"
+            app:destination="@id/navigation_setting" />
     </fragment>
     <fragment
         android:id="@+id/navigation_graph"
@@ -33,9 +33,6 @@
         android:name="com.example.moveup.SettingFragment"
         android:label="Einstellungen"
         tools:layout="@layout/fragment_setting">
-        <action
-            android:id="@+id/action_navigation_setting_to_configFragment"
-            app:destination="@id/navigation_config" />
     </fragment>
     <fragment
         android:id="@+id/navigation_bluetooth"
@@ -47,11 +44,6 @@
         android:name="com.example.moveup.LoginTabFragment"
         android:label="login_tab_fragment"
         tools:layout="@layout/login_tab_fragment" />
-    <fragment
-        android:id="@+id/navigation_config"
-        android:name="com.example.moveup.ConfigFragment"
-        android:label="Konfiguration"
-        tools:layout="@layout/fragment_config" />
     <fragment
         android:id="@+id/navigation_exercise"
         android:name="com.example.moveup.ExerciseFragment"
