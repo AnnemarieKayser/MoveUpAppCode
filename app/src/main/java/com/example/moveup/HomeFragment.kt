@@ -59,6 +59,7 @@ class HomeFragment : Fragment() {
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var data: UserData? = null
+    private var dataExercise: UserDataExercise? = null
     private var dataSetting: UserDataSetting? = null
     private var dataConfig: UserDataConfig? = null
     private var statusVibration = "VIBON"
@@ -74,6 +75,8 @@ class HomeFragment : Fragment() {
     private var arrayBentList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
+    private var arrayMovementBreakDb = arrayListOf<Any?>()
+    private var arrayMovementBreak = arrayOfNulls<Any>(24)
     private var counterReminder = 0
     private var counterLeanBack = 0
 
@@ -144,11 +147,61 @@ class HomeFragment : Fragment() {
                     isReceivingData = false
                     binding.buttonGetDataHome.text = getString(R.string.btn_data_graph)
                     insertDataInDb()
+
+                    val kalender: Calendar = Calendar.getInstance()
+                    var zeitformat = SimpleDateFormat("HH")
+                    var time = zeitformat.format(kalender.time)
+                    hour = time.toInt()
+
+                    if (arrayDynamic[hour].toString().toInt() < 3 && arrayMovementBreak[hour].toString().toInt() == 0) {
+
+                        if (arrayStraight[hour].toString().toInt() > 30) {
+
+                            context?.let {
+                                MaterialAlertDialogBuilder(it)
+                                    .setTitle(resources.getString(R.string.title_alert_dialog))
+                                    .setMessage(resources.getString(R.string.message_alert_dialog))
+                                    .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
+
+                                    }
+                                    .setPositiveButton(resources.getString(R.string.change_to_exercise)) { dialog, which ->
+                                        findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
+                                    }
+                                    .show()
+                            }
+                        } else {
+                            if (arrayDynamic[hour - 1].toString().toInt() < 3 && arrayMovementBreak[hour - 1].toString().toInt() == 0) {
+
+                                if (arrayStraight[hour - 1].toString().toInt() > 30) {
+                                    context?.let {
+                                        MaterialAlertDialogBuilder(it)
+                                            .setTitle(resources.getString(R.string.title_alert_dialog))
+                                            .setMessage(resources.getString(R.string.message_alert_dialog))
+                                            .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
+
+                                            }
+                                            .setPositiveButton(resources.getString(R.string.change_to_exercise)) { dialog, which ->
+                                                findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
+                                            }
+                                            .show()
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                mHandler.postDelayed(mRunnable, 3000)
+                mHandler.postDelayed(mRunnable, 2000)
             } else {
                 toast("verbinde zunächst den Sensor")
             }
+        }
+
+        if (viewModel.getStatusMeasurment()) {
+            binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
+            sensorStarted = viewModel.getStatusMeasurment()
+        } else {
+            binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
+            sensorStarted = viewModel.getStatusMeasurment()
         }
 
         binding.buttonStartSensor.setOnClickListener {
@@ -168,6 +221,16 @@ class HomeFragment : Fragment() {
                 }
             } else {
                 if (isConnected) {
+
+                    val kalender: Calendar = Calendar.getInstance()
+                    var zeitformat = SimpleDateFormat("HH")
+                    var time = zeitformat.format(kalender.time)
+                    hour = time.toInt()
+
+                    zeitformat = SimpleDateFormat("mm")
+                    time = zeitformat.format(kalender.time)
+                    minute = time.toInt()
+
                     val obj = JSONObject()
                     sensorStarted = !sensorStarted
 
@@ -186,6 +249,8 @@ class HomeFragment : Fragment() {
                         obj.put("STARTMESSUNG", "AUS")
                         binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
                     }
+
+                    viewModel.setStatusMeasurment(sensorStarted)
 
                     // Senden
                     if (gattCharacteristic != null) {
@@ -367,11 +432,17 @@ class HomeFragment : Fragment() {
                 progressTime += arrayStraight[i].toString().toInt()
             }
 
-            binding.circularProgressBar.progress = progressTime
-
-            binding.circularProgressBar.apply {
+            if (progressTime <= timeMaxProgressBar) {
+                binding.circularProgressBar.progress = progressTime
                 binding.textViewHomeProgressTime.text =
-                    getString(R.string.tv_time, progressTime, progressMax)
+                    getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                binding.textViewProgress.text = getString(R.string.tv_progress)
+
+            } else {
+                binding.circularProgressBar.progress = timeMaxProgressBar
+                binding.textViewHomeProgressTime.text =
+                    getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                binding.textViewProgress.text = getString(R.string.tv_progress_done)
             }
 
             val kalender: Calendar = Calendar.getInstance()
@@ -383,21 +454,6 @@ class HomeFragment : Fragment() {
             time = zeitformat.format(kalender.time)
             minute = time.toInt()
 
-            if(arrayDynamic[hour].toString().toInt() < 3 && arrayStraight[hour].toString().toInt() > 30){
-
-                context?.let {
-                    MaterialAlertDialogBuilder(it)
-                        .setTitle(resources.getString(R.string.title_alert_dialog))
-                        .setMessage(resources.getString(R.string.message_alert_dialog))
-                        .setNegativeButton(resources.getString(R.string.dialog_cancel)){ dialog, which ->
-
-                        }
-                        .setPositiveButton(resources.getString(R.string.change_to_exercise)) { dialog, which ->
-                            findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
-                        }
-                        .show()
-                }
-            }
 
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -432,6 +488,7 @@ class HomeFragment : Fragment() {
         context?.unbindService(serviceConnection)
         bluetoothLeService = null
         toast("onDestroy")
+        mHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onPause() {
@@ -455,11 +512,11 @@ class HomeFragment : Fragment() {
         }
 
         for (i in 0 until 24) {
-            arrayBentList.add(i, arrayBent[i].toString().toInt() / 2)
+            arrayBentList.add(i, arrayBent[i])
         }
 
         for (i in 0 until 24) {
-            arrayLeanList.add(i, arrayLeanBack[i].toString().toInt() / 2)
+            arrayLeanList.add(i, arrayLeanBack[i])
         }
 
         for (i in 0 until 24) {
@@ -544,23 +601,30 @@ class HomeFragment : Fragment() {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
-                        binding.circularProgressBar.apply {
-                            progressMax = timeMaxProgressBar
+                        if (progressTime < timeMaxProgressBar) {
+                            binding.circularProgressBar.apply {
+                                progressMax = timeMaxProgressBar
+                            }
                             binding.textViewHomeProgressTime.text =
                                 getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                            binding.circularProgressBar.progress = progressTime
+                            binding.textViewProgress.text = getString(R.string.tv_progress)
+                        } else {
+                            binding.textViewHomeProgressTime.text =
+                                getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                            binding.circularProgressBar.progress = timeMaxProgressBar
+                            binding.textViewProgress.text = getString(R.string.tv_progress_done)
                         }
-                        binding.circularProgressBar.progress = progressTime
-
                         arrayBentList.clear()
                         arrayLeanList.clear()
                         arrayDynamicList.clear()
                         arrayStraightList.clear()
                     }
-
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
+
 
         db.collection("users").document(uid).collection("Einstellungen")
             .document("Vibration")// alle Einträge abrufen
@@ -597,6 +661,30 @@ class HomeFragment : Fragment() {
                         thresholdLean = dataConfig!!.getThresholdLeanBack()
                         toast(thresholdBent.toString() + thresholdLean.toString())
 
+                    }
+
+                } else {
+                    Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
+                }
+            }
+
+        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        //val uid = mFirebaseAuth.currentUser!!.uid
+        //Daten zu Challenges und Bewegungspausen einlesen
+        db.collection("users").document(uid).collection(date)
+            .document("Challenge")// alle Einträge abrufen
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Datenbankantwort in Objektvariable speichern
+                    dataExercise = task.result!!.toObject(UserDataExercise::class.java)
+
+                    if (dataExercise != null) {
+                        arrayMovementBreakDb = dataExercise!!.getMovementBreakArray()
+
+                        for (i in 0 until 24) {
+                            arrayMovementBreak[i] = arrayMovementBreakDb[i]
+                        }
                     }
 
                 } else {

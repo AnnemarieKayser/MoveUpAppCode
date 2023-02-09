@@ -473,6 +473,7 @@ class SettingFragment : Fragment() {
 
                         binding.switchVibration.isChecked = statusVibration == "VIBON"
 
+
                         if (vibrationLength == 500) {
                             binding.toggleButton.check(R.id.buttonVibShort)
                         }

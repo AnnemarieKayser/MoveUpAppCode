@@ -136,8 +136,10 @@ class MainActivity : AppCompatActivity() {
         val edit = sp.edit()
         val address = viewModel.getDeviceAddress()
         val day = viewModel.getDate()
+        val statusMeas = viewModel.getStatusMeasurment()
         edit.putString(DEVICEADDRESS, address)
         edit.putString("DAY", day)
+        edit.putBoolean("STATUSMEAS", statusMeas)
         edit.commit()
     }
 
@@ -147,6 +149,7 @@ class MainActivity : AppCompatActivity() {
         val sp = getPreferences(Context.MODE_PRIVATE)
         viewModel.setDeviceAddress(sp.getString(DEVICEADDRESS, "").toString())
         viewModel.setDate(sp.getString("DAY", "").toString())
+        viewModel.setStatusMeasurment(sp.getBoolean("STATUSMEAS", false))
     }
 
 }

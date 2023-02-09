@@ -71,13 +71,15 @@ class GraphFragment : Fragment() {
     private var arrayDynamic = arrayOfNulls<Any>(24)
     private var arrayStraight = arrayOfNulls<Any>(24)
     private var arrayChallenge = arrayOfNulls<Any>(24)
-    private var arrayMovementBreak = arrayOfNulls<Any>(24)
     private var arrayBentList = arrayListOf<Any?>()
     private var arrayStraightList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
     private var arrayChallengeDb = arrayListOf<Any?>()
     private var arrayMovementBreakDb = arrayListOf<Any?>()
+    private var arrayMovementBreak = arrayOfNulls<Any>(24)
+    private var counterChallenge = 0
+    private var counterMovement = 0
 
 
     //Datenbank
@@ -130,7 +132,7 @@ class GraphFragment : Fragment() {
                     binding.buttonData.text = getString(R.string.btn_data_graph)
                     insertDataInDb()
                 }
-                mHandler.postDelayed(mRunnable, 3000)
+                mHandler.postDelayed(mRunnable, 2000)
 
             } else {
                 toast("Verbinde zunächst den Sensor!")
@@ -292,7 +294,7 @@ class GraphFragment : Fragment() {
                 AAScrollablePlotArea()
                     .opacity(0F)
                     .minWidth(400)
-                    .scrollPositionX(20f)
+                    .scrollPositionX(1f)
             )
             .build()
     }
@@ -464,12 +466,9 @@ class GraphFragment : Fragment() {
                 }
             }
 
-            // (&& listdataBent[i].toInt() != val1[i]) ausschnitt aus if schleife
             for (i in 0 until 24) {
                 if (listdataBent[i].toInt() != 0) {
-                    arrayBent[i] = listdataBent[i].toInt()/2
-                    //arrayBent[i] = arrayBent[i].toString().toInt() + (listdataBent[i].toInt() / 2) - (val1[i] ?: 0)
-                    //val1[i] = listdataBent[i].toInt() / 2
+                    arrayBent[i] = listdataBent[i].toInt() / 2
                 }
             }
 
@@ -483,9 +482,7 @@ class GraphFragment : Fragment() {
 
             for (i in 0 until 24) {
                 if (listdataLean[i].toInt() != 0) {
-                    arrayLeanBack[i] = listdataLean[i].toInt()/2
-                    //arrayLeanBack[i] = arrayLeanBack[i].toString().toInt() + listdataLean[i].toInt() - (val2[i] ?: 0)
-                    //val2[i] = listdataLean[i].toInt()
+                    arrayLeanBack[i] = listdataLean[i].toInt() / 2
                 }
             }
 
@@ -500,8 +497,7 @@ class GraphFragment : Fragment() {
             for (i in 0 until 24) {
                 if (listdataDynamic[i].toInt() != 0) {
                     arrayDynamic[i] = listdataDynamic[i].toInt()
-                    //arrayDynamic[i] = arrayDynamic[i].toString().toInt() + listdataDynamic[i].toInt() - (val3[i] ?: 0)
-                    //val3[i] = listdataDynamic[i].toInt()
+
                 }
             }
 
@@ -517,8 +513,6 @@ class GraphFragment : Fragment() {
             for (i in 0 until 24) {
                 if (listdataUpright[i].toInt() != 0) {
                     arrayStraight[i] = listdataUpright[i].toInt()
-                    // arrayStraight[i] = arrayStraight[i].toString().toInt() + listdataUpright[i].toInt() - (val4[i] ?: 0)
-                    //val4[i] = listdataUpright[i].toInt()
                 }
             }
             progressTime = 0F
@@ -527,20 +521,34 @@ class GraphFragment : Fragment() {
                 progressTime += arrayStraight[i].toString().toInt()
             }
 
+            for (i in 0 until 24) {
+                counterReminder += arrayBent[i].toString().toInt()
+            }
+
+            for (i in 0 until 24) {
+                counterLeanBack += arrayLeanBack[i].toString().toInt()
+            }
 
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
+            binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
+
 
             val seriesArr = configureChartSeriesArray()
             binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
-            binding.circularProgressBar.progress = progressTime
+            if (progressTime < timeMaxProgressBar) {
+                binding.circularProgressBar.progress = progressTime
+                binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                binding.textViewProgressUpright.text = getString(R.string.tv_progress)
 
-            binding.circularProgressBar.apply {
-                binding.textViewTime.text = getString(R.string.tv_time, progressTime, progressMax)
+            } else {
+                binding.circularProgressBar.progress = timeMaxProgressBar
+                binding.textViewTime.text =
+                    getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                binding.textViewProgressUpright.text = getString(R.string.tv_progress_done)
             }
 
             showDialog()
-
 
 
         } catch (e: JSONException) {
@@ -580,8 +588,15 @@ class GraphFragment : Fragment() {
                         timeMaxProgressBar = editTextView.text.toString().toFloat()
                         binding.circularProgressBar.apply {
                             progressMax = timeMaxProgressBar
-                            binding.textViewTime.text =
-                                getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                        }
+                        if(progressTime < timeMaxProgressBar) {
+                            binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                            binding.textViewProgressUpright.text = getString(R.string.tv_progress)
+
+                        } else{
+                            binding.circularProgressBar.progress = timeMaxProgressBar
+                            binding.textViewProgressUpright.text = getString(R.string.tv_progress_done)
+                            binding.textViewTime.text = getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
                         }
                         insertDataInDb()
                     }
@@ -610,6 +625,7 @@ class GraphFragment : Fragment() {
         bluetoothLeService!!.close()
         context?.unbindService(serviceConnection)
         bluetoothLeService = null
+        mHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onPause() {
@@ -627,11 +643,11 @@ class GraphFragment : Fragment() {
         val date = zeitformat.format(kalender.time)
 
         for (i in 0 until 24) {
-            arrayBentList.add(i, arrayBent[i].toString().toInt() / 2)
+            arrayBentList.add(i, arrayBent[i])
         }
 
         for (i in 0 until 24) {
-            arrayLeanList.add(i, arrayLeanBack[i].toString().toInt()/2)
+            arrayLeanList.add(i, arrayLeanBack[i])
         }
 
         for (i in 0 until 24) {
@@ -710,48 +726,58 @@ class GraphFragment : Fragment() {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
-                        mRunnable = Runnable {
-                            val seriesArr = configureChartSeriesArray()
-                            binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
-                        }
-                        mHandler.postDelayed(mRunnable, 1000)
-
-
                         arrayBentList.clear()
                         arrayLeanList.clear()
                         arrayDynamicList.clear()
                         arrayStraightList.clear()
 
-                        binding.circularProgressBar.apply {
-                            progressMax = timeMaxProgressBar
-                            binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                        for (i in 0 until 24) {
+                            counterReminder += arrayBent[i].toString().toInt()
                         }
-                        binding.circularProgressBar.progress = progressTime
+
+                        for (i in 0 until 24) {
+                            counterLeanBack += arrayLeanBack[i].toString().toInt()
+                        }
+
+
+                        binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
+                        binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
+
+
+
+                        if (progressTime < timeMaxProgressBar) {
+                            binding.circularProgressBar.apply {
+                                progressMax = timeMaxProgressBar
+                            }
+                            binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                            binding.textViewProgressUpright.text = getString(R.string.tv_progress)
+                            binding.circularProgressBar.progress = progressTime
+                        } else {
+                            binding.circularProgressBar.progress = timeMaxProgressBar
+                            binding.textViewTime.text = getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                            binding.textViewProgressUpright.text = getString(R.string.tv_progress_done)
+                        }
 
                     } else {
-                        val seriesArr = configureChartSeriesArrayAfterLoadDb()
-                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(
-                            seriesArr
-                        )
                         binding.circularProgressBar.apply {
                             progressMax = 0F
                             binding.textViewTime.text = getString(R.string.tv_time, 0F, 0F)
                         }
                         binding.circularProgressBar.progress = 0F
                     }
+                    val seriesArr = configureChartSeriesArray()
+                    binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
                 } else {
                     Log.d(TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
-    }
-
-    private fun loadDbExerciseData(date: String) {
 
         // Einstiegspunkt für die Abfrage ist users/uid/Messungen
-        val uid = mFirebaseAuth.currentUser!!.uid
+        //val uid = mFirebaseAuth.currentUser!!.uid
         //Daten zu Challenges und Bewegungspausen einlesen
-        db.collection("users").document(uid).collection(date).document("Challenge")// alle Einträge abrufen
+        db.collection("users").document(uid).collection(date)
+            .document("Challenge")// alle Einträge abrufen
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -761,6 +787,8 @@ class GraphFragment : Fragment() {
                     if (dataExercise != null) {
                         arrayChallengeDb = dataExercise!!.getChallengeArray()
                         arrayMovementBreakDb = dataExercise!!.getMovementBreakArray()
+                        counterChallenge = dataExercise!!.getChallenge()
+                        counterMovement = dataExercise!!.getMovementBreak()
 
                         for (i in 0 until 24) {
                             arrayChallenge[i] = arrayChallengeDb[i]
@@ -770,20 +798,20 @@ class GraphFragment : Fragment() {
                             arrayMovementBreak[i] = arrayMovementBreakDb[i]
                         }
 
-                        val seriesArr = configureChartSeriesArray()
-                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
-
-                    } else {
-                        val seriesArr = configureChartSeriesArrayExercise()
-                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(
-                            seriesArr
-                        )
+                        binding.textViewChallengeGraph.text = getString(R.string.tv_counter_challenge, counterChallenge)
+                        binding.textViewMovementGraph.text = getString(R.string.tv_counter_movement, counterMovement)
                     }
+
+                    val seriesArr = configureChartSeriesArray()
+                    binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
+    }
+
+    private fun loadDbExerciseData(date: String) {
 
     }
 }

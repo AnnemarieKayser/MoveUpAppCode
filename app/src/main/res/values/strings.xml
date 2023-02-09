@@ -1,42 +1,24 @@
 <resources>
     <string name="app_name">moveUP</string>
     <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_home">Home</string>
     <string name="title_graph">Graph</string>
     <string name="title_setting">Einstellungen</string>
     <string name="mainActionBluetooth">Bluetooth</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="bt_not_available">Bluetooth nicht verfügbar</string>
-    <string name="btn_scan">Suche moveUp-Sensor</string>
-    <string name="ble_not_supported">BLE wird nicht unterstützt</string>
-    <string name="btn_connect">Verbinden</string>
-    <string name="tv_status">nicht verbunden</string>
-    <string name="btn_led">Led anschalten</string>
-    <string name="tv_led">Led aus</string>
-    <string name="tv_selected_device">Kein Gerät ausgewählt</string>
-    <string name="bt_connect_off">Gerät nicht verbunden</string>
-    <string name="btn_scan_stop">Scan stopp</string>
-    <string name="connected">verbunden</string>
-    <string name="disconnected">nicht verbunden</string>
-    <string name="bt_led_off">Led ausschalten</string>
-    <string name="led_on">Led an</string>
-    <string name="bt_led_on">Led anschalten</string>
-    <string name="led_off">Led aus</string>
-    <string name="btn_data">Daten</string>
-    <string name="bt_data_off">Aktualisierung beenden</string>
-    <string name="tv_move_up">moveUp</string>
-    <string name="chart_title">Tagesübersicht</string>
-    <string name="title_alert_dialog">Hinweis</string>
-    <string name="message_alert_dialog">Sie haben sich über einen längeren Zeitraum nicht bewegt. Zeit für eine kleine Bewegungspause</string>
-    <string name="accept">Ok</string>
+
+    <!-- HomeFragment-->
+    <string name="tv_connect_sensor_main">Verbinde deinen moveUp-Sensor \nund starte in den Tag!</string>
+    <string name="tv_main_go">Let\'s do this!</string>
+    <string name="sensor_connected">Dein Sensor ist verbunden! Schau dir deine Statistik an.</string>
+    <string name="btn_sensor_connected">Statistik öffnen</string>
+    <string name="tv_time_home">Status: %1$.0f / %2$.0f min.</string>
+    <string name="btn_start_sensor">Starte die Messung!</string>
+    <string name="btn_stop_sensor">Beende die Messung</string>
+    <string name="tv_home_intro">Befestige den moveUp-Sensor am Rücken an deinem Oberteil. Konfiguriere den Sensor anschließend und starte die Messung!</string>
+    <string name="change_to_exercise">Bewegungspause starten</string>
+    <string name="tv_progress_done">"Du hast dein heutiges Tagesziel an gerader Haltung erreicht!"</string>
+
+    <!-- LoginInFragment-->
     <string name="tv_welcome">Willkommen in der moveUp-App</string>
     <string name="hint_email">Email</string>
     <string name="hint_passwort">Passwort</string>
@@ -57,25 +39,29 @@
     <string name="button_cancel">Abbrechen</string>
     <string name="fill_out">Email eintragen</string>
     <string name="btn_log_out">Ausloggen</string>
-    <string name="tv_connect_sensor_main">Verbinde deinen moveUp-Sensor \nund starte in den Tag!</string>
-    <string name="tv_main_go">Let\'s do this!</string>
-    <string name="tv_vibration">Vibration</string>
-    <string name="vibration_on">Vibration an</string>
-    <string name="vibration_off">Vibration aus</string>
+
+    <!-- GraphFragment -->
+    <string name="chart_title">Tagesübersicht</string>
     <string name="tv_reminder">Anzahl der Phasen mit ungerader Haltung: %d.</string>
-    <string name="sensor_connected">Dein Sensor ist verbunden! Schau dir deine Statistik an.</string>
-    <string name="btn_sensor_connected">Statistik öffnen</string>
-    <string name="save">Daten wurden gespeichert!</string>
-    <string name="not_save">Daten wurden nicht gespeichert!</string>
-    <string name="tv_config">Konfiguration deines Sensors</string>
-    <string name="btn_config">Starten</string>
     <string name="tv_time">Status: %1$.0f / %2$.0f min.</string>
     <string name="btn_time_goal">Zielzeit setzen</string>
     <string name="dialog_set_time_title">Geben Sie ihre Zielzeit in Minuten an</string>
     <string name="dialog_cancel">Abbrechen</string>
     <string name="dialog_OK">Ok</string>
     <string name="tv_progress">Dein aktueller Stand heute: </string>
-    <string name="tv_time_home">Status: %1$.0f / %2$.0f min.</string>
+    <string name="btn_data_graph">Daten aktualisieren</string>
+    <string name="btn_select_date">Wähle eine Datum aus</string>
+    <string name="tv_reminder_lean_back">Anzahl der Phasen mit zurückgelehnter Haltung: %d.</string>
+    <string name="tv_counter_challenge">Anzahl der abgeschlossenen Challenges heute: %d.</string>
+    <string name="tv_counter_movement">Anzahl der Bewegungspausen heute: %d.</string>
+
+
+    <!-- SettingFragment -->
+    <string name="tv_vibration">Vibration</string>
+    <string name="vibration_on">Vibration an</string>
+    <string name="vibration_off">Vibration aus</string>
+    <string name="tv_config">Konfiguration deines Sensors</string>
+    <string name="btn_config">Starten</string>
     <string name="btn_challenge_home">Starte Challenge</string>
     <string name="tv_status_ble">Stelle sicher, das dein moveUp-Sensor verbunden ist! \nAktueller Status: %1$s. </string>
     <string name="btn_connect_sensor">Verbindung herstellen</string>
@@ -83,13 +69,15 @@
     <string name="btn_start">Start</string>
     <string name="tv_countdown">10</string>
     <string name="tv_config2">Nehme nun eine ungerade Haltung ein und drücke erneuert den Start-Button. Halte die Position für 10 Sekunden</string>
-    <string name="btn_start_sensor">Starte die Messung!</string>
-    <string name="btn_stop_sensor">Beende die Messung</string>
-    <string name="btn_data_graph">Daten aktualisieren</string>
-    <string name="tv_data">Daten</string>
-    <string name="alert_dialog_message_wifi">Für die Nutzung dieser App wird W-lan benötigt. Bitte verbinde dein Smartphone zunächst mit dem W-lan.</string>
-    <string name="alert_dialog_title_reminder">Erinnerung:</string>
-    <string name="title_exercise"><![CDATA[Übungen & Challenges]]></string>
+    <string name="btn_short">Kurz</string>
+    <string name="btn_medium">Mittel</string>
+    <string name="btn_long">Lang</string>
+    <string name="tv_vibration_length">Länge der Vibration bei einer ungeraden Haltung:</string>
+    <string name="tv_get_data_config">Aktiviere den Empfang von Daten, damit die Konfigurationsdaten des moveUp Sensors eingelesen werden können.</string>
+    <string name="tv_config_3">Nehme nun eine zurückgelehnte Haltung ein und starte die Messung. Halte die Position für 10 Sekunden.</string>
+
+    <!-- ExerciseFragment -->
+    <string name="title_exercise">Exercise</string>
     <string name="tv_challenge">Starte eine neue Challenge!\n Gibt eine Zeit ein, die du gerade Sitzen möchtest. </string>
     <string name="btn_start_challenge">Starte die Challenge!</string>
     <string name="tv_challenge_title">Challenge</string>
@@ -98,26 +86,44 @@
     <string name="title_alert_challenge">Challenge</string>
     <string name="message_alert_dialog_challenge">Sie haben die Challenge geschafft!</string>
     <string name="btn_get_data">Daten Empfangen</string>
-    <string name="btn_select_date">Wähle eine Datum aus</string>
     <string name="tv_practice">Übungen</string>
     <string name="btn_get_video">Nächste Übung</string>
-    <string name="btn_short">Kurz</string>
-    <string name="btn_medium">Mittel</string>
-    <string name="btn_long">Lang</string>
-    <string name="tv_vibration_length">Länge der Vibration bei einer ungeraden Haltung:</string>
     <string name="tv_challenge_completed">Erfolgreich abgeschlossene Challenges: %d</string>
     <string name="tv_challenge_home">Starte eine neue Challenge!</string>
-    <string name="tv_bluetooth">Suche und Verbinde deinen moveUp-Sensor:</string>
-    <string name="tv_start_exercise">Starte eine neue Bewegungspause! </string>
+    <string name="tv_start_exercise">Starte eine neue Bewegungspause!</string>
+    <string name="tv_start_exercise_recommendation">Empfehlung:\nJede halbe Stunde bis Stunde 3–5 Minuten lang bewegen.</string>
     <string name="message_alert_dialog_exercise">Eine Übung wird für insgesamt 1 Minute angezeigt.
         Wiederhole diese Übung so oft wie möglich in dieser Zeit. Anschließend kannst du die
         nächste Übung über den Button starten. Die Videos werden zufällig ausgweählt. Mache so viele Übungen wie du möchtest. Viel Erfolg!</string>
     <string name="btn_show_directions">Erklärung Bewegungspause</string>
-    <string name="tv_get_data_config">Aktiviere den Empfang von Daten, damit die Konfigurationsdaten des moveUp Sensors eingelesen werden können.</string>
-    <string name="tv_config_3">Nehme nun eine zurückgelehnte Haltung ein und starte die Messung. Halte die Position für 10 Sekunden.</string>
+
+    <!-- Bluetooth -->
+    <string name="bt_not_available">Bluetooth nicht verfügbar</string>
+    <string name="btn_scan">Suche moveUp-Sensor</string>
+    <string name="ble_not_supported">BLE wird nicht unterstützt</string>
+    <string name="btn_connect">Verbinden</string>
+    <string name="tv_status">nicht verbunden</string>
+    <string name="tv_selected_device">Kein Gerät ausgewählt</string>
+    <string name="bt_connect_off">Gerät nicht verbunden</string>
+    <string name="btn_scan_stop">Scan stopp</string>
+    <string name="connected">verbunden</string>
+    <string name="disconnected">nicht verbunden</string>
+    <string name="btn_data">Daten</string>
+    <string name="bt_data_off">Aktualisierung beenden</string>
+    <string name="tv_move_up">moveUp</string>
+    <string name="tv_bluetooth">Suche und Verbinde deinen moveUp-Sensor:</string>
+
+    <!-- AlertDialog -->
+    <string name="title_alert_dialog">Hinweis</string>
+    <string name="message_alert_dialog">Sie haben sich über einen längeren Zeitraum nicht bewegt. Zeit für eine kleine Bewegungspause</string>
+    <string name="accept">Ok</string>
+    <string name="alert_dialog_message_wifi">Für die Nutzung dieser App wird W-lan benötigt. Bitte verbinde dein Smartphone zunächst mit dem W-lan.</string>
+    <string name="alert_dialog_title_reminder">Erinnerung:</string>
     <string name="message_alert_dialog_config">Konfiguriere den Sensor zunächst auf deine individuelle Haltung nachdem du ihn an deiner Kleidung befestigt hast. Wenn du die Position des Sensors änderst, führe erneurt eine Konfiguration durch, um bestmögliche Ergebnisse zu erhalten!</string>
     <string name="change_to_config">Wechsel zur Konfiguration</string>
-    <string name="tv_home_intro">Befestige den moveUp-Sensor am Rücken an deinem Oberteil. Konfiguriere den Sensor anschließend und starte die Messung!</string>
-    <string name="change_to_exercise">Bewegungspause starten</string>
+
+    <!-- Datenbank -->
+    <string name="save">Daten wurden gespeichert!</string>
+    <string name="not_save">Daten wurden nicht gespeichert!</string>
 
 </resources>

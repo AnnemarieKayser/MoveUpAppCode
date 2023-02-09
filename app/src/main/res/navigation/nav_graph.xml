@@ -47,7 +47,7 @@
     <fragment
         android:id="@+id/navigation_exercise"
         android:name="com.example.moveup.ExerciseFragment"
-        android:label="Challenges und Übungen"
+        android:label="Exercise"
         tools:layout="@layout/fragment_exercise" />
 
 </navigation>

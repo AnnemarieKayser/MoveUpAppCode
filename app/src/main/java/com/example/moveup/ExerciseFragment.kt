@@ -222,7 +222,7 @@ class ExerciseFragment : Fragment() {
 
             counterShowVideo = 0
             counterMovementBreak++
-            arrayMovementBreak[hour] = counterMovementBreak
+            arrayMovementBreak[hour] = arrayMovementBreak[hour].toString().toInt() + 1
             insertDataInDb()
 
             val progressDialog = ProgressDialog(activity)

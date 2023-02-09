@@ -23,12 +23,18 @@ class BasicViewModel : ViewModel() {
         get() = _timeChallenge
 
 
+    private val _statusMeasurment = MutableLiveData<Boolean>()
+    val statusMeasurment: LiveData<Boolean>
+        get() = _statusMeasurment
+
+
 
     init {
         _discoveredDevices.value = mutableListOf()
         _deviceAddress.value = ""
         _date.value = ""
         _timeChallenge.value = 0
+        _statusMeasurment.value = false
     }
 
 
@@ -65,6 +71,14 @@ class BasicViewModel : ViewModel() {
 
     fun setTimeChallenge(timeChallenge: Int) {
         _timeChallenge.value = timeChallenge
+    }
+
+    fun getStatusMeasurment(): Boolean {
+        return _statusMeasurment.value!!
+    }
+
+    fun setStatusMeasurment(statusMeasurment: Boolean) {
+        _statusMeasurment.value = statusMeasurment
     }
 
 
