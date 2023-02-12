@@ -47,6 +47,7 @@ class ExerciseFragment : Fragment() {
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var challengeStarted = false
     private var isReceivingData = false
+    private var sensorStarted = true
 
 
     private val mHandler: Handler by lazy { Handler() }
@@ -79,7 +80,6 @@ class ExerciseFragment : Fragment() {
     var counterVideo = 1
     private var counterVideoMax = 1
     private var counterShowVideo = 0
-    var myMenu: Menu? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -92,7 +92,6 @@ class ExerciseFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        (requireActivity() as MainActivity).supportActionBar!!.hide()
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
         scanner = mBluetooth.bluetoothLeScanner
@@ -127,16 +126,6 @@ class ExerciseFragment : Fragment() {
 
         binding.buttonStartChallenge.setOnClickListener {
 
-            val kalender: Calendar = Calendar.getInstance()
-            var zeitformat = SimpleDateFormat("HH")
-            var timeFormat = zeitformat.format(kalender.time)
-            hour = timeFormat.toInt()
-
-            zeitformat = SimpleDateFormat("mm")
-            timeFormat = zeitformat.format(kalender.time)
-            minute = timeFormat.toInt()
-
-
             val timeChallenge: String = binding.editTextChallengeTime.text.toString()
             time = timeChallenge.toInt()
             viewModel.setTimeChallenge(time)
@@ -150,11 +139,8 @@ class ExerciseFragment : Fragment() {
                     challengeStarted = !challengeStarted
                     // Werte setzen
                     if (challengeStarted) {
-                        obj.put("STARTMESSUNG", "AUS")
                         obj.put("CHALLENGE", "START")
                         obj.put("TIMECHALLENGE", time)
-                        obj.put("HOUR", hour)
-                        obj.put("MINUTE", minute)
                         binding.buttonStartChallenge.text = getString(R.string.btn_stop_challenge)
                         toast("Start")
                     } else {
@@ -170,6 +156,54 @@ class ExerciseFragment : Fragment() {
                 } else {
                     toast("Sensor ist nicht verbunden")
                 }
+            }
+        }
+
+        if (viewModel.getStatusMeasurment()) {
+            binding.buttonStopStart.text = getString(R.string.btn_pause)
+            sensorStarted = viewModel.getStatusMeasurment()
+        } else {
+            binding.buttonStopStart.text = getString(R.string.btn_start_sensor)
+            sensorStarted = viewModel.getStatusMeasurment()
+        }
+
+        binding.buttonStopStart.setOnClickListener {
+            if (isConnected) {
+
+                val kalender: Calendar = Calendar.getInstance()
+                var zeitformat = SimpleDateFormat("HH")
+                var time = zeitformat.format(kalender.time)
+                hour = time.toInt()
+
+                zeitformat = SimpleDateFormat("mm")
+                time = zeitformat.format(kalender.time)
+                minute = time.toInt()
+
+                val obj = JSONObject()
+                sensorStarted = !sensorStarted
+
+
+                // Werte setzen
+                if (sensorStarted) {
+                    obj.put("STARTMESSUNG", "AN")
+                    obj.put("HOUR", hour)
+                    obj.put("MINUTE", minute)
+
+                    binding.buttonStopStart.text = getString(R.string.btn_pause)
+                } else {
+                    obj.put("STARTMESSUNG", "AUS")
+                    binding.buttonStopStart.text = getString(R.string.btn_start_sensor)
+                }
+
+                viewModel.setStatusMeasurment(sensorStarted)
+
+                // Senden
+                if (gattCharacteristic != null) {
+                    gattCharacteristic!!.value = obj.toString().toByteArray()
+                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                }
+            } else {
+                toast("verbinde zunächst den Sensor")
             }
         }
 
@@ -216,9 +250,21 @@ class ExerciseFragment : Fragment() {
         binding.buttonGetVideo.setOnClickListener {
 
             val kalender: Calendar = Calendar.getInstance()
-            val zeitformat = SimpleDateFormat("HH")
-            val timeFormat = zeitformat.format(kalender.time)
-            hour = timeFormat.toInt()
+            var zeitformat = SimpleDateFormat("HH")
+            var time = zeitformat.format(kalender.time)
+            hour = time.toInt()
+
+            zeitformat = SimpleDateFormat("mm")
+            time = zeitformat.format(kalender.time)
+            minute = time.toInt()
+
+            if(minute > 29){
+                hour = hour * 2 + 1
+            }
+
+            if(minute < 30){
+                hour *= 2
+            }
 
             counterShowVideo = 0
             counterMovementBreak++
@@ -258,11 +304,11 @@ class ExerciseFragment : Fragment() {
         binding.textViewChallengesCompleted.text =
             getString(R.string.tv_challenge_completed, counterChallenge)
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayChallenge.add(i, 0)
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayMovementBreak.add(i, 0)
         }
 
@@ -361,9 +407,21 @@ class ExerciseFragment : Fragment() {
                 }
 
                 val kalender: Calendar = Calendar.getInstance()
-                val zeitformat = SimpleDateFormat("HH")
-                val timeFormat = zeitformat.format(kalender.time)
-                hour = timeFormat.toInt()
+                var zeitformat = SimpleDateFormat("HH")
+                var time = zeitformat.format(kalender.time)
+                hour = time.toInt()
+
+                zeitformat = SimpleDateFormat("mm")
+                time = zeitformat.format(kalender.time)
+                minute = time.toInt()
+
+                if(minute > 29){
+                    hour = hour * 2 + 1
+                }
+
+                if(minute < 30){
+                    hour *= 2
+                }
 
                 counterChallenge++
 

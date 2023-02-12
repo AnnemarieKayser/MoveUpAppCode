@@ -68,15 +68,15 @@ class HomeFragment : Fragment() {
     private var thresholdLean = 20
     private var configData = false
     private var arrayStraightList = arrayListOf<Any?>()
-    private var arrayStraight = arrayOfNulls<Any>(24)
-    private var arrayBent = arrayOfNulls<Any>(24)
-    private var arrayLeanBack = arrayOfNulls<Any>(24)
-    private var arrayDynamic = arrayOfNulls<Any>(24)
+    private var arrayStraight = arrayOfNulls<Any>(48)
+    private var arrayBent = arrayOfNulls<Any>(48)
+    private var arrayLeanBack = arrayOfNulls<Any>(48)
+    private var arrayDynamic = arrayOfNulls<Any>(48)
     private var arrayBentList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
     private var arrayMovementBreakDb = arrayListOf<Any?>()
-    private var arrayMovementBreak = arrayOfNulls<Any>(24)
+    private var arrayMovementBreak = arrayOfNulls<Any>(48)
     private var counterReminder = 0
     private var counterLeanBack = 0
 
@@ -153,43 +153,25 @@ class HomeFragment : Fragment() {
                     var time = zeitformat.format(kalender.time)
                     hour = time.toInt()
 
-                    if (arrayDynamic[hour].toString().toInt() < 3 && arrayMovementBreak[hour].toString().toInt() == 0) {
+                    if (arrayDynamic[hour*2].toString().toInt() < 3 && arrayMovementBreak[hour*2].toString().toInt() == 0) {
 
-                        if (arrayStraight[hour].toString().toInt() > 30) {
+                            if(arrayDynamic[hour*2 - 1].toString().toInt() < 3 && arrayMovementBreak[hour*2 - 1].toString().toInt() == 0) {
 
-                            context?.let {
-                                MaterialAlertDialogBuilder(it)
-                                    .setTitle(resources.getString(R.string.title_alert_dialog))
-                                    .setMessage(resources.getString(R.string.message_alert_dialog))
-                                    .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
+                                context?.let {
+                                    MaterialAlertDialogBuilder(it)
+                                        .setTitle(resources.getString(R.string.title_alert_dialog))
+                                        .setMessage(resources.getString(R.string.message_alert_dialog))
+                                        .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
 
-                                    }
-                                    .setPositiveButton(resources.getString(R.string.change_to_exercise)) { dialog, which ->
-                                        findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
-                                    }
-                                    .show()
-                            }
-                        } else {
-                            if (arrayDynamic[hour - 1].toString().toInt() < 3 && arrayMovementBreak[hour - 1].toString().toInt() == 0) {
-
-                                if (arrayStraight[hour - 1].toString().toInt() > 30) {
-                                    context?.let {
-                                        MaterialAlertDialogBuilder(it)
-                                            .setTitle(resources.getString(R.string.title_alert_dialog))
-                                            .setMessage(resources.getString(R.string.message_alert_dialog))
-                                            .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
-
-                                            }
-                                            .setPositiveButton(resources.getString(R.string.change_to_exercise)) { dialog, which ->
-                                                findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
-                                            }
-                                            .show()
-                                    }
+                                        }
+                                        .setPositiveButton(resources.getString(R.string.change_to_exercise)) { dialog, which ->
+                                            findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
+                                        }
+                                        .show()
                                 }
                             }
                         }
                     }
-                }
                 mHandler.postDelayed(mRunnable, 2000)
             } else {
                 toast("verbinde zunächst den Sensor")
@@ -287,6 +269,22 @@ class HomeFragment : Fragment() {
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
 
+        for (i in 0 until 48) {
+            arrayBent[i] = 0
+        }
+        for (i in 0 until 48) {
+            arrayLeanBack[i] = 0
+        }
+        for (i in 0 until 48) {
+            arrayDynamic[i] = 0
+        }
+        for (i in 0 until 48) {
+            arrayMovementBreak[i] = 0
+        }
+        for (i in 0 until 48) {
+            arrayStraight[i] = 0
+        }
+
         loadDbData()
 
     }
@@ -365,72 +363,87 @@ class HomeFragment : Fragment() {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
 
-            counterReminder = obj.getString("counterReminder").toInt()
+            if (obj.has("bent")) {
 
-            counterLeanBack = obj.getString("counterLeanBack").toInt()
+                counterReminder = obj.getString("bent").toInt()
+            }
+
+            if (obj.has("lean")) {
+
+                counterLeanBack = obj.getString("lean").toInt()
+            }
+
+            toast(counterLeanBack.toString())
 
 
             val listdataBent = ArrayList<String>()
-            val jArrayBent = obj.getJSONArray("arrayBentBack")
-            if (jArrayBent != null) {
-                for (i in 0 until jArrayBent.length()) {
-                    listdataBent.add(jArrayBent.getString(i))
-                }
-            }
+            if (obj.has("arrBent")) {
+                val jArrayBent = obj.getJSONArray("arrBent")
+                    for (i in 0 until jArrayBent.length()) {
+                        listdataBent.add(jArrayBent.getString(i))
+                    }
 
-            for (i in 0 until 24) {
-                if (listdataBent[i].toInt() != 0) {
-                    arrayBent[i] = listdataBent[i].toInt() / 2
+
+                for (i in 0 until 48) {
+                    if (listdataBent[i].toInt() != 0) {
+                        arrayBent[i] = listdataBent[i].toInt() / 2
+                    }
                 }
             }
 
             val listdataLean = ArrayList<String>()
-            val jArrayLean = obj.getJSONArray("arrayLeanBack")
-            if (jArrayLean != null) {
+            if (obj.has("arrLean")) {
+
+                val jArrayLean = obj.getJSONArray("arrLean")
                 for (i in 0 until jArrayLean.length()) {
                     listdataLean.add(jArrayLean.getString(i))
                 }
-            }
 
-            for (i in 0 until 24) {
-                if (listdataLean[i].toInt() != 0) {
-                    arrayLeanBack[i] = listdataLean[i].toInt() / 2
+
+                for (i in 0 until 48) {
+                    if (listdataLean[i].toInt() != 0) {
+                        arrayLeanBack[i] = listdataLean[i].toInt() / 2
+                    }
                 }
             }
 
             val listdataDynamic = ArrayList<String>()
-            val jArrayDynamic = obj.getJSONArray("arrayCounterDynamic")
-            if (jArrayDynamic != null) {
+            if (obj.has("arrDynamic")) {
+
+                val jArrayDynamic = obj.getJSONArray("arrDynamic")
                 for (i in 0 until jArrayDynamic.length()) {
                     listdataDynamic.add(jArrayDynamic.getString(i))
                 }
-            }
 
-            for (i in 0 until 24) {
-                if (listdataDynamic[i].toInt() != 0) {
-                    arrayDynamic[i] = listdataDynamic[i].toInt()
+
+                for (i in 0 until 48) {
+                    if (listdataDynamic[i].toInt() != 0) {
+                        arrayDynamic[i] = listdataDynamic[i].toInt()
+                    }
                 }
             }
-
             val listdataUpright = ArrayList<String>()
-            val jArrayUpright = obj.getJSONArray("arraySittingStraight")
-            if (jArrayUpright != null) {
+            if (obj.has("arrStraight")) {
+
+                val jArrayUpright = obj.getJSONArray("arrStraight")
                 for (i in 0 until jArrayUpright.length()) {
                     listdataUpright.add(jArrayUpright.getString(i))
                 }
-            }
 
-            for (i in 0 until 24) {
-                if (listdataUpright[i].toInt() != 0) {
-                    arrayStraight[i] = listdataUpright[i].toInt()
+
+                for (i in 0 until 48) {
+                    if (listdataUpright[i].toInt() != 0) {
+                        arrayStraight[i] = listdataUpright[i].toInt()
+                    }
+                }
+
+                progressTime = 0F
+
+                for (i in 0 until 48) {
+                    progressTime += arrayStraight[i].toString().toInt()
                 }
             }
 
-            progressTime = 0F
-
-            for (i in 0 until 24) {
-                progressTime += arrayStraight[i].toString().toInt()
-            }
 
             if (progressTime <= timeMaxProgressBar) {
                 binding.circularProgressBar.progress = progressTime
@@ -444,15 +457,6 @@ class HomeFragment : Fragment() {
                     getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
                 binding.textViewProgress.text = getString(R.string.tv_progress_done)
             }
-
-            val kalender: Calendar = Calendar.getInstance()
-            var zeitformat = SimpleDateFormat("HH")
-            var time = zeitformat.format(kalender.time)
-            hour = time.toInt()
-
-            zeitformat = SimpleDateFormat("mm")
-            time = zeitformat.format(kalender.time)
-            minute = time.toInt()
 
 
         } catch (e: JSONException) {
@@ -507,19 +511,19 @@ class HomeFragment : Fragment() {
         val date = zeitformat.format(kalender.time)
 
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayStraightList.add(i, arrayStraight[i])
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayBentList.add(i, arrayBent[i])
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayLeanList.add(i, arrayLeanBack[i])
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayDynamicList.add(i, arrayDynamic[i])
         }
 
@@ -580,24 +584,24 @@ class HomeFragment : Fragment() {
                         arrayDynamicList = data!!.getArrayDynamicPhase()
                         arrayStraightList = data!!.getArrayUpright()
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayBent[i] = arrayBentList[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayLeanBack[i] = arrayLeanList[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayDynamic[i] = arrayDynamicList[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
@@ -619,6 +623,8 @@ class HomeFragment : Fragment() {
                         arrayLeanList.clear()
                         arrayDynamicList.clear()
                         arrayStraightList.clear()
+                    } else{
+                        binding.textViewHomeProgressTime.text = getString(R.string.tv_time, 0F, 0F)
                     }
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
@@ -682,10 +688,11 @@ class HomeFragment : Fragment() {
                     if (dataExercise != null) {
                         arrayMovementBreakDb = dataExercise!!.getMovementBreakArray()
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayMovementBreak[i] = arrayMovementBreakDb[i]
                         }
                     }
+
 
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)

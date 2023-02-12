@@ -125,5 +125,10 @@
     <!-- Datenbank -->
     <string name="save">Daten wurden gespeichert!</string>
     <string name="not_save">Daten wurden nicht gespeichert!</string>
+    <string name="btn_pause">Messung pausieren</string>
+    <string name="tv_upright_bent">Ungerade vs. gerade Haltung</string>
+    <string name="tv_upright_bent2">Versuche 75–100% der Zeit gerade zusitzen</string>
+    <string name="tv_upright_bent_status">Aktuell: %d</string>
+    <string name="tv_stop_measurment">Stoppe die Messung bevor du eine Challenge oder Bewegungspause startest</string>
 
 </resources>

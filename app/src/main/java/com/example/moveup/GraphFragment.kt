@@ -35,6 +35,7 @@ import org.json.JSONObject
 import splitties.toast.toast
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.roundToInt
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -57,6 +58,7 @@ class GraphFragment : Fragment() {
     private var data: UserData? = null
     private var dataExercise: UserDataExercise? = null
     private var isReceivingData = false
+    private var yAxisMax = 30
 
     //Circular-Progress-Bar
     private var timeMaxProgressBar = 60F
@@ -66,18 +68,18 @@ class GraphFragment : Fragment() {
     private lateinit var mRunnable: Runnable
 
     private var aaChartModel = AAChartModel()
-    private var arrayBent = arrayOfNulls<Any>(24)
-    private var arrayLeanBack = arrayOfNulls<Any>(24)
-    private var arrayDynamic = arrayOfNulls<Any>(24)
-    private var arrayStraight = arrayOfNulls<Any>(24)
-    private var arrayChallenge = arrayOfNulls<Any>(24)
+    private var arrayBent = arrayOfNulls<Any>(48)
+    private var arrayLeanBack = arrayOfNulls<Any>(48)
+    private var arrayDynamic = arrayOfNulls<Any>(48)
+    private var arrayStraight = arrayOfNulls<Any>(48)
+    private var arrayChallenge = arrayOfNulls<Any>(48)
     private var arrayBentList = arrayListOf<Any?>()
     private var arrayStraightList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
     private var arrayChallengeDb = arrayListOf<Any?>()
     private var arrayMovementBreakDb = arrayListOf<Any?>()
-    private var arrayMovementBreak = arrayOfNulls<Any>(24)
+    private var arrayMovementBreak = arrayOfNulls<Any>(48)
     private var counterChallenge = 0
     private var counterMovement = 0
 
@@ -154,11 +156,35 @@ class GraphFragment : Fragment() {
                 CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
 
             // Set Width
-            progressBarWidth = 7f // in DP
-            backgroundProgressBarWidth = 9f // in DP
+            progressBarWidth = 10f // in DP
+            backgroundProgressBarWidth = 4f // in DP
 
             // Other
             roundBorder = true
+
+            progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
+        }
+
+        binding.circularProgressBar1.apply {
+            // Set Progress Max
+            progressMax = timeMaxProgressBar
+
+            // Set ProgressBar Color
+            progressBarColorStart = Color.GREEN
+            progressBarColorEnd = Color.GREEN
+            progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
+
+            // Set background ProgressBar Color
+            backgroundProgressBarColor = Color.RED
+            backgroundProgressBarColorDirection =
+                CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+
+            // Set Width
+            progressBarWidth = 10f // in DP
+            backgroundProgressBarWidth = 5f // in DP
+
+            // Other
+            //roundBorder = true
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
@@ -203,22 +229,22 @@ class GraphFragment : Fragment() {
         }
 
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayBent[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayLeanBack[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayDynamic[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayChallenge[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayMovementBreak[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayStraight[i] = 0
         }
 
@@ -262,38 +288,17 @@ class GraphFragment : Fragment() {
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
             .setBackgroundColor("#682842")
             .setAxesTextColor("#FFFFFF")
-            .setCategories(
-                "00:00",
-                "01:00",
-                "02:00",
-                "03:00",
-                "04:00",
-                "05:00",
-                "06:00",
-                "07:00",
-                "08:00",
-                "09:00",
-                "10:00",
-                "11:00",
-                "12:00",
-                "13:00",
-                "14:00",
-                "15:00",
-                "16:00",
-                "17:00",
-                "18:00",
-                "19:00",
-                "20:00",
-                "21:00",
-                "22:00",
-                "23:00",
-                "24:00"
+            .setCategories("00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30", "04:00", "04:30", "05:00", "05:30",
+                "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
+                "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00",
+                "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30"
             )
             .setYAxisTitle("Minuten")
+            .setYAxisMax(25f)
             .setScrollablePlotArea(
                 AAScrollablePlotArea()
                     .opacity(0F)
-                    .minWidth(400)
+                    .minWidth(600)
                     .scrollPositionX(1f)
             )
             .build()
@@ -325,10 +330,10 @@ class GraphFragment : Fragment() {
     }
 
     private fun configureChartSeriesArrayExercise(): Array<AASeriesElement> {
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayChallenge[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayMovementBreak[i] = 0
         }
         return arrayOf(
@@ -343,19 +348,18 @@ class GraphFragment : Fragment() {
 
     private fun configureChartSeriesArrayAfterLoadDb(): Array<AASeriesElement> {
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayBent[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayLeanBack[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayDynamic[i] = 0
         }
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayStraight[i] = 0
         }
-
 
 
         return arrayOf(
@@ -451,86 +455,105 @@ class GraphFragment : Fragment() {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
             toast("Daten empfangen")
-            statusPos = obj.getString("statusPosition").toString()
+            if (obj.has("statPos")) {
+                statusPos = obj.getString("statPos").toString()
+            }
+            if (obj.has("bent")) {
+                counterReminder = obj.getString("bent").toInt()
+            }
 
-            counterReminder = obj.getString("counterReminder").toInt()
-
-            counterLeanBack = obj.getString("counterLeanBack").toInt()
-
+            if (obj.has("lean")) {
+                counterLeanBack = obj.getString("lean").toInt()
+            }
 
             val listdataBent = ArrayList<String>()
-            val jArrayBent = obj.getJSONArray("arrayBentBack")
-            if (jArrayBent != null) {
+            if (obj.has("arrBent")) {
+                val jArrayBent = obj.getJSONArray("arrBent")
                 for (i in 0 until jArrayBent.length()) {
                     listdataBent.add(jArrayBent.getString(i))
                 }
-            }
 
-            for (i in 0 until 24) {
-                if (listdataBent[i].toInt() != 0) {
-                    arrayBent[i] = listdataBent[i].toInt() / 2
+                for (i in 0 until 48) {
+                    if (listdataBent[i].toInt() != 0) {
+                        arrayBent[i] = listdataBent[i].toInt() / 2
+                    }
                 }
+                counterReminder = 0
+                for (i in 0 until 48) {
+                    counterReminder += arrayBent[i].toString().toInt()
+                }
+
             }
 
             val listdataLean = ArrayList<String>()
-            val jArrayLean = obj.getJSONArray("arrayLeanBack")
-            if (jArrayLean != null) {
-                for (i in 0 until jArrayLean.length()) {
-                    listdataLean.add(jArrayLean.getString(i))
+            if (obj.has("arrLean")) {
+                val jArrayLean = obj.getJSONArray("arrLean")
+                    for (i in 0 until jArrayLean.length()) {
+                        listdataLean.add(jArrayLean.getString(i))
+                    }
+                for (i in 0 until 48) {
+                    if (listdataLean[i].toInt() != 0) {
+                        arrayLeanBack[i] = listdataLean[i].toInt() / 2
+                    }
                 }
-            }
+                counterLeanBack = 0
 
-            for (i in 0 until 24) {
-                if (listdataLean[i].toInt() != 0) {
-                    arrayLeanBack[i] = listdataLean[i].toInt() / 2
+                for (i in 0 until 48) {
+                    counterLeanBack += arrayLeanBack[i].toString().toInt()
                 }
             }
 
             val listdataDynamic = ArrayList<String>()
-            val jArrayDynamic = obj.getJSONArray("arrayCounterDynamic")
-            if (jArrayDynamic != null) {
-                for (i in 0 until jArrayDynamic.length()) {
-                    listdataDynamic.add(jArrayDynamic.getString(i))
-                }
-            }
+            if (obj.has("arrDynamic")) {
 
-            for (i in 0 until 24) {
-                if (listdataDynamic[i].toInt() != 0) {
-                    arrayDynamic[i] = listdataDynamic[i].toInt()
+                val jArrayDynamic = obj.getJSONArray("arrDynamic")
+                    for (i in 0 until jArrayDynamic.length()) {
+                        listdataDynamic.add(jArrayDynamic.getString(i))
+                    }
 
+                for (i in 0 until 48) {
+                    if (listdataDynamic[i].toInt() != 0) {
+                        arrayDynamic[i] = listdataDynamic[i].toInt()
+
+                    }
                 }
             }
 
 
             val listdataUpright = ArrayList<String>()
-            val jArrayUpright = obj.getJSONArray("arraySittingStraight")
-            if (jArrayUpright != null) {
-                for (i in 0 until jArrayUpright.length()) {
-                    listdataUpright.add(jArrayUpright.getString(i))
+            if (obj.has("arrStraight")) {
+
+                val jArrayUpright = obj.getJSONArray("arrStraight")
+                    for (i in 0 until jArrayUpright.length()) {
+                        listdataUpright.add(jArrayUpright.getString(i))
+                    }
+
+                for (i in 0 until 48) {
+                    if (listdataUpright[i].toInt() != 0) {
+                        arrayStraight[i] = listdataUpright[i].toInt()
+                    }
+                }
+
+                progressTime = 0F
+
+                for (i in 0 until 48) {
+                    progressTime += arrayStraight[i].toString().toInt()
                 }
             }
 
-            for (i in 0 until 24) {
-                if (listdataUpright[i].toInt() != 0) {
-                    arrayStraight[i] = listdataUpright[i].toInt()
-                }
-            }
-            progressTime = 0F
-
-            for (i in 0 until 24) {
-                progressTime += arrayStraight[i].toString().toInt()
-            }
-
-            for (i in 0 until 24) {
-                counterReminder += arrayBent[i].toString().toInt()
-            }
-
-            for (i in 0 until 24) {
-                counterLeanBack += arrayLeanBack[i].toString().toInt()
-            }
 
             binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
             binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
+
+            binding.circularProgressBar1.apply {
+                progressMax = counterReminder + progressTime
+            }
+
+            binding.circularProgressBar1.progress = progressTime
+
+            val ratio = ((progressTime/(counterReminder + progressTime))*100).roundToInt()
+
+            binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio)
 
 
             val seriesArr = configureChartSeriesArray()
@@ -642,19 +665,19 @@ class GraphFragment : Fragment() {
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayBentList.add(i, arrayBent[i])
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayLeanList.add(i, arrayLeanBack[i])
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayDynamicList.add(i, arrayDynamic[i])
         }
 
-        for (i in 0 until 24) {
+        for (i in 0 until 48) {
             arrayStraightList.add(i, arrayStraight[i])
         }
 
@@ -710,19 +733,19 @@ class GraphFragment : Fragment() {
                         arrayDynamicList = data!!.getArrayDynamicPhase()
                         arrayStraightList = data!!.getArrayUpright()
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayBent[i] = arrayBentList[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayLeanBack[i] = arrayLeanList[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayDynamic[i] = arrayDynamicList[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
@@ -731,17 +754,29 @@ class GraphFragment : Fragment() {
                         arrayDynamicList.clear()
                         arrayStraightList.clear()
 
-                        for (i in 0 until 24) {
+                        counterReminder = 0
+                        counterLeanBack = 0
+                        for (i in 0 until 48) {
                             counterReminder += arrayBent[i].toString().toInt()
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             counterLeanBack += arrayLeanBack[i].toString().toInt()
                         }
 
 
                         binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
                         binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
+
+                        binding.circularProgressBar1.apply {
+                            progressMax = counterReminder + progressTime
+                        }
+
+                        binding.circularProgressBar1.progress = progressTime
+
+                        val ratio = ((progressTime/(counterReminder + progressTime))*100).roundToInt()
+
+                        binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio)
 
 
 
@@ -759,6 +794,11 @@ class GraphFragment : Fragment() {
                         }
 
                     } else {
+                        binding.textViewNumberReminder.text = getString(R.string.tv_reminder, 0)
+                        binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, 0)
+                        val seriesArr = configureChartSeriesArrayAfterLoadDb()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+                        binding.textViewProgressUpright.text = getString(R.string.tv_progress)
                         binding.circularProgressBar.apply {
                             progressMax = 0F
                             binding.textViewTime.text = getString(R.string.tv_time, 0F, 0F)
@@ -790,16 +830,21 @@ class GraphFragment : Fragment() {
                         counterChallenge = dataExercise!!.getChallenge()
                         counterMovement = dataExercise!!.getMovementBreak()
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayChallenge[i] = arrayChallengeDb[i]
                         }
 
-                        for (i in 0 until 24) {
+                        for (i in 0 until 48) {
                             arrayMovementBreak[i] = arrayMovementBreakDb[i]
                         }
 
                         binding.textViewChallengeGraph.text = getString(R.string.tv_counter_challenge, counterChallenge)
                         binding.textViewMovementGraph.text = getString(R.string.tv_counter_movement, counterMovement)
+                    }else{
+                        val seriesArr = configureChartSeriesArrayExercise()
+                        binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+                        binding.textViewChallengeGraph.text = getString(R.string.tv_counter_challenge, 0)
+                        binding.textViewMovementGraph.text = getString(R.string.tv_counter_movement, 0)
                     }
 
                     val seriesArr = configureChartSeriesArray()
