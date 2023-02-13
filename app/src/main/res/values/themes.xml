@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Theme.MoveUP" parent="Theme.Material3.Light.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/pink_dark</item>
-        <item name="colorPrimaryVariant">@color/pink_medium2</item>
+        <item name="colorPrimary">@color/blue_grey_dark</item>
+        <item name="colorPrimaryVariant">@color/blue_grey_dark</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/brown</item>

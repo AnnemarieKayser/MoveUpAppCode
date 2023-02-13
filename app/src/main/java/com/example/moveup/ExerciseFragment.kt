@@ -3,7 +3,6 @@ package com.example.moveup
 import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
 import android.net.Uri
 import android.os.Bundle
@@ -11,13 +10,9 @@ import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.MediaController
-import android.widget.Toolbar
-import androidx.core.view.get
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.FragmentExerciseBinding
@@ -35,51 +30,101 @@ import java.util.*
 
 class ExerciseFragment : Fragment() {
 
+ /*
+  ======================================================================================
+  ==========================           Introduction           ==========================
+  ======================================================================================
+  Projektname: moveUP
+  Autor: Annemarie Kayser
+  Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+             Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
+             am Rücken und Senden einer Benachrichtigung an die zugehörige App. Messung des dynamischen und statischen
+             Sitzverhaltens mithilfe von Gyroskopwerten.
+  Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+            Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
+            Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+            Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+  Letztes Update: 07.02.2023
+
+ ======================================================================================
+*/
+
+/*
+  =============================================================
+  =======              Function Activity                =======
+  =============================================================
+
+  In diesem Fragment kann eine Challenge oder eine Bewegungspause gestartet werden
+            - Für die Challenge kann der Benutzer eine Zielzeit eingeben, die
+              er gerade Sitzen möchte
+            - Die Zeit wird an den ESP32 thing übergeben und dort wird eine Stoppuhr gestartet
+            - das Ende der Challenge wird zurück übergeben und in der Datenbank gespeichert
+
+            - Bei einer Bewegungspause werden Videos aus der Datenbank geladen und
+              in einem VideoView abgespielt
+            - die Videos zeigen kurze Übungen, um den Rücken zu entlasten
+            - Der Benutzer kann die Übungen so oft wie er möchte ausführen
+*/
+
+/*
+  =============================================================
+  =======                   Variables                   =======
+  =============================================================
+*/
+
+
     private var _binding: FragmentExerciseBinding? = null
     private val binding get() = _binding!!
     private val viewModel: BasicViewModel by activityViewModels()
 
-    //Ble
-    private lateinit var scanner: BluetoothLeScanner
+    // === Bluetooth Low Energy === //
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
-    private var challengeStarted = false
     private var isReceivingData = false
     private var sensorStarted = true
 
-
+    // === Handler-Runnable-Konstrukt === //
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
-    //Datenbank
+    // === Datenbank === //
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
-
-    // Create a storage reference from our app
     private val storageReference: FirebaseStorage by lazy { FirebaseStorage.getInstance() }
-
-    // Create a storage reference from our app
     private var storageRef = storageReference.reference
     private var data: UserDataExercise? = null
-    private var counterChallenge = 0
-    private var counterMovementBreak = 0
-    private var arrayChallenge = arrayListOf<Any?>()
-    private var arrayMovementBreak = arrayListOf<Any?>()
 
+    // === Variablen für Challenge === //
+    private var arrayChallenge = arrayListOf<Any?>()
+    private var counterChallenge = 0
+    private var challengeStarted = false
     private var statusChallenge = ""
     private var statusReceived = false
+
+    // === Variablen für Bewegungspause === //
+    private var counterMovementBreak = 0
+    private var arrayMovementBreak = arrayListOf<Any?>()
+
+    // === MediaController === //
+    var mediaController: MediaController? = null
+    var r = Random()
+    private var counterVideoMax = 1
+    private var counterShowVideo = 0
+
+    // === Zeitvariablen === //
     private var time = 0
     private var hour = 0
     private var minute = 0
 
-    //MediaController
-    var mediaController: MediaController? = null
-    var r = Random()
-    var counterVideo = 1
-    private var counterVideoMax = 1
-    private var counterShowVideo = 0
+/*
+  =============================================================
+  =======                                               =======
+  =======         onCreateView & onViewCreated          =======
+  =======                                               =======
+  =============================================================
+*/
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -92,49 +137,72 @@ class ExerciseFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- Initialisierung Bluetooth-Adapter --- //
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
-        scanner = mBluetooth.bluetoothLeScanner
-
-        // BluetoothLe Service starten
+        // --- BluetoothLe Service starten --- //
         val gattServiceIntent = Intent(context, BluetoothLeService::class.java)
-        // Service anbinden
+        // --- Service anbinden --- //
         context?.bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
-        //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
+        // --- Sensor nach 1s verbinden, wenn deviceAddress bekannt und gespeichert ist --- //
         mRunnable = Runnable {
 
             if (viewModel.getDeviceAddress() != "") {
-                bluetoothLeService!!.connect(viewModel.getDeviceAddress());
+                bluetoothLeService!!.connect(viewModel.getDeviceAddress())
             }
         }
         mHandler.postDelayed(mRunnable, 1000)
 
+        // --- Initialisierung Arrays --- //
+        for (i in 0 until 48) {
+            arrayChallenge.add(i, 0)
+        }
+
+        for (i in 0 until 48) {
+            arrayMovementBreak.add(i, 0)
+        }
+
+        // --- Daten aus der Datenbank lesen --- //
+        loadDbData()
+
+        // --- Anzeige der abgeschlossenen Challenges --- //
+        binding.textViewChallengesCompleted.text =
+            getString(R.string.tv_challenge_completed, counterChallenge)
+
+        // --- Empfang von Daten vom ESP32 thing aktivieren/deaktivieren --- //
         binding.buttonGetData.setOnClickListener {
+            // Daten empfangen deaktiviert
             if (isReceivingData) {
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
                 isReceivingData = false
-                toast("keine daten empfangen")
                 binding.buttonGetData.text = getString(R.string.btn_data_graph)
             } else {
+                // Daten empfangen aktiviert
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
                 isReceivingData = true
-                toast("Daten empfangen")
                 binding.buttonGetData.text = getString(R.string.bt_data_off)
             }
         }
 
+        // --- Starten einer Challenge --- //
         binding.buttonStartChallenge.setOnClickListener {
 
+            // Eingegebene Zeit wird eingelesen und der Variablen time zugewiesen
             val timeChallenge: String = binding.editTextChallengeTime.text.toString()
             time = timeChallenge.toInt()
+
+            // Speichern der Zeit im viewModel
             viewModel.setTimeChallenge(time)
 
+            // Überprüfen, ob eine Zeit eingegeben wurde
             if (timeChallenge.isEmpty()) {
                 binding.editTextChallengeTime.error = getString(R.string.required)
             } else {
+                // wenn der Sensor verbunden ist, werden die Daten gesendet
                 if (isConnected) {
                     statusReceived = false
+
                     val obj = JSONObject()
                     challengeStarted = !challengeStarted
                     // Werte setzen
@@ -142,13 +210,12 @@ class ExerciseFragment : Fragment() {
                         obj.put("CHALLENGE", "START")
                         obj.put("TIMECHALLENGE", time)
                         binding.buttonStartChallenge.text = getString(R.string.btn_stop_challenge)
-                        toast("Start")
                     } else {
                         obj.put("CHALLENGE", "STOPP")
                         binding.buttonStartChallenge.text = getString(R.string.btn_start_challenge)
                     }
 
-                    // Senden
+                    // Senden der Daten
                     if (gattCharacteristic != null) {
                         gattCharacteristic!!.value = obj.toString().toByteArray()
                         bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
@@ -159,6 +226,7 @@ class ExerciseFragment : Fragment() {
             }
         }
 
+        // --- Einlesen des aktuellen Status der Messung --- //
         if (viewModel.getStatusMeasurment()) {
             binding.buttonStopStart.text = getString(R.string.btn_pause)
             sensorStarted = viewModel.getStatusMeasurment()
@@ -167,9 +235,13 @@ class ExerciseFragment : Fragment() {
             sensorStarted = viewModel.getStatusMeasurment()
         }
 
+        // --- Messung starten oder stoppen --- //
         binding.buttonStopStart.setOnClickListener {
+
+            // wenn der Sensor verbunden ist, werden die Daten gesendet
             if (isConnected) {
 
+                // Einlesen der aktuellen Stunde und Minute
                 val kalender: Calendar = Calendar.getInstance()
                 var zeitformat = SimpleDateFormat("HH")
                 var time = zeitformat.format(kalender.time)
@@ -182,22 +254,26 @@ class ExerciseFragment : Fragment() {
                 val obj = JSONObject()
                 sensorStarted = !sensorStarted
 
-
                 // Werte setzen
                 if (sensorStarted) {
                     obj.put("STARTMESSUNG", "AN")
+                    // Übergabe der aktuellen Stunde und Minute, um Uhr im Code des
+                    // Embedded System zu starten, um Daten zu der entsprechenden Zeit in
+                    // einem Array hinzuzufügen und zu speichern
                     obj.put("HOUR", hour)
                     obj.put("MINUTE", minute)
 
                     binding.buttonStopStart.text = getString(R.string.btn_pause)
                 } else {
                     obj.put("STARTMESSUNG", "AUS")
+
                     binding.buttonStopStart.text = getString(R.string.btn_start_sensor)
                 }
 
+                // Speichern des aktuellen Status der Messung im viewModel
                 viewModel.setStatusMeasurment(sensorStarted)
 
-                // Senden
+                // Senden der Daten
                 if (gattCharacteristic != null) {
                     gattCharacteristic!!.value = obj.toString().toByteArray()
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
@@ -207,15 +283,17 @@ class ExerciseFragment : Fragment() {
             }
         }
 
+        // --- Initialisierung MediaController --- //
         if (mediaController == null) {
             mediaController = MediaController(activity)
             mediaController!!.setAnchorView(binding.videoView)
         }
-
         binding.videoView.setMediaController(mediaController)
 
+        // --- Nachdem ein Video zuende gespielt wurde, wird diese Funktion aufgerufen --- //
         binding.videoView.setOnCompletionListener {
-            toast("fertig")
+            // Das Video wird fünf mal abgespielt
+            // Anschließend kann ein neues geladen werden
             counterShowVideo++
             if(counterShowVideo < 5) {
                 binding.videoView.start()
@@ -224,31 +302,33 @@ class ExerciseFragment : Fragment() {
             }
         }
 
-        // com.google.firebase.storage.ktx.component2
-        storageRef.child("Video").listAll()
-            .addOnSuccessListener { (items) ->
+        // --- Abfrage der Anzahl an Videos in der Datenbank --- //
+        storageRef.child("Video").listAll().addOnSuccessListener { (items) ->
                 counterVideoMax = items.size
-                //toast(counterVideoMax.toString())
             }
             .addOnFailureListener {
-                // Uh-oh, an error occurred!
+                toast(getString(R.string.error_video))
             }
 
+        // --- Anzeige AlertDialog mit Erklärung zu Bewegungspause --- //
         binding.buttonShowDirections.setOnClickListener {
             context?.let {
                 MaterialAlertDialogBuilder(it)
                     .setTitle(resources.getString(R.string.title_alert_dialog))
                     .setMessage(resources.getString(R.string.message_alert_dialog_exercise))
-
                     .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
-
                     }
                     .show()
             }
         }
 
+        // --- Laden und Abspielen eines Videos --- //
+        // Zufälliges Video wird aus der Datenbank geladen und im VideoView abgespielt
+        // Anzahl der Bewegungspausen wird um eins hochzählt und in der Datenbank gespeichert
         binding.buttonGetVideo.setOnClickListener {
 
+            // Einlesen der aktuellen Stunde und Minute, um die durchgeführte Bewegungspause
+            // zu der entsprechenden Uhrzeit zu speichern
             val kalender: Calendar = Calendar.getInstance()
             var zeitformat = SimpleDateFormat("HH")
             var time = zeitformat.format(kalender.time)
@@ -258,6 +338,7 @@ class ExerciseFragment : Fragment() {
             time = zeitformat.format(kalender.time)
             minute = time.toInt()
 
+            // Umwandeln der Stunde in halbe Stunden
             if(minute > 29){
                 hour = hour * 2 + 1
             }
@@ -266,60 +347,60 @@ class ExerciseFragment : Fragment() {
                 hour *= 2
             }
 
+            // Zurücksetzen der Anzahl an Wiederholungen des Videos
             counterShowVideo = 0
+
+            // Hochzählen der Bewegungspausen
             counterMovementBreak++
+
+            // Speichern der Anzahl in der Datenbank
             arrayMovementBreak[hour] = arrayMovementBreak[hour].toString().toInt() + 1
             insertDataInDb()
 
+            // Initialisierung ProgressDialog
             val progressDialog = ProgressDialog(activity)
-            progressDialog.setTitle("Kotlin Progress Bar")
-            progressDialog.setMessage("Application is loading, please wait")
+            progressDialog.setTitle(getString(R.string.progress_dialog_title))
+            progressDialog.setMessage(getString(R.string.progress_dialog_message))
             progressDialog.setCancelable(false)
             progressDialog.show()
 
-            var videoID = r.nextInt(counterVideoMax - 1) + 1
+            // zufälliges Laden eines Videos
+            val videoID = r.nextInt(counterVideoMax - 1) + 1
+
             storageRef.child("Video/" + videoID + ".mp4").downloadUrl.addOnSuccessListener {
 
-                // Uri object to refer the
-                // resource from the videoUrl
-                // Uri object to refer the
-                // resource from the videoUrl
+                // ProgressDialog beenden
                 if (progressDialog.isShowing) {
                     progressDialog.dismiss()
                 }
+
+                //  Uri-Adresse einlesen
                 val uri: Uri = Uri.parse(it.toString())
 
                 binding.videoView.setVideoURI(uri)
 
+                // Video starten
                 binding.videoView.requestFocus()
 
                 binding.videoView.start()
 
             }
                 .addOnFailureListener {
-                    // Handle any errors
+                    toast(getString(R.string.error_video))
                 }
         }
-
-        binding.textViewChallengesCompleted.text =
-            getString(R.string.tv_challenge_completed, counterChallenge)
-
-        for (i in 0 until 48) {
-            arrayChallenge.add(i, 0)
-        }
-
-        for (i in 0 until 48) {
-            arrayMovementBreak.add(i, 0)
-        }
-
-        loadDbData()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 
+/*
+  =============================================================
+  =======                                               =======
+  =======                   Funktionen                  =======
+  =======                                               =======
+  =============================================================
+*/
+
+    // === serviceConnection === //
     // BluetoothLE Service Anbindung
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
@@ -327,15 +408,14 @@ class ExerciseFragment : Fragment() {
             bluetoothLeService = (service as BluetoothLeService.LocalBinder).getService()
             if (!bluetoothLeService!!.initialize()) {
                 Log.e(ContentValues.TAG, "Unable to initialize Bluetooth")
-
             }
         }
-
         override fun onServiceDisconnected(componentName: ComponentName) {
             bluetoothLeService = null
         }
     }
 
+    // === makeGattUpdateIntentFilter === //
     private fun makeGattUpdateIntentFilter(): IntentFilter? {
         val intentFilter = IntentFilter()
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED)
@@ -345,6 +425,7 @@ class ExerciseFragment : Fragment() {
         return intentFilter
     }
 
+    // === gattUpdateReceiver === //
     private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action = intent.action
@@ -358,22 +439,26 @@ class ExerciseFragment : Fragment() {
         }
     }
 
+    // === onConnect === //
     private fun onConnect() {
         isConnected = true
         Log.i(ContentValues.TAG, "connected")
         toast("connected")
     }
 
+    // === onDisconnect === //
     private fun onDisconnect() {
         isConnected = false
         Log.i(ContentValues.TAG, "disconnected")
         toast("disconnected")
     }
 
+    // === onGattCharacteristicDiscovered === //
     private fun onGattCharacteristicDiscovered() {
         gattCharacteristic = bluetoothLeService?.getGattCharacteristic()
     }
 
+    // === onDataAvailable === //
     private fun onDataAvailable() {
         // neue Daten verfügbar
         Log.i(ContentValues.TAG, "Data available")
@@ -383,15 +468,16 @@ class ExerciseFragment : Fragment() {
         parseJSONData(s)
     }
 
+    // === parseJSONData === //
     private fun parseJSONData(jsonString: String) {
         try {
             val obj = JSONObject(jsonString)
-            //extrahieren des Objektes data
-
+            //Daten einlesen und Variablen zuweisen
             statusChallenge = obj.getString("challenge").toString()
 
             toast(statusChallenge)
 
+            // Challenge beendet
             if (statusChallenge == "geschafft" && !statusReceived) {
 
                 statusReceived = true
@@ -400,12 +486,14 @@ class ExerciseFragment : Fragment() {
                 // Werte setzen
                 obj.put("CHALLENGERECEIVED", true)
 
-                // Senden
+                // Senden der Daten
                 if (gattCharacteristic != null) {
                     gattCharacteristic!!.value = obj.toString().toByteArray()
                     bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
                 }
 
+                // Einlesen der aktuellen Stunde und Minute, um die durchgeführte Bewegungspause
+                // zu der entsprechenden Uhrzeit zu speichern
                 val kalender: Calendar = Calendar.getInstance()
                 var zeitformat = SimpleDateFormat("HH")
                 var time = zeitformat.format(kalender.time)
@@ -415,6 +503,7 @@ class ExerciseFragment : Fragment() {
                 time = zeitformat.format(kalender.time)
                 minute = time.toInt()
 
+                // Umwandeln der Stunde in halbe Stunden
                 if(minute > 29){
                     hour = hour * 2 + 1
                 }
@@ -423,14 +512,21 @@ class ExerciseFragment : Fragment() {
                     hour *= 2
                 }
 
+                // Hochzählen der abgeschlossenen Challenges
                 counterChallenge++
 
+                // Speichern der Daten
                 arrayChallenge[hour] = arrayChallenge[hour].toString().toInt() + viewModel.getTimeChallenge()
+                insertDataInDb()
+
+                // Aktualisierung Anzeige
                 binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
                 binding.buttonStartChallenge.text = getString(R.string.btn_start_challenge)
-                insertDataInDb()
+
+                // Zeit im viewModel auf null setzen
                 viewModel.setTimeChallenge(0)
 
+                // Anzeige AlertDialog
                 context?.let {
                     MaterialAlertDialogBuilder(it)
                         .setTitle(resources.getString(R.string.title_alert_challenge))
@@ -448,54 +544,25 @@ class ExerciseFragment : Fragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        (requireActivity() as MainActivity).supportActionBar!!.show()
-        if (!mBluetooth.isEnabled) {
-            val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(turnBTOn, 1)
-        }
-        context?.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (bluetoothLeService != null && isConnected) {
-            var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress());
-            Log.d(ContentValues.TAG, "Connect request result=" + result);
-        }
-
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        bluetoothLeService!!.disconnect()
-        bluetoothLeService!!.close()
-        context?.unbindService(serviceConnection)
-        bluetoothLeService = null
-    }
-
-    override fun onPause() {
-        super.onPause()
-        context?.unregisterReceiver(gattUpdateReceiver)
-        if (isConnected) {
-            bluetoothLeService!!.disconnect()
-        }
-    }
-
+    // === insertDataInDb === //
+    // Daten werden zu dem aktuellen Tag gespeichert
+    // Daten werden benutzerspezifisch gespeichert
+    // Daten werden in der Datenbank in dem Dokument "Challenges" gespeichert
     private fun insertDataInDb() {
 
-
+        // Einlesen des aktuellen Datums
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
+        // Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserDataExercise()
         userData.setChallenge(counterChallenge)
         userData.setChallengeArray(arrayChallenge)
         userData.setMovementBreak(counterMovementBreak)
         userData.setMovementBreakArray(arrayMovementBreak)
 
-        // Schreibe Daten als Document in die Collection Messungen in DB;
-        // Eine id als Document Name wird automatisch vergeben
-        // Implementiere auch onSuccess und onFailure Listender
+        // Speicherpfad: users/uid/date/Challenges
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection(date).document("Challenge")
             .set(userData)
@@ -507,28 +574,33 @@ class ExerciseFragment : Fragment() {
             }
     }
 
+    // === loadDbData === //
+    // Daten werden aus der Datenbank geladen
     fun loadDbData() {
 
+        // Einlesen des aktuellen Datums
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Challenge
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection(date)
-            .document("Challenge")// alle Einträge abrufen
+            .document("Challenge")
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserDataExercise::class.java)
 
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (data != null) {
                         counterChallenge = data!!.getChallenge()
                         counterMovementBreak = data!!.getMovementBreak()
                         arrayChallenge = data!!.getChallengeArray()
                         arrayMovementBreak = data!!.getMovementBreakArray()
 
+                        // Aktualisierung Anzeige
                         binding.textViewChallengesCompleted.text =
                             getString(R.string.tv_challenge_completed, counterChallenge)
                     }
@@ -537,6 +609,48 @@ class ExerciseFragment : Fragment() {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
+    }
+
+    // === onDestroyView === //
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    // === onResume === //
+    override fun onResume() {
+        super.onResume()
+        (requireActivity() as MainActivity).supportActionBar!!.show()
+        if (!mBluetooth.isEnabled) {
+            val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(turnBTOn, 1)
+        }
+        context?.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter())
+        if (bluetoothLeService != null && isConnected) {
+            var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress())
+            Log.d(ContentValues.TAG, "Connect request result=" + result)
+        }
+
+    }
+
+    // === onDestroy === //
+    // Ble-Verbindung wird beendet
+    override fun onDestroy() {
+        super.onDestroy()
+        bluetoothLeService!!.disconnect()
+        bluetoothLeService!!.close()
+        context?.unbindService(serviceConnection)
+        bluetoothLeService = null
+    }
+
+    // === onPause === //
+    // Ble-Verbindung wird beendet
+    override fun onPause() {
+        super.onPause()
+        context?.unregisterReceiver(gattUpdateReceiver)
+        if (isConnected) {
+            bluetoothLeService!!.disconnect()
+        }
     }
 
 }

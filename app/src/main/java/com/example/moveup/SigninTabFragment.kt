@@ -1,31 +1,68 @@
 package com.example.moveup
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import com.example.moveup.databinding.SigninTabFragmentBinding
 import com.google.firebase.auth.FirebaseAuth
 import splitties.toast.toast
 
 class SigninTabFragment: Fragment() {
 
+/*
+ ======================================================================================
+ ==========================          Einleitung              ==========================
+ ======================================================================================
+ Projektname: moveUP
+ Autor: Annemarie Kayser
+ Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
+            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
+ Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
+           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+ Letztes Update: 07.02.2023
+
+======================================================================================
+*/
+
+/*
+  =============================================================
+  =======              Function Activity                =======
+  =============================================================
+
+  In diesem Fragment kann der User sich mit Email und Passwort registrieren
+*/
+
+/*
+  =============================================================
+  =======                   Variables                   =======
+  =============================================================
+*/
+
     private var _binding: SigninTabFragmentBinding? = null
-    private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
+
+    // === Datenbank === //
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private lateinit var mAuthListener: FirebaseAuth.AuthStateListener
 
 
+/*
+  =============================================================
+  =======                                               =======
+  =======         onCreateView & onViewCreated          =======
+  =======                                               =======
+  =============================================================
+*/
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = SigninTabFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -34,6 +71,7 @@ class SigninTabFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
 
+        // --- E-mail wird an Benutzer geschickt zur Verifizierung seiner Mail --- //
         mAuthListener = FirebaseAuth.AuthStateListener {
             val user = mFirebaseAuth.currentUser
 
@@ -50,6 +88,7 @@ class SigninTabFragment: Fragment() {
             }
         }
 
+        // --- E-Mail und Passwort werden eingelesen und an die register-Funktion übergeben --- //
         binding.buttonRegister.setOnClickListener {
             var email : String
             var password : String
@@ -61,6 +100,16 @@ class SigninTabFragment: Fragment() {
 
     }
 
+/*
+  =============================================================
+  =======                                               =======
+  =======                   Funktionen                  =======
+  =======                                               =======
+  =============================================================
+*/
+
+    // === validateForm === //
+    // Überprüfen, ob E-Mail und Passwort eingegeben wurden
     private fun validateForm(email: String, password: String): Boolean {
         var valid = true
 
@@ -74,16 +123,18 @@ class SigninTabFragment: Fragment() {
             valid = false
         }
 
-
         return valid
     }
 
+    // === register === //
     private fun register(email: String, password: String) {
 
+        // Überprüfen, ob E-mail und Passwort eingegeben wurden
         if (!validateForm(email, password)) {
             return
         }
 
+        // User wird neu angelegt in der Datenbank
         getActivity()?.let {
             mFirebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(it) { task ->

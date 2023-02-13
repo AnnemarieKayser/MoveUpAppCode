@@ -2,7 +2,6 @@ package com.example.moveup
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
 import android.content.ContentValues.TAG
 import android.graphics.Color
@@ -37,84 +36,129 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
 
-/**
- * A simple [Fragment] subclass as the second destination in the navigation.
- */
 class GraphFragment : Fragment() {
+
+/*
+ ======================================================================================
+ ==========================          Einleitung              ==========================
+ ======================================================================================
+ Projektname: moveUP
+ Autor: Annemarie Kayser
+ Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
+            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
+ Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
+           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+ Letztes Update: 07.02.2023
+
+======================================================================================
+*/
+
+/*
+  =============================================================
+  =======              Function Activity                =======
+  =============================================================
+
+  In diesem Fragment werden die Daten zum Sitzverhalten ausgewertet und dargestellt
+        - In einem Graphen werden Daten zu der Rückenhaltung und zum dynamischen/statischen Sitzverhalten
+          angezeigt
+        - Es kann eine Zielzeit angegeben werden, die am Tag gerade gesessen werden möchte
+        - der Fortschritt wird in einer ProgressBar angezeigt
+        - Das Verhältnis von gerader zu ungerader Haltung wird in einer ProgressBar angezeigt
+
+*/
+
+/*
+  =============================================================
+  =======                   Variables                   =======
+  =============================================================
+*/
+
 
     private var _binding: FragmentGraphBinding? = null
     private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
 
-    //Ble
-    private lateinit var scanner: BluetoothLeScanner
+    // === Bluetooth Low Energy === //
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
-    private var statusPos = "Haltung gerade"
-    private var counterReminder = 0
-    private var counterLeanBack = 0
-    private var data: UserData? = null
-    private var dataExercise: UserDataExercise? = null
     private var isReceivingData = false
-    private var yAxisMax = 30
 
-    //Circular-Progress-Bar
+    // === Circular-Progress-Bar === //
     private var timeMaxProgressBar = 60F
     private var progressTime: Float = 0F
 
+    // === Handler-Runnable-Konstrukt === //
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
+    // === Graph === //
     private var aaChartModel = AAChartModel()
     private var arrayBent = arrayOfNulls<Any>(48)
     private var arrayLeanBack = arrayOfNulls<Any>(48)
     private var arrayDynamic = arrayOfNulls<Any>(48)
     private var arrayStraight = arrayOfNulls<Any>(48)
     private var arrayChallenge = arrayOfNulls<Any>(48)
+    private var arrayMovementBreak = arrayOfNulls<Any>(48)
+
+    // === Counter === //
+    private var counterReminder = 0
+    private var counterLeanBack = 0
+    private var counterChallenge = 0
+    private var counterMovement = 0
+
+    // === Datenbank === //
+    private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private var data: UserData? = null
+    private var dataExercise: UserDataExercise? = null
     private var arrayBentList = arrayListOf<Any?>()
     private var arrayStraightList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
     private var arrayChallengeDb = arrayListOf<Any?>()
     private var arrayMovementBreakDb = arrayListOf<Any?>()
-    private var arrayMovementBreak = arrayOfNulls<Any>(48)
-    private var counterChallenge = 0
-    private var counterMovement = 0
-
-
-    //Datenbank
-    private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var date = ""
+
+
+
+/*
+  =============================================================
+  =======                                               =======
+  =======         onCreateView & onViewCreated          =======
+  =======                                               =======
+  =============================================================
+*/
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentGraphBinding.inflate(inflater, container, false)
         return binding.root
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- Initialisierung Bluetooth-Adapter --- //
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
-        scanner = mBluetooth.bluetoothLeScanner
 
-        // BluetoothLe Service starten
+        // --- BluetoothLe Service starten --- //
         val gattServiceIntent = Intent(context, BluetoothLeService::class.java)
-        // Service anbinden
+        // --- Service anbinden --- //
         context?.bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
 
-        //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
+        // --- Sensor nach 1s verbinden, wenn deviceAddress bekannt und gespeichert ist --- //
         mRunnable = Runnable {
-            if (isAdded() && activity != null) {
+            if (isAdded && activity != null) {
                 if (viewModel.getDeviceAddress() != "") {
                     bluetoothLeService!!.connect(viewModel.getDeviceAddress())
                 }
@@ -122,16 +166,21 @@ class GraphFragment : Fragment() {
         }
         mHandler.postDelayed(mRunnable, 1000)
 
+        // --- Empfang von Daten vom ESP32 thing für 2s aktivieren --- //
+        // Daten werden aktualisiert
         binding.buttonData.setOnClickListener {
+            // Daten empfangen aktiviert, wenn Sensor verbunden ist
             if (isConnected) {
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
                 isReceivingData = true
                 binding.buttonData.text = getString(R.string.bt_data_off)
 
                 mRunnable = Runnable {
+                    // Daten empfangen deaktiviert
                     bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
                     isReceivingData = false
                     binding.buttonData.text = getString(R.string.btn_data_graph)
+                    // Speichern der Daten in der Datenbank
                     insertDataInDb()
                 }
                 mHandler.postDelayed(mRunnable, 2000)
@@ -141,77 +190,83 @@ class GraphFragment : Fragment() {
             }
         }
 
+        // --- Konfiguration CircularProgressBar --- //
+        // Anzeige des Fortschritts mit gerader Haltung
         binding.circularProgressBar.apply {
-            // Set Progress Max
+            // Progress Max
             progressMax = timeMaxProgressBar
 
-            // Set ProgressBar Color
-            progressBarColorStart = Color.CYAN
-            //progressBarColorEnd = Color.GREEN
+            // ProgressBar Farbe
+            progressBarColorStart = Color.MAGENTA
+
+            // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
 
-            // Set background ProgressBar Color
+            // Hintergrundfarbe
             backgroundProgressBarColor = Color.GRAY
-            backgroundProgressBarColorDirection =
-                CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
 
-            // Set Width
-            progressBarWidth = 10f // in DP
-            backgroundProgressBarWidth = 4f // in DP
+            // Weite der ProgressBar
+            progressBarWidth = 10f
+            backgroundProgressBarWidth = 4f
 
-            // Other
+
             roundBorder = true
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
 
+        // --- Konfiguration CircularProgressBar --- //
+        // Anzeige des Verhältnisses zwischen gerader und ungerader Haltung
         binding.circularProgressBar1.apply {
-            // Set Progress Max
+            // Progress Max
             progressMax = timeMaxProgressBar
 
-            // Set ProgressBar Color
+            // ProgressBar Farbe
             progressBarColorStart = Color.GREEN
             progressBarColorEnd = Color.GREEN
+
+            // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
 
-            // Set background ProgressBar Color
+            // Hintergrundfarbe
             backgroundProgressBarColor = Color.RED
-            backgroundProgressBarColorDirection =
-                CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
 
-            // Set Width
-            progressBarWidth = 10f // in DP
-            backgroundProgressBarWidth = 5f // in DP
+            // Weite der ProgressBar
+            progressBarWidth = 10f
+            backgroundProgressBarWidth = 5f
 
-            // Other
-            //roundBorder = true
+            roundBorder = true
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
 
+        // --- Anzeige AlertDialog --- //
+        // Festlegen der Zeit, die man gerade sitzen möchte
         binding.buttonSetGoal.setOnClickListener {
             showDialogEditTime()
         }
 
+        // --- Anzeige eines DatePickers, um Datum auszuwählen --- //
+        // Daten zu diesem Datum werden anschließend in dem Graphen angezeigt
         binding.buttonSelectDate.setOnClickListener {
-            // Makes only dates from today forward selectable.
-            val constraintsBuilder =
-                CalendarConstraints.Builder()
-                    .setValidator(DateValidatorPointBackward.now())
+            // Nur zurückliegende Daten können ausgewählt werden
+            val constraintsBuilder = CalendarConstraints.Builder().setValidator(DateValidatorPointBackward.now())
 
+            // Aufbau des DatePickers
             val datePicker =
                 MaterialDatePicker.Builder.datePicker()
-                    .setTitleText("Select date")
                     .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                     .setCalendarConstraints(constraintsBuilder.build())
-                    .setTitleText("Wähle ein Datum aus")
+                    .setTitleText(getString(R.string.date_picker_title))
                     .build()
 
             datePicker.show(parentFragmentManager, "tag")
 
             datePicker.addOnPositiveButtonClickListener {
-                // Respond to positive button click.
-
+                // Klick auf positiven Button
+                // ausgewähltes Datum formatieren
                 val calendar = Calendar.getInstance()
                 calendar.timeInMillis = datePicker.selection!!
                 val format = SimpleDateFormat("yyyy-MM-dd")
@@ -219,16 +274,17 @@ class GraphFragment : Fragment() {
 
                 binding.buttonSelectDate.text = date
 
+                // Daten zu dem ausgewählten Tag werden geladen und angezeigt
                 loadDbData(date)
-                loadDbExerciseData(date)
             }
             datePicker.addOnNegativeButtonClickListener {
-                // Respond to negative button click.
+                // Klick auf negativen Button
+                // datePicker wird geschlossen
             }
-
         }
 
 
+        // --- Initialisierung Arrays --- //
         for (i in 0 until 48) {
             arrayBent[i] = 0
         }
@@ -248,45 +304,53 @@ class GraphFragment : Fragment() {
             arrayStraight[i] = 0
         }
 
+        // --- Initialisierung und Konfiguration des Graphen --- //
         setUpAAChartView()
 
+        // --- Einlesen des aktuellen Datums --- //
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
+        // --- Einlesen der Daten aus Datenbank --- //
         loadDbData(date)
-        loadDbExerciseData(date)
     }
 
+
+/*
+  =============================================================
+  =======                                               =======
+  =======                   Funktionen                  =======
+  =======                                               =======
+  =============================================================
+*/
+
+    // === setUpAAChartView === //
+    // https://github.com/AAChartModel/AAChartCore-Kotlin
     fun setUpAAChartView() {
         aaChartModel = configureAAChartModel()
         binding.chartView.aa_drawChartWithChartModel(aaChartModel)
     }
 
+    // === configureAAChartModel === //
+    // https://github.com/AAChartModel/AAChartCore-Kotlin
     private fun configureAAChartModel(): AAChartModel {
         val aaChartModel = configureChartBasicContent()
         aaChartModel.series(this.configureChartSeriesArray() as Array<Any>)
         return aaChartModel
     }
 
+    // === configureChartBasicContent === //
+    // https://github.com/AAChartModel/AAChartCore-Kotlin
     private fun configureChartBasicContent(): AAChartModel {
         return AAChartModel.Builder(requireContext().applicationContext)
             .setChartType(AAChartType.Column)
             .setXAxisVisible(true)
             .setTitle(getString(R.string.chart_title))
-            .setColorsTheme(
-                arrayOf(
-                    "#ce93d8",
-                    "#536dfe",
-                    "#7e57c2",
-                    "#d3b8ae",
-                    "#CDBCCB",
-                    "#BC1A53"
-                )
-            )
+            .setColorsTheme(arrayOf("#ce93d8", "#bbdefb", "#9c27b0","#6ab7ff", "#ff77a9", "#283593" ))
             .setStacking(AAChartStackingType.Normal)
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
-            .setBackgroundColor("#682842")
+            .setBackgroundColor("#102027")
             .setAxesTextColor("#FFFFFF")
             .setCategories("00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30", "04:00", "04:30", "05:00", "05:30",
                 "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
@@ -297,28 +361,29 @@ class GraphFragment : Fragment() {
             .setYAxisMax(25f)
             .setScrollablePlotArea(
                 AAScrollablePlotArea()
-                    .opacity(0F)
                     .minWidth(600)
-                    .scrollPositionX(1f)
-            )
+                    .scrollPositionX(1f))
             .build()
     }
 
 
+    // === configureChartSeriesArray === //
+    // Initialisierung Datentyp und Kategorien
+    // https://github.com/AAChartModel/AAChartCore-Kotlin
     private fun configureChartSeriesArray(): Array<AASeriesElement> {
 
         return arrayOf(
             AASeriesElement()
-                .name("Aufrechte Phase")
+                .name("Aufrecht")
                 .data(arrayStraight as Array<Any>),
             AASeriesElement()
-                .name("zurückgelehnte Phase")
+                .name("zurückgelehnt")
                 .data(arrayLeanBack as Array<Any>),
             AASeriesElement()
-                .name("ungerade Haltung")
+                .name("ungerade")
                 .data(arrayBent as Array<Any>),
             AASeriesElement()
-                .name("dynamische Phase")
+                .name("dynamisch")
                 .data(arrayDynamic as Array<Any>),
             AASeriesElement()
                 .name("Challenges")
@@ -329,6 +394,9 @@ class GraphFragment : Fragment() {
         )
     }
 
+    // === configureChartSeriesArrayExercise === //
+    // wird angesprungen, wenn keine Daten zu einem ausgewählten Datum vorhanden sind
+    // https://github.com/AAChartModel/AAChartCore-Kotlin
     private fun configureChartSeriesArrayExercise(): Array<AASeriesElement> {
         for (i in 0 until 48) {
             arrayChallenge[i] = 0
@@ -346,6 +414,9 @@ class GraphFragment : Fragment() {
         )
     }
 
+    // === configureChartSeriesArrayAfterLoadDb === //
+    // wird angesprungen, wenn keine Daten zu einem ausgewählten Datum vorhanden sind
+    // https://github.com/AAChartModel/AAChartCore-Kotlin
     private fun configureChartSeriesArrayAfterLoadDb(): Array<AASeriesElement> {
 
         for (i in 0 until 48) {
@@ -360,7 +431,6 @@ class GraphFragment : Fragment() {
         for (i in 0 until 48) {
             arrayStraight[i] = 0
         }
-
 
         return arrayOf(
             AASeriesElement()
@@ -384,11 +454,7 @@ class GraphFragment : Fragment() {
         )
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
+    // === serviceConnection === //
     // BluetoothLE Service Anbindung
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
@@ -396,15 +462,14 @@ class GraphFragment : Fragment() {
             bluetoothLeService = (service as BluetoothLeService.LocalBinder).getService()
             if (!bluetoothLeService!!.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth")
-
             }
         }
-
         override fun onServiceDisconnected(componentName: ComponentName) {
             bluetoothLeService = null
         }
     }
 
+    // === makeGattUpdateIntentFilter === //
     private fun makeGattUpdateIntentFilter(): IntentFilter? {
         val intentFilter = IntentFilter()
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED)
@@ -414,6 +479,7 @@ class GraphFragment : Fragment() {
         return intentFilter
     }
 
+    // === gattUpdateReceiver === //
     private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action = intent.action
@@ -427,20 +493,24 @@ class GraphFragment : Fragment() {
         }
     }
 
+    // === onConnect === //
     private fun onConnect() {
         isConnected = true
         toast("connected")
     }
 
+    // === onDisconnect === //
     private fun onDisconnect() {
         isConnected = false
         toast("disconnected")
     }
 
+    // === onGattCharacteristicDiscovered === //
     private fun onGattCharacteristicDiscovered() {
         gattCharacteristic = bluetoothLeService?.getGattCharacteristic()
     }
 
+    // === onDataAvailable === //
     private fun onDataAvailable() {
         // neue Daten verfügbar
         Log.i(TAG, "Data available")
@@ -450,22 +520,15 @@ class GraphFragment : Fragment() {
         parseJSONData(s)
     }
 
+    // === parseJSONData === //
     private fun parseJSONData(jsonString: String) {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
-            toast("Daten empfangen")
-            if (obj.has("statPos")) {
-                statusPos = obj.getString("statPos").toString()
-            }
-            if (obj.has("bent")) {
-                counterReminder = obj.getString("bent").toInt()
-            }
 
-            if (obj.has("lean")) {
-                counterLeanBack = obj.getString("lean").toInt()
-            }
-
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf das Array, welches im Graph angezeigt wird, übertragen
             val listdataBent = ArrayList<String>()
             if (obj.has("arrBent")) {
                 val jArrayBent = obj.getJSONArray("arrBent")
@@ -478,13 +541,19 @@ class GraphFragment : Fragment() {
                         arrayBent[i] = listdataBent[i].toInt() / 2
                     }
                 }
+
+                // gesamte Anzahl an Minuten an einem Tag mit ungerader Haltung wird berechnet
                 counterReminder = 0
                 for (i in 0 until 48) {
                     counterReminder += arrayBent[i].toString().toInt()
                 }
-
+                binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
             }
 
+
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf das Array, welches im Graph angezeigt wird, übertragen
             val listdataLean = ArrayList<String>()
             if (obj.has("arrLean")) {
                 val jArrayLean = obj.getJSONArray("arrLean")
@@ -496,13 +565,19 @@ class GraphFragment : Fragment() {
                         arrayLeanBack[i] = listdataLean[i].toInt() / 2
                     }
                 }
-                counterLeanBack = 0
 
+                // gesamte Anzahl an Minuten an einem Tag mit zurückgelehnter Haltung wird berechnet
+                counterLeanBack = 0
                 for (i in 0 until 48) {
                     counterLeanBack += arrayLeanBack[i].toString().toInt()
                 }
+                binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
             }
 
+
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf das Array, welches im Graph angezeigt wird, übertragen
             val listdataDynamic = ArrayList<String>()
             if (obj.has("arrDynamic")) {
 
@@ -519,7 +594,9 @@ class GraphFragment : Fragment() {
                 }
             }
 
-
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf das Array, welches im Graph angezeigt wird, übertragen
             val listdataUpright = ArrayList<String>()
             if (obj.has("arrStraight")) {
 
@@ -534,69 +611,49 @@ class GraphFragment : Fragment() {
                     }
                 }
 
+                // gesamte Anzahl an Minuten an einem Tag mit gerader Haltung wird berechnet
                 progressTime = 0F
-
                 for (i in 0 until 48) {
                     progressTime += arrayStraight[i].toString().toInt()
                 }
             }
 
-
-            binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
-            binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
-
+            // progressMax wird aktualisiert
             binding.circularProgressBar1.apply {
                 progressMax = counterReminder + progressTime
             }
-
+            // Aktualisierung der Anzeige
             binding.circularProgressBar1.progress = progressTime
 
+            // Verhältnis zwischen gerader und ungerader Haltung wird berechnet und angezeigt
             val ratio = ((progressTime/(counterReminder + progressTime))*100).roundToInt()
-
             binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio)
 
-
+            // Aktualisierung des Graphen
             val seriesArr = configureChartSeriesArray()
             binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
+            // Aktualisierung der Anzeige der Zeit mit gerader Haltung
             if (progressTime < timeMaxProgressBar) {
                 binding.circularProgressBar.progress = progressTime
                 binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
                 binding.textViewProgressUpright.text = getString(R.string.tv_progress)
-
             } else {
                 binding.circularProgressBar.progress = timeMaxProgressBar
-                binding.textViewTime.text =
-                    getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                binding.textViewTime.text = getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
                 binding.textViewProgressUpright.text = getString(R.string.tv_progress_done)
             }
-
-            showDialog()
-
 
         } catch (e: JSONException) {
             e.printStackTrace()
         }
     }
 
-    private fun showDialog() {
-        if (statusPos == "krumm") {
-
-            context?.let {
-                MaterialAlertDialogBuilder(it)
-                    .setTitle(resources.getString(R.string.title_alert_dialog))
-                    .setMessage(resources.getString(R.string.message_alert_dialog))
-
-                    .setPositiveButton(resources.getString(R.string.accept)) { dialog, which ->
-
-                    }
-                    .show()
-            }
-        }
-    }
-
+    // === showDialogEditTime === //
+    // AlertDialog mit Text-Eingabe-Feld
+    // Eingabe der Zeit die man am Tag gerade sitzen möchte
     private fun showDialogEditTime() {
-        //AlertDialog mit Text-Eingabe-Feld
+
         val editTextView = EditText(context)
 
         context?.let {
@@ -609,9 +666,12 @@ class GraphFragment : Fragment() {
                     if (editTextView.text.toString().isEmpty()) {
                     } else {
                         timeMaxProgressBar = editTextView.text.toString().toFloat()
+
+                        // Aktualisierung der Anzeige
                         binding.circularProgressBar.apply {
                             progressMax = timeMaxProgressBar
                         }
+
                         if(progressTime < timeMaxProgressBar) {
                             binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
                             binding.textViewProgressUpright.text = getString(R.string.tv_progress)
@@ -621,6 +681,7 @@ class GraphFragment : Fragment() {
                             binding.textViewProgressUpright.text = getString(R.string.tv_progress_done)
                             binding.textViewTime.text = getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
                         }
+                        // Speichern der Daten
                         insertDataInDb()
                     }
                 }
@@ -628,6 +689,7 @@ class GraphFragment : Fragment() {
         }
     }
 
+    // === onResume === //
     override fun onResume() {
         super.onResume()
         (requireActivity() as MainActivity).supportActionBar!!.show()
@@ -642,6 +704,7 @@ class GraphFragment : Fragment() {
         }
     }
 
+    // === onDestroy === //
     override fun onDestroy() {
         super.onDestroy()
         bluetoothLeService!!.disconnect()
@@ -651,6 +714,7 @@ class GraphFragment : Fragment() {
         mHandler.removeCallbacksAndMessages(null)
     }
 
+    // === onPause === //
     override fun onPause() {
         super.onPause()
         context?.unregisterReceiver(gattUpdateReceiver)
@@ -659,12 +723,19 @@ class GraphFragment : Fragment() {
         }
     }
 
+    // === insertDataInDb === //
+    // Speichern der Daten in der Datenbank
+    // Daten werden benutzerspezifisch gespeichert
+    // Daten werden zu dem aktuellen Datum gespeichert
     private fun insertDataInDb() {
 
+        // Einlesen des aktuellen Datums
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
+        // Daten aus Arrays für Graphen werden in ArrayLists überschrieben, da
+        // diese nur in die Datenbank geschrieben werden können
         for (i in 0 until 48) {
             arrayBentList.add(i, arrayBent[i])
         }
@@ -681,11 +752,8 @@ class GraphFragment : Fragment() {
             arrayStraightList.add(i, arrayStraight[i])
         }
 
-
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
-        userData.setCounterBentBack(counterReminder)
-        userData.setCounterLeanBack(counterLeanBack)
         userData.setProgressTime(progressTime)
         userData.setProgressTimeMax(timeMaxProgressBar)
         userData.setArrayBentBack(arrayBentList)
@@ -693,9 +761,7 @@ class GraphFragment : Fragment() {
         userData.setArrayDynamicPhase(arrayDynamicList)
         userData.setArrayUpright(arrayStraightList)
 
-        // Schreibe Daten als Document in die Collection Messungen in DB;
-        // Eine id als Document Name wird automatisch vergeben
-        // Implementiere auch onSuccess und onFailure Listender
+        // Speicherpfad users/uid/date/Daten
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection(date).document("Daten")
             .set(userData)
@@ -705,27 +771,30 @@ class GraphFragment : Fragment() {
             .addOnFailureListener { e ->
                 toast(getString(R.string.not_save))
             }
+
+        // Löschen der Daten aus Listen
         arrayBentList.clear()
         arrayLeanList.clear()
         arrayDynamicList.clear()
         arrayStraightList.clear()
     }
 
+    // === loadDbData === //
+    // Einlesen der Daten aus der Datenbank
     private fun loadDbData(date: String) {
 
-        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Daten
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection(date)
-            .document("Daten")// alle Einträge abrufen
+            .document("Daten")//
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserData::class.java)
-                    // Frage anzeigen
+
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (data != null) {
-                        counterReminder = data!!.getCounterBentBack()
-                        counterLeanBack = data!!.getCounterLeanBack()
                         progressTime = data!!.getProgressTime()
                         timeMaxProgressBar = data!!.getProgressTimeMax()
                         arrayBentList = data!!.getArrayBentBack()
@@ -733,6 +802,7 @@ class GraphFragment : Fragment() {
                         arrayDynamicList = data!!.getArrayDynamicPhase()
                         arrayStraightList = data!!.getArrayUpright()
 
+                        // Überschreiben der Daten in die Arrays für die Anzeige im Graphen
                         for (i in 0 until 48) {
                             arrayBent[i] = arrayBentList[i]
                         }
@@ -749,37 +819,46 @@ class GraphFragment : Fragment() {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
+                        // Löschen der Daten aus den ListArrays
                         arrayBentList.clear()
                         arrayLeanList.clear()
                         arrayDynamicList.clear()
                         arrayStraightList.clear()
 
+                        // Berechnung der gesamten Zeit an ungerader Haltung an einem Tag
                         counterReminder = 0
-                        counterLeanBack = 0
                         for (i in 0 until 48) {
                             counterReminder += arrayBent[i].toString().toInt()
                         }
+                        binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
 
+
+                        // Berechnung der gesamten Zeit an zurückgelehnter Haltung an einem Tag
+                        counterLeanBack = 0
                         for (i in 0 until 48) {
                             counterLeanBack += arrayLeanBack[i].toString().toInt()
                         }
-
-
-                        binding.textViewNumberReminder.text = getString(R.string.tv_reminder, counterReminder)
                         binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, counterLeanBack)
 
+                        // Berechnung der gesamten Zeit an gerader Haltung an einem Tag
+                        progressTime = 0F
+                        for (i in 0 until 48) {
+                            progressTime += arrayStraight[i].toString().toInt()
+                        }
+
+                        // Berechnung progressMax
                         binding.circularProgressBar1.apply {
                             progressMax = counterReminder + progressTime
                         }
 
+                        // Aktualisierung der Anzeige
                         binding.circularProgressBar1.progress = progressTime
 
-                        val ratio = ((progressTime/(counterReminder + progressTime))*100).roundToInt()
-
+                        // Verhältnis zwischen gerader und ungerader Haltung wird berechnet und angezeigt
+                        val ratio = ((progressTime / (counterReminder + progressTime)) * 100).roundToInt()
                         binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio)
 
-
-
+                        // ProgressBar mit Anzeige der gesamten Zeit an gerader Haltung wird aktualisiert
                         if (progressTime < timeMaxProgressBar) {
                             binding.circularProgressBar.apply {
                                 progressMax = timeMaxProgressBar
@@ -794,10 +873,13 @@ class GraphFragment : Fragment() {
                         }
 
                     } else {
+                        // wenn die Daten gleich null sind, werden alle Anzeigen auf null gesetzt
                         binding.textViewNumberReminder.text = getString(R.string.tv_reminder, 0)
                         binding.textViewLeanBack.text = getString(R.string.tv_reminder_lean_back, 0)
+
                         val seriesArr = configureChartSeriesArrayAfterLoadDb()
                         binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
+
                         binding.textViewProgressUpright.text = getString(R.string.tv_progress)
                         binding.circularProgressBar.apply {
                             progressMax = 0F
@@ -805,6 +887,7 @@ class GraphFragment : Fragment() {
                         }
                         binding.circularProgressBar.progress = 0F
                     }
+
                     val seriesArr = configureChartSeriesArray()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
@@ -813,23 +896,24 @@ class GraphFragment : Fragment() {
                 }
             }
 
-        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
-        //val uid = mFirebaseAuth.currentUser!!.uid
-        //Daten zu Challenges und Bewegungspausen einlesen
+        // Daten zu Challenges und Bewegungspausen einlesen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Challenge
         db.collection("users").document(uid).collection(date)
-            .document("Challenge")// alle Einträge abrufen
+            .document("Challenge")
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     dataExercise = task.result!!.toObject(UserDataExercise::class.java)
 
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (dataExercise != null) {
                         arrayChallengeDb = dataExercise!!.getChallengeArray()
                         arrayMovementBreakDb = dataExercise!!.getMovementBreakArray()
                         counterChallenge = dataExercise!!.getChallenge()
                         counterMovement = dataExercise!!.getMovementBreak()
 
+                        // Überschreiben der Daten in die Arrays für die Anzeige im Graphen
                         for (i in 0 until 48) {
                             arrayChallenge[i] = arrayChallengeDb[i]
                         }
@@ -838,9 +922,11 @@ class GraphFragment : Fragment() {
                             arrayMovementBreak[i] = arrayMovementBreakDb[i]
                         }
 
+                        // Anzeige aktualisieren
                         binding.textViewChallengeGraph.text = getString(R.string.tv_counter_challenge, counterChallenge)
                         binding.textViewMovementGraph.text = getString(R.string.tv_counter_movement, counterMovement)
                     }else{
+                        // wenn die Daten gleich null sind, werden alle Anzeigen auf null gesetzt
                         val seriesArr = configureChartSeriesArrayExercise()
                         binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
                         binding.textViewChallengeGraph.text = getString(R.string.tv_counter_challenge, 0)
@@ -856,7 +942,11 @@ class GraphFragment : Fragment() {
             }
     }
 
-    private fun loadDbExerciseData(date: String) {
 
+    // === onDestroyView === //
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
+
 }

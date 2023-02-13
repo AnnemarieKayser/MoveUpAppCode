@@ -2,7 +2,6 @@ package com.example.moveup
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
 import android.graphics.Color
 import android.os.Bundle
@@ -12,7 +11,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -28,126 +26,246 @@ import splitties.toast.toast
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * A simple [Fragment] subclass as the default destination in the navigation.
- */
+
 class HomeFragment : Fragment() {
+
+
+/*
+ ======================================================================================
+ ==========================          Einleitung              ==========================
+ ======================================================================================
+ Projektname: moveUP
+ Autor: Annemarie Kayser
+ Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
+            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
+ Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
+           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+ Letztes Update: 07.02.2023
+
+======================================================================================
+*/
+
+/*
+  =============================================================
+  =======              Function Activity                =======
+  =============================================================
+
+  Dieses Fragment zeigt einen ersten Überblick über die Funktionen der App
+  und dient zur Navigation
+            - Start/Stopp der Messung
+            - Anzeige ProgressBar mit Zeit an gerader Haltung
+            - Aktualisierung der Daten
+            - Ausloggen
+*/
+
+/*
+  =============================================================
+  =======                   Variables                   =======
+  =============================================================
+*/
+
 
     private var _binding: FragmentHomeBinding? = null
     private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
 
-    //Ble
-    private lateinit var scanner: BluetoothLeScanner
+    // === Bluetooth Low Energy === //
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
     private var bluetoothLeService: BluetoothLeService? = null
     private var gattCharacteristic: BluetoothGattCharacteristic? = null
     private var sensorStarted = false
     private var isReceivingData = false
+
+    // === Zeitvariablen === //
     private var hour = 0
     private var minute = 0
 
+    // === Handler-Runnable-Konstrukt === //
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
-    //Circular-Progress-Bar
+    // === Circular-Progress-Bar === //
     private var timeMaxProgressBar = 60F
     private var progressTime: Float = 0F
 
-    //Datenbank
+    // === Datenbank === //
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var data: UserData? = null
     private var dataExercise: UserDataExercise? = null
     private var dataSetting: UserDataSetting? = null
     private var dataConfig: UserDataConfig? = null
+
+
+    // === Variablen für Datenbank === //
     private var statusVibration = "VIBON"
     private var vibrationLength = 1000
     private var thresholdBent = -30
     private var thresholdLean = 20
+    private var counterReminder = 0
+    private var counterLeanBack = 0
     private var configData = false
-    private var arrayStraightList = arrayListOf<Any?>()
     private var arrayStraight = arrayOfNulls<Any>(48)
     private var arrayBent = arrayOfNulls<Any>(48)
     private var arrayLeanBack = arrayOfNulls<Any>(48)
     private var arrayDynamic = arrayOfNulls<Any>(48)
+    private var arrayMovementBreak = arrayOfNulls<Any>(48)
     private var arrayBentList = arrayListOf<Any?>()
     private var arrayLeanList = arrayListOf<Any?>()
     private var arrayDynamicList = arrayListOf<Any?>()
     private var arrayMovementBreakDb = arrayListOf<Any?>()
-    private var arrayMovementBreak = arrayOfNulls<Any>(48)
-    private var counterReminder = 0
-    private var counterLeanBack = 0
+    private var arrayStraightList = arrayListOf<Any?>()
+
+
+/*
+  =============================================================
+  =======                                               =======
+  =======         onCreateView & onViewCreated          =======
+  =======                                               =======
+  =============================================================
+*/
 
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
-
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
-            // With blank your fragment BackPressed will be disabled.
-        }
+       // --- Deaktivierung des Zurück-Buttons --- //
+       requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
 
+        // --- Initialisierung Bluetooth-Adapter --- //
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
-        scanner = mBluetooth.bluetoothLeScanner
 
-        // BluetoothLe Service starten
+        // --- BluetoothLe Service starten --- //
         val gattServiceIntent = Intent(context, BluetoothLeService::class.java)
-        // Service anbinden
+        // --- Service anbinden --- //
         context?.bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
 
-        //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
+        // --- Sensor nach 1s verbinden, wenn deviceAddress bekannt und gespeichert ist --- //
         mRunnable = Runnable {
-
             if (viewModel.getDeviceAddress() != "") {
-                bluetoothLeService!!.connect(viewModel.getDeviceAddress());
+                bluetoothLeService!!.connect(viewModel.getDeviceAddress())
             }
         }
         mHandler.postDelayed(mRunnable, 1000)
 
+
+        // --- Navigation zu BluetoothFragment oder Starten der Messung --- //
         binding.buttonNavigate.setOnClickListener {
             if (isConnected) {
-                findNavController().navigate(R.id.action_navigation_home_to_navigation_graph)
+                // AlertDialog
+                if (!configData) {
+                    context?.let {
+                        MaterialAlertDialogBuilder(it)
+                            .setTitle(resources.getString(R.string.title_alert_dialog))
+                            .setMessage(resources.getString(R.string.message_alert_dialog_config))
+                            .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
+
+                            }
+                            .setPositiveButton(resources.getString(R.string.change_to_config)) { dialog, which ->
+                                findNavController().navigate(R.id.action_navigation_home_to_navigation_setting)
+                            }
+                            .show()
+                    }
+                } else {
+
+                    // Einlesen der aktuellen Stunde und Minute
+                    val kalender: Calendar = Calendar.getInstance()
+                    var zeitformat = SimpleDateFormat("HH")
+                    var time = zeitformat.format(kalender.time)
+                    hour = time.toInt()
+
+                    zeitformat = SimpleDateFormat("mm")
+                    time = zeitformat.format(kalender.time)
+                    minute = time.toInt()
+
+                    val obj = JSONObject()
+                    sensorStarted = !sensorStarted
+
+
+                    // Werte setzen
+                    if (sensorStarted) {
+                        // Übergabe Start der Messung
+                        obj.put("STARTMESSUNG", "AN")
+
+                        // Übergabe der aktuellen Stunde und Minute, um Uhr im Code des
+                        // Embedded System zu starten, um Daten zu der entsprechenden Zeit in
+                        // einem Array hinzuzufügen und zu speichern
+                        obj.put("HOUR", hour)
+                        obj.put("MINUTE", minute)
+
+                        // Übergabe der eingestellten Vibration
+                        obj.put("VIBRATION", statusVibration)
+                        obj.put("VIBLENGTH", vibrationLength)
+
+                        // Übergabe der Konfigurationsdaten
+                        obj.put("THRESHOLDBENTBACK", thresholdBent)
+                        obj.put("THRESHOLDLEANBACK", thresholdLean)
+                        binding.buttonNavigate.text = getString(R.string.btn_stop_sensor)
+                    } else {
+                        // Übergabe Stopp der Messung
+                        obj.put("STARTMESSUNG", "AUS")
+                        binding.buttonNavigate.text = getString(R.string.btn_start_sensor)
+                    }
+
+                    // Speichern des aktuellen Status der Messung im viewModel
+                    viewModel.setStatusMeasurment(sensorStarted)
+
+                    // Senden der Daten
+                    if (gattCharacteristic != null) {
+                        gattCharacteristic!!.value = obj.toString().toByteArray()
+                        bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
+                    }
+                }
             } else {
                 findNavController().navigate(R.id.action_navigation_home_to_navigation_bluetooth)
             }
         }
 
+        // --- Navigation zu ExerciseFragment --- //
         binding.buttonConfigStartChallengeHome.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
         }
 
+        // --- Ausloggen --- //
+        // Öffnen der LogInActivity
         binding.buttonLogOutHome.setOnClickListener {
             mFirebaseAuth.signOut()
             val intent = Intent(getActivity(), LoginInActivity::class.java)
             getActivity()?.startActivity(intent)
         }
 
+        // --- Daten empfangen vom ESP32 thing für 2 Sekunden --- //
         binding.buttonGetDataHome.setOnClickListener {
+            // wenn der ESP32 thing verbunden ist, werden die Daten empfangen
             if (isConnected) {
+                // Daten empfangen aktiviert
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, true)
                 isReceivingData = true
                 binding.buttonGetDataHome.text = getString(R.string.bt_data_off)
 
                 mRunnable = Runnable {
+                    // Daten empfangen deaktiviert
                     bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
                     isReceivingData = false
                     binding.buttonGetDataHome.text = getString(R.string.btn_data_graph)
+                    // Speichern der Daten
                     insertDataInDb()
 
+                    //Anzeige eines AlertDialogs, wenn der Benutzer sich über einen längeren Zeitraum nicht bewegt hat
                     val kalender: Calendar = Calendar.getInstance()
                     var zeitformat = SimpleDateFormat("HH")
                     var time = zeitformat.format(kalender.time)
@@ -178,97 +296,43 @@ class HomeFragment : Fragment() {
             }
         }
 
-        if (viewModel.getStatusMeasurment()) {
-            binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
-            sensorStarted = viewModel.getStatusMeasurment()
-        } else {
-            binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
-            sensorStarted = viewModel.getStatusMeasurment()
-        }
-
+        // --- Messung starten/stoppen --- //
+        // Abfrage, ob der Sensor bereits konfiguriert wurde
+        // wenn Nein, Messung wird nicht gestartet
+        // wenn Ja und Sensor verbunden, Daten werden an ESP32 thing gesendet
         binding.buttonStartSensor.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_home_to_navigation_setting)
 
-            if (!configData) {
-                context?.let {
-                    MaterialAlertDialogBuilder(it)
-                        .setTitle(resources.getString(R.string.title_alert_dialog))
-                        .setMessage(resources.getString(R.string.message_alert_dialog_config))
-                        .setNegativeButton(resources.getString(R.string.dialog_cancel)) { dialog, which ->
-
-                        }
-                        .setPositiveButton(resources.getString(R.string.change_to_config)) { dialog, which ->
-                            findNavController().navigate(R.id.action_navigation_home_to_navigation_setting)
-                        }
-                        .show()
-                }
-            } else {
-                if (isConnected) {
-
-                    val kalender: Calendar = Calendar.getInstance()
-                    var zeitformat = SimpleDateFormat("HH")
-                    var time = zeitformat.format(kalender.time)
-                    hour = time.toInt()
-
-                    zeitformat = SimpleDateFormat("mm")
-                    time = zeitformat.format(kalender.time)
-                    minute = time.toInt()
-
-                    val obj = JSONObject()
-                    sensorStarted = !sensorStarted
-
-
-                    // Werte setzen
-                    if (sensorStarted) {
-                        obj.put("STARTMESSUNG", "AN")
-                        obj.put("HOUR", hour)
-                        obj.put("MINUTE", minute)
-                        obj.put("VIBRATION", statusVibration)
-                        obj.put("VIBLENGTH", vibrationLength)
-                        obj.put("THRESHOLDBENTBACK", thresholdBent)
-                        obj.put("THRESHOLDLEANBACK", thresholdLean)
-                        binding.buttonStartSensor.text = getString(R.string.btn_stop_sensor)
-                    } else {
-                        obj.put("STARTMESSUNG", "AUS")
-                        binding.buttonStartSensor.text = getString(R.string.btn_start_sensor)
-                    }
-
-                    viewModel.setStatusMeasurment(sensorStarted)
-
-                    // Senden
-                    if (gattCharacteristic != null) {
-                        gattCharacteristic!!.value = obj.toString().toByteArray()
-                        bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                    }
-                } else {
-                    toast("verbinde zunächst den Sensor")
-                }
-            }
         }
 
+
+        // --- Konfiguration CircularProgressBar --- //
+        // Anzeige des Fortschritts mit gerader Haltung
         binding.circularProgressBar.apply {
-            // Set Progress Max
+            // Progress Max
             progressMax = timeMaxProgressBar
 
-            // Set ProgressBar Color
-            progressBarColorStart = Color.CYAN
-            //progressBarColorEnd = Color.GREEN
+            // ProgressBar Farbe
+            progressBarColorStart = Color.MAGENTA
+
+            // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
 
-            // Set background ProgressBar Color
+            // Hintergrundfarbe
             backgroundProgressBarColor = Color.GRAY
-            backgroundProgressBarColorDirection =
-                CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
+            backgroundProgressBarColorDirection = CircularProgressBar.GradientDirection.TOP_TO_BOTTOM
 
-            // Set Width
-            progressBarWidth = 7f // in DP
-            backgroundProgressBarWidth = 9f // in DP
+            // Weite der ProgressBar
+            progressBarWidth = 10f
+            backgroundProgressBarWidth = 4f
 
-            // Other
             roundBorder = true
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
         }
 
+
+        // --- Initialisierung Arrays --- //
         for (i in 0 until 48) {
             arrayBent[i] = 0
         }
@@ -285,10 +349,19 @@ class HomeFragment : Fragment() {
             arrayStraight[i] = 0
         }
 
+        // --- Einlesen der Daten aus Datenbank --- //
         loadDbData()
-
     }
 
+/*
+  =============================================================
+  =======                                               =======
+  =======                   Funktionen                  =======
+  =======                                               =======
+  =============================================================
+*/
+
+    // === serviceConnection === //
     // BluetoothLE Service Anbindung
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
@@ -296,15 +369,14 @@ class HomeFragment : Fragment() {
             bluetoothLeService = (service as BluetoothLeService.LocalBinder).getService()
             if (!bluetoothLeService!!.initialize()) {
                 Log.e(ContentValues.TAG, "Unable to initialize Bluetooth")
-
             }
         }
-
         override fun onServiceDisconnected(componentName: ComponentName) {
             bluetoothLeService = null
         }
     }
 
+    // === makeGattUpdateIntentFilter === //
     private fun makeGattUpdateIntentFilter(): IntentFilter? {
         val intentFilter = IntentFilter()
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED)
@@ -314,6 +386,7 @@ class HomeFragment : Fragment() {
         return intentFilter
     }
 
+    // === gattUpdateReceiver === //
     private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action = intent.action
@@ -327,28 +400,38 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // === OnConnect === //
     private fun onConnect() {
         isConnected = true
-        //binding.textViewConnected.setText(R.string.connected)
         Log.i(ContentValues.TAG, "connected")
         toast("connected")
         binding.textViewConnectSensor.text = getString(R.string.sensor_connected)
-        binding.buttonNavigate.text = getString(R.string.btn_sensor_connected)
+        binding.buttonNavigate.text = getString(R.string.btn_start_sensor)
+        // --- Einlesen des aktuellen Status der Messung --- //
+        if (viewModel.getStatusMeasurment()) {
+            binding.buttonNavigate.text = getString(R.string.btn_stop_sensor)
+            sensorStarted = viewModel.getStatusMeasurment()
+        } else {
+            binding.buttonNavigate.text = getString(R.string.btn_start_sensor)
+            sensorStarted = viewModel.getStatusMeasurment()
+        }
     }
 
+    // === onDisconnect === //
     private fun onDisconnect() {
         isConnected = false
-        //binding.textViewConnected.setText(R.string.disconnected)
         Log.i(ContentValues.TAG, "disconnected")
         toast("disconnected")
         binding.textViewConnectSensor.text = getString(R.string.tv_connect_sensor_main)
         binding.buttonNavigate.text = getString(R.string.btn_connect)
     }
 
+    // === onGattCharacteristicDiscovered === //
     private fun onGattCharacteristicDiscovered() {
         gattCharacteristic = bluetoothLeService?.getGattCharacteristic()
     }
 
+    // === onDataAvailable === //
     private fun onDataAvailable() {
         // neue Daten verfügbar
         Log.i(ContentValues.TAG, "Data available")
@@ -358,31 +441,21 @@ class HomeFragment : Fragment() {
         parseJSONData(s)
     }
 
+    // === parseJSONData === //
     private fun parseJSONData(jsonString: String) {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
 
-            if (obj.has("bent")) {
-
-                counterReminder = obj.getString("bent").toInt()
-            }
-
-            if (obj.has("lean")) {
-
-                counterLeanBack = obj.getString("lean").toInt()
-            }
-
-            toast(counterLeanBack.toString())
-
-
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf ein ArrayOfNulls übertragen
             val listdataBent = ArrayList<String>()
             if (obj.has("arrBent")) {
                 val jArrayBent = obj.getJSONArray("arrBent")
                     for (i in 0 until jArrayBent.length()) {
                         listdataBent.add(jArrayBent.getString(i))
                     }
-
 
                 for (i in 0 until 48) {
                     if (listdataBent[i].toInt() != 0) {
@@ -391,14 +464,15 @@ class HomeFragment : Fragment() {
                 }
             }
 
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf ein ArrayOfNulls übertragen
             val listdataLean = ArrayList<String>()
             if (obj.has("arrLean")) {
-
                 val jArrayLean = obj.getJSONArray("arrLean")
                 for (i in 0 until jArrayLean.length()) {
                     listdataLean.add(jArrayLean.getString(i))
                 }
-
 
                 for (i in 0 until 48) {
                     if (listdataLean[i].toInt() != 0) {
@@ -407,14 +481,15 @@ class HomeFragment : Fragment() {
                 }
             }
 
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf ein ArrayOfNulls übertragen
             val listdataDynamic = ArrayList<String>()
             if (obj.has("arrDynamic")) {
-
                 val jArrayDynamic = obj.getJSONArray("arrDynamic")
                 for (i in 0 until jArrayDynamic.length()) {
                     listdataDynamic.add(jArrayDynamic.getString(i))
                 }
-
 
                 for (i in 0 until 48) {
                     if (listdataDynamic[i].toInt() != 0) {
@@ -422,14 +497,16 @@ class HomeFragment : Fragment() {
                     }
                 }
             }
+
+            // Abfrage, ob das jeweilige Array in dem empfangenen Objekt dabei ist
+            // Daten im JSONArray werden auf eine ArrayList übertragen
+            // Anschließend werden die Daten auf ein ArrayOfNulls übertragen
             val listdataUpright = ArrayList<String>()
             if (obj.has("arrStraight")) {
-
                 val jArrayUpright = obj.getJSONArray("arrStraight")
                 for (i in 0 until jArrayUpright.length()) {
                     listdataUpright.add(jArrayUpright.getString(i))
                 }
-
 
                 for (i in 0 until 48) {
                     if (listdataUpright[i].toInt() != 0) {
@@ -437,39 +514,37 @@ class HomeFragment : Fragment() {
                     }
                 }
 
+                // gesamte Anzahl an Minuten an einem Tag mit gerader Haltung wird berechnet
                 progressTime = 0F
-
                 for (i in 0 until 48) {
                     progressTime += arrayStraight[i].toString().toInt()
                 }
             }
 
-
+            // Aktualisierung der Anzeige der Zeit mit gerader Haltung
             if (progressTime <= timeMaxProgressBar) {
                 binding.circularProgressBar.progress = progressTime
-                binding.textViewHomeProgressTime.text =
-                    getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+                binding.textViewHomeProgressTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
                 binding.textViewProgress.text = getString(R.string.tv_progress)
 
             } else {
                 binding.circularProgressBar.progress = timeMaxProgressBar
-                binding.textViewHomeProgressTime.text =
-                    getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                binding.textViewHomeProgressTime.text = getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
                 binding.textViewProgress.text = getString(R.string.tv_progress_done)
             }
-
 
         } catch (e: JSONException) {
             e.printStackTrace()
         }
     }
 
+    // === onDestroyView === //
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-
+    // === onResume === //
     override fun onResume() {
         super.onResume()
         (requireActivity() as MainActivity).supportActionBar!!.show()
@@ -477,40 +552,47 @@ class HomeFragment : Fragment() {
             val turnBTOn = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(turnBTOn, 1)
         }
-        context?.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter());
+        context?.registerReceiver(gattUpdateReceiver, makeGattUpdateIntentFilter())
         if (bluetoothLeService != null && isConnected) {
-            var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress());
-            Log.d(ContentValues.TAG, "Connect request result=" + result);
+            var result = bluetoothLeService!!.connect(viewModel.getDeviceAddress())
+            Log.d(ContentValues.TAG, "Connect request result=" + result)
         }
-
     }
 
+    // === onDestroy === //
+    // Beenden der Bluetooth-Verbindung
     override fun onDestroy() {
         super.onDestroy()
         bluetoothLeService!!.disconnect()
         bluetoothLeService!!.close()
         context?.unbindService(serviceConnection)
         bluetoothLeService = null
-        toast("onDestroy")
         mHandler.removeCallbacksAndMessages(null)
     }
 
+    // === onPause === //
+    // Beenden der Bluetooth-Verbindung
     override fun onPause() {
         super.onPause()
         context?.unregisterReceiver(gattUpdateReceiver)
         if (isConnected) {
             bluetoothLeService!!.disconnect()
         }
-        toast("Onpause")
     }
 
+    // === insertDataInDb === //
+    // Speichern der Daten in der Datenbank
+    // Daten werden benutzerspezifisch gespeichert
+    // Daten werden zu dem aktuellen Datum gespeichert
     private fun insertDataInDb() {
 
+        // Einlesen des aktuellen Datums
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-
+        // Daten aus Arrays für Graphen werden in ArrayLists überschrieben, da
+        // diese nur in die Datenbank geschrieben werden können
         for (i in 0 until 48) {
             arrayStraightList.add(i, arrayStraight[i])
         }
@@ -530,8 +612,6 @@ class HomeFragment : Fragment() {
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
-        userData.setCounterBentBack(counterReminder)
-        userData.setCounterLeanBack(counterLeanBack)
         userData.setProgressTime(progressTime)
         userData.setProgressTimeMax(timeMaxProgressBar)
         userData.setArrayBentBack(arrayBentList)
@@ -539,9 +619,7 @@ class HomeFragment : Fragment() {
         userData.setArrayDynamicPhase(arrayDynamicList)
         userData.setArrayUpright(arrayStraightList)
 
-        // Schreibe Daten als Document in die Collection Messungen in DB;
-        // Eine id als Document Name wird automatisch vergeben
-        // Implementiere auch onSuccess und onFailure Listender
+        // Speicherpfad users/uid/date/Daten
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection(date).document("Daten")
             .set(userData)
@@ -551,19 +629,24 @@ class HomeFragment : Fragment() {
             .addOnFailureListener { e ->
                 toast(getString(R.string.not_save))
             }
+
+        // Löschen der Daten aus Listen
         arrayStraightList.clear()
         arrayBentList.clear()
         arrayLeanList.clear()
         arrayDynamicList.clear()
     }
 
+    // === loadDbData === //
+    // Einlesen der Daten aus der Datenbank
     private fun loadDbData() {
 
+        // Einlesen des aktuellen Datums
         val kalender: Calendar = Calendar.getInstance()
         val zeitformat = SimpleDateFormat("yyyy-MM-dd")
         val date = zeitformat.format(kalender.time)
 
-        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Daten
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection(date)
             .document("Daten") // alle Einträge abrufen
@@ -572,11 +655,9 @@ class HomeFragment : Fragment() {
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserData::class.java)
-                    // Frage anzeigen
-                    if (data != null) {
 
-                        counterReminder = data!!.getCounterBentBack()
-                        counterLeanBack = data!!.getCounterLeanBack()
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
+                    if (data != null) {
                         progressTime = data!!.getProgressTime()
                         timeMaxProgressBar = data!!.getProgressTimeMax()
                         arrayBentList = data!!.getArrayBentBack()
@@ -584,6 +665,7 @@ class HomeFragment : Fragment() {
                         arrayDynamicList = data!!.getArrayDynamicPhase()
                         arrayStraightList = data!!.getArrayUpright()
 
+                        // Überschreiben der Daten in die ArraysOfNulls
                         for (i in 0 until 48) {
                             arrayBent[i] = arrayBentList[i]
                         }
@@ -600,30 +682,29 @@ class HomeFragment : Fragment() {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
-
-                        for (i in 0 until 48) {
-                            arrayStraight[i] = arrayStraightList[i]
-                        }
-
+                        // ProgressBar mit Anzeige der gesamten Zeit an gerader Haltung wird aktualisiert
                         if (progressTime < timeMaxProgressBar) {
+
                             binding.circularProgressBar.apply {
                                 progressMax = timeMaxProgressBar
                             }
-                            binding.textViewHomeProgressTime.text =
-                                getString(R.string.tv_time, progressTime, timeMaxProgressBar)
+
+                            binding.textViewHomeProgressTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
                             binding.circularProgressBar.progress = progressTime
                             binding.textViewProgress.text = getString(R.string.tv_progress)
                         } else {
-                            binding.textViewHomeProgressTime.text =
-                                getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
+                            binding.textViewHomeProgressTime.text = getString(R.string.tv_time, timeMaxProgressBar, timeMaxProgressBar)
                             binding.circularProgressBar.progress = timeMaxProgressBar
                             binding.textViewProgress.text = getString(R.string.tv_progress_done)
                         }
+
+                        // Löschen der Daten aus Listen
                         arrayBentList.clear()
                         arrayLeanList.clear()
                         arrayDynamicList.clear()
                         arrayStraightList.clear()
                     } else{
+                        // wenn die Daten gleich null sind, wird die Anzeige auf null gesetzt
                         binding.textViewHomeProgressTime.text = getString(R.string.tv_time, 0F, 0F)
                     }
                 } else {
@@ -632,16 +713,18 @@ class HomeFragment : Fragment() {
             }
 
 
+        // Daten zu Einstellung der Vibration werden eingelesen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Einstellungen/Vibration
         db.collection("users").document(uid).collection("Einstellungen")
-            .document("Vibration")// alle Einträge abrufen
+            .document("Vibration")
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     dataSetting = task.result!!.toObject(UserDataSetting::class.java)
 
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (dataSetting != null) {
-                        //toast("Vibrationsdaten")
                         vibrationLength = dataSetting!!.getVibrationLength()
                         statusVibration = dataSetting!!.getVibration()
                     }
@@ -651,32 +734,29 @@ class HomeFragment : Fragment() {
                 }
             }
 
+        // Daten zur Konfiguration des Sensors werden eingelesen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Einstellungen/Konfiguration
         db.collection("users").document(uid).collection("Einstellungen")
-            .document("Konfiguration")// alle Einträge abrufen
+            .document("Konfiguration")
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    //toast("Config")
                     // Datenbankantwort in Objektvariable speichern
                     dataConfig = task.result!!.toObject(UserDataConfig::class.java)
 
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (dataConfig != null) {
-                        toast("config data")
                         configData = true
                         thresholdBent = dataConfig!!.getThresholdBentBack()
                         thresholdLean = dataConfig!!.getThresholdLeanBack()
-                        toast(thresholdBent.toString() + thresholdLean.toString())
-
                     }
-
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
                 }
             }
 
-        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
-        //val uid = mFirebaseAuth.currentUser!!.uid
-        //Daten zu Challenges und Bewegungspausen einlesen
+        // Daten zu Challenges und Bewegungspausen einlesen
+        // Einstiegspunkt für die Abfrage ist users/uid/date/Challenge
         db.collection("users").document(uid).collection(date)
             .document("Challenge")// alle Einträge abrufen
             .get()
@@ -685,15 +765,15 @@ class HomeFragment : Fragment() {
                     // Datenbankantwort in Objektvariable speichern
                     dataExercise = task.result!!.toObject(UserDataExercise::class.java)
 
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (dataExercise != null) {
+
                         arrayMovementBreakDb = dataExercise!!.getMovementBreakArray()
 
                         for (i in 0 until 48) {
                             arrayMovementBreak[i] = arrayMovementBreakDb[i]
                         }
                     }
-
-
                 } else {
                     Log.d(ContentValues.TAG, "FEHLER: Daten lesen ", task.exception)
                 }

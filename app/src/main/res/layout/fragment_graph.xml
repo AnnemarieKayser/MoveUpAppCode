@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/backgoundgraph"
     android:fillViewport="true"
     tools:context=".GraphFragment">
 
@@ -12,21 +11,21 @@
 
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="#360E30">
+        android:background="@color/blue_grey_dark">
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView8"
             android:layout_width="0dp"
             android:layout_height="250dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            android:backgroundTint="#3D1B39"
+            android:backgroundTint="#162C35"
             app:cardCornerRadius="5dp"
             app:cardElevation="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@+id/cardView7">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -87,9 +86,9 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textViewUprightBent" />
 
+
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
-
 
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
@@ -114,7 +113,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            android:backgroundTint="#3D1B39"
+            android:backgroundTint="@color/blue_grey_light"
             app:cardCornerRadius="5dp"
             app:cardElevation="10dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -140,6 +139,13 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
+        <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
+            android:id="@+id/chartView"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/buttonSelectDate" />
+
         <TextView
             android:id="@+id/textViewTime"
             android:layout_width="wrap_content"
@@ -149,71 +155,45 @@
             android:text="@string/tv_time"
             android:textColor="@color/white"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardViewGraph" />
+            app:layout_constraintTop_toBottomOf="@+id/chartView" />
 
         <Button
             android:id="@+id/buttonSetGoal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:backgroundTint="@color/grey_light"
+            android:backgroundTint="@color/blue_grey_light"
             android:text="@string/btn_time_goal"
             app:layout_constraintEnd_toStartOf="@+id/textViewTime"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardViewGraph" />
+            app:layout_constraintTop_toBottomOf="@+id/chartView" />
 
         <Button
             android:id="@+id/buttonData"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/blue_grey_light"
             android:elevation="50dp"
             android:text="@string/btn_data_graph"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardView8" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/buttonSelectDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/blue_grey_light"
             android:elevation="8dp"
             android:text="@string/btn_select_date"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/buttonData"
-            app:layout_constraintTop_toBottomOf="@+id/cardView8" />
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardViewGraph"
-            android:layout_width="0dp"
-            android:layout_height="400dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="8dp"
-            app:cardBackgroundColor="#682842"
-            app:cardCornerRadius="5dp"
-            app:cardElevation="7dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/buttonData">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-
-                <com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
-                    android:id="@+id/chartView"
-                    android:layout_width="match_parent"
-                    android:layout_height="350dp"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                </com.github.aachartmodel.aainfographics.aachartcreator.AAChartView>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
+            app:layout_constraintTop_toBottomOf="@+id/buttonData" />
 
         <TextView
             android:id="@+id/textViewProgressUpright"
@@ -238,7 +218,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            android:backgroundTint="#3D1B39"
+            android:backgroundTint="@color/blue_grey_light"
             app:cardCornerRadius="5dp"
             app:cardElevation="10dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -271,7 +251,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            android:backgroundTint="#3D1B39"
+            android:backgroundTint="@color/blue_grey_light"
             app:cardCornerRadius="5dp"
             app:cardElevation="10dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -304,11 +284,9 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#3D1B39"
+            android:backgroundTint="@color/blue_grey_light"
             app:cardCornerRadius="5dp"
             app:cardElevation="10dp"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/cardView6">
@@ -330,6 +308,16 @@
                     app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

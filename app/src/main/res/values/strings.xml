@@ -3,18 +3,18 @@
     <string name="action_settings">Settings</string>
     <string name="title_home">Home</string>
     <string name="title_graph">Graph</string>
-    <string name="title_setting">Einstellungen</string>
+    <string name="title_setting">Setting</string>
     <string name="mainActionBluetooth">Bluetooth</string>
 
     <!-- HomeFragment-->
     <string name="tv_connect_sensor_main">Verbinde deinen moveUp-Sensor \nund starte in den Tag!</string>
     <string name="tv_main_go">Let\'s do this!</string>
-    <string name="sensor_connected">Dein Sensor ist verbunden! Schau dir deine Statistik an.</string>
+    <string name="sensor_connected">Dein Sensor ist verbunden! Befestige den moveUp-Sensor an deinem Oberteil.</string>
     <string name="btn_sensor_connected">Statistik öffnen</string>
     <string name="tv_time_home">Status: %1$.0f / %2$.0f min.</string>
     <string name="btn_start_sensor">Starte die Messung!</string>
     <string name="btn_stop_sensor">Beende die Messung</string>
-    <string name="tv_home_intro">Befestige den moveUp-Sensor am Rücken an deinem Oberteil. Konfiguriere den Sensor anschließend und starte die Messung!</string>
+    <string name="tv_home_intro">Konfiguriere den Sensor auf deine individuelle Haltung!</string>
     <string name="change_to_exercise">Bewegungspause starten</string>
     <string name="tv_progress_done">"Du hast dein heutiges Tagesziel an gerader Haltung erreicht!"</string>
 
@@ -130,5 +130,10 @@
     <string name="tv_upright_bent2">Versuche 75–100% der Zeit gerade zusitzen</string>
     <string name="tv_upright_bent_status">Aktuell: %d</string>
     <string name="tv_stop_measurment">Stoppe die Messung bevor du eine Challenge oder Bewegungspause startest</string>
+    <string name="error_video">Video konnte nicht geladen werden</string>
+    <string name="progress_dialog_title">Einen Moment...</string>
+    <string name="progress_dialog_message">Das Video wird geladen</string>
+    <string name="date_picker_title">Wähle ein Datum aus</string>
+    <string name="btn_start_config">Starte Konfiguration</string>
 
 </resources>

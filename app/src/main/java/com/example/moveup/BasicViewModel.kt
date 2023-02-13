@@ -6,29 +6,33 @@ import androidx.lifecycle.ViewModel
 
 class BasicViewModel : ViewModel() {
 
+    // Speichern der gefundenen Geräte
     private val _discoveredDevices = MutableLiveData<MutableList<String>>()
     val discoveredDevices: LiveData<MutableList<String>>
         get() = _discoveredDevices
 
+    // Speichern der Mac-Adresse des verbundenen ESP32 thing
     private val _deviceAddress = MutableLiveData<String>()
     val deviceAddress: LiveData<String>
         get() = _deviceAddress
 
+    // Speichern des aktuellen Datums
     private val _date = MutableLiveData<String>()
     val date: LiveData<String>
         get() = _date
 
+    // Speichern der eingegebenen Zeit für eine Challenge
     private val _timeChallenge = MutableLiveData<Int>()
     val timeChallenge: LiveData<Int>
         get() = _timeChallenge
 
-
+    // Speichern des Status der Messung
     private val _statusMeasurment = MutableLiveData<Boolean>()
     val statusMeasurment: LiveData<Boolean>
         get() = _statusMeasurment
 
 
-
+    // Initialisierung der Variablen
     init {
         _discoveredDevices.value = mutableListOf()
         _deviceAddress.value = ""
@@ -38,6 +42,7 @@ class BasicViewModel : ViewModel() {
     }
 
 
+    // === getter- und setter-Funktionen === //
     fun getDeviceList(): List<String>? {
         return _discoveredDevices.value
     }
@@ -80,8 +85,6 @@ class BasicViewModel : ViewModel() {
     fun setStatusMeasurment(statusMeasurment: Boolean) {
         _statusMeasurment.value = statusMeasurment
     }
-
-
 
     // Extension Function, um Änderung in den Einträgen von Listen
     // dem Observer anzeigen zu können

@@ -2,7 +2,6 @@ package com.example.moveup
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.le.BluetoothLeScanner
 import android.content.*
 import android.os.Bundle
 import android.os.Handler
@@ -11,28 +10,60 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.RadioButton
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
 import com.example.moveup.databinding.FragmentSettingBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import org.json.JSONException
 import org.json.JSONObject
 import splitties.toast.toast
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 class SettingFragment : Fragment() {
+
+
+/*
+ ======================================================================================
+ ==========================          Einleitung              ==========================
+ ======================================================================================
+ Projektname: moveUP
+ Autor: Annemarie Kayser
+ Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
+            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
+ Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
+           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+ Letztes Update: 07.02.2023
+
+======================================================================================
+*/
+
+/*
+  =============================================================
+  =======              Function Activity                =======
+  =============================================================
+
+  In diesem Fragment können Einstellungen des Systems vorgenommen werden
+            - Ein- und Ausstellen der Vibration
+            - Einstellen der Länge der Vibration
+            - Konfiguration des Sensors auf die individuelle Haltung
+
+*/
+
+/*
+  =============================================================
+  =======                   Variables                   =======
+  =============================================================
+*/
 
     private var _binding: FragmentSettingBinding? = null
     private val viewModel: BasicViewModel by activityViewModels()
     private val binding get() = _binding!!
 
-    //Ble
-    private lateinit var scanner: BluetoothLeScanner
+    // === Bluetooth Low Energy === //
     private lateinit var mBluetooth: BluetoothAdapter
     private var isConnected = false
     private var isReceivingData = false
@@ -41,48 +72,55 @@ class SettingFragment : Fragment() {
     private var statusVibration = "VIBON"
     private var vibrationLength = 1000
 
-    //Konfiguration
+    // === Konfiguration === //
     private var thresholdBent = -50
     private var thresholdLean = 30
 
-    //Countdown
+    // === Handler-Runnable-Konstrukt === //
     private val handler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
 
+    // === Datenbank === //
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
     private var data: UserDataSetting? = null
 
+/*
+  =============================================================
+  =======                                               =======
+  =======         onCreateView & onViewCreated          =======
+  =======                                               =======
+  =============================================================
+*/
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentSettingBinding.inflate(inflater, container, false)
         return binding.root
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- Deaktivierung der Buttons --- //
         binding.buttonStart.isEnabled = false
         binding.buttonStart2.isEnabled = false
         binding.buttonStart3.isEnabled = false
         binding.buttonGetConfigData.isEnabled = false
 
+        // --- Initialisierung Bluetooth-Adapter --- //
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
 
-        scanner = mBluetooth.bluetoothLeScanner
 
-        // BluetoothLe Service starten
+        // --- BluetoothLe Service starten --- //
         val gattServiceIntent = Intent(context, BluetoothLeService::class.java)
-        // Service anbinden
+        // --- Service anbinden --- //
         context?.bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 
 
-        //Sensor nach 1s verbinden, wenn deviceAddress bekannt ist
+        // --- Sensor nach 1s verbinden, wenn deviceAddress bekannt und gespeichert ist --- //
         mRunnable = Runnable {
 
             if (viewModel.getDeviceAddress() != "") {
@@ -91,19 +129,23 @@ class SettingFragment : Fragment() {
         }
         handler.postDelayed(mRunnable, 1000)
 
+        // --- ESP32 thing verbinden --- //
         binding.buttonConnectSensor.setOnClickListener {
             bluetoothLeService!!.connect(viewModel.getDeviceAddress())
         }
 
+        // --- Einlesen der Daten aus der Datenbank --- //
         loadDbData()
 
+        // --- Ausloggen und starten der LogInActivity --- //
         binding.buttonLogOut.setOnClickListener {
             mFirebaseAuth.signOut()
             val intent = Intent(getActivity(), LoginInActivity::class.java)
             getActivity()?.startActivity(intent)
         }
 
-        // To listen for a switch's checked/unchecked state changes
+        // --- Änderung des Status des switch-Schalters (aktiviert/deaktiviert) --- //
+        // Senden der Einstellung an ESP32 thing
         binding.switchVibration.setOnCheckedChangeListener { buttonView, isChecked ->
             val obj = JSONObject()
 
@@ -121,21 +163,23 @@ class SettingFragment : Fragment() {
             obj.put("VIBRATION", statusVibration)
             obj.put("VIBLENGTH", vibrationLength)
 
-            if(isConnected) {
-                // Senden
-                if (gattCharacteristic != null) {
-                    gattCharacteristic!!.value = obj.toString().toByteArray()
-                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                }
+            // Senden der Daten
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
             }
+
+            // Speichern der Einstellung
             insertDataInDb()
         }
 
+        // --- Änderung des Status des toggle-Buttons --- //
+        // Senden der Einstellung an ESP32 thing
         binding.toggleButton.addOnButtonCheckedListener { toggleButton, checkedId, isChecked ->
             val obj = JSONObject()
 
             if (isChecked) {
-                //Check which radio button is selected
+                // Überprüfen, welcher Button ausgewählt wurde
                 when (checkedId) {
                     R.id.buttonVibShort -> {
                         vibrationLength = 500
@@ -152,18 +196,21 @@ class SettingFragment : Fragment() {
             }
             obj.put("VIBLENGTH", vibrationLength)
 
-            if(isConnected) {
-                // send
-                if (gattCharacteristic != null) {
-                    gattCharacteristic!!.value = obj.toString().toByteArray()
-                    bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
-                }
+            // Daten senden
+            if (gattCharacteristic != null) {
+                gattCharacteristic!!.value = obj.toString().toByteArray()
+                bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
             }
+
+            // Speichern der Einstellung
             insertDataInDb()
         }
 
+        // --- Starten der Konfiguration --- //
+        // 10 Sekunden eine gerade Haltung einnehmen
         binding.buttonStart.setOnClickListener {
 
+            // --- Beenden des Countdowns, falls noch einer läuft --- //
             handler.removeCallbacksAndMessages(null)
 
 
@@ -173,13 +220,13 @@ class SettingFragment : Fragment() {
             obj.put("START", true)
             obj.put("STARTMESSUNG", "AUS")
 
-            // Senden
+            // Senden der Daten
             if (gattCharacteristic != null) {
                 gattCharacteristic!!.value = obj.toString().toByteArray()
                 bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
             }
 
-            //Start Countdown
+            // Start Countdown
             val n = AtomicInteger(10) // initialisiere mit 10.
             val counter: Runnable = object : Runnable {
                 override fun run() {
@@ -191,15 +238,17 @@ class SettingFragment : Fragment() {
                     } else {
                         binding.textViewCountdown.text = getString(R.string.tv_countdown)
                         binding.buttonStart2.isEnabled = true
-
                     }
                 }
             }
             handler.postDelayed(counter, 0)
         }
 
+        // --- Starten der Konfiguration --- //
+        // 10 Sekunden eine ungerade Haltung einnehmen
         binding.buttonStart2.setOnClickListener {
 
+            // --- Beenden des Countdowns, falls noch einer läuft --- //
             handler.removeCallbacksAndMessages(null)
 
             val obj = JSONObject()
@@ -208,7 +257,7 @@ class SettingFragment : Fragment() {
             obj.put("START", true)
 
 
-            // Senden
+            // Senden der Daten
             if (gattCharacteristic != null) {
                 gattCharacteristic!!.value = obj.toString().toByteArray()
                 bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
@@ -224,7 +273,6 @@ class SettingFragment : Fragment() {
                     if (n.getAndDecrement() >= 1) {
                         handler.postDelayed(this, 1000)
                     } else {
-
                         binding.textViewCountdown2.text = getString(R.string.tv_countdown)
                         binding.buttonStart3.isEnabled = true
                     }
@@ -233,8 +281,11 @@ class SettingFragment : Fragment() {
             handler.postDelayed(counter, 0)
         }
 
+        // --- Starten der Konfiguration --- //
+        // 10 Sekunden eine zurückgelehnte Haltung einnehmen
         binding.buttonStart3.setOnClickListener {
 
+            // --- Beenden des Countdowns, falls noch einer läuft --- //
             handler.removeCallbacksAndMessages(null)
 
             val obj = JSONObject()
@@ -242,8 +293,7 @@ class SettingFragment : Fragment() {
             obj.put("STATUSKONFIG3", true)
             obj.put("START", true)
 
-
-            // Senden
+            // Senden der Daten
             if (gattCharacteristic != null) {
                 gattCharacteristic!!.value = obj.toString().toByteArray()
                 bluetoothLeService!!.writeCharacteristic(gattCharacteristic)
@@ -267,6 +317,7 @@ class SettingFragment : Fragment() {
             handler.postDelayed(counter, 0)
         }
 
+        // --- Daten empfangen vom ESP32 thing aktivieren/deaktivieren --- //
         binding.buttonGetConfigData.setOnClickListener {
             if (isReceivingData) {
                 bluetoothLeService!!.setCharacteristicNotification(gattCharacteristic!!, false)
@@ -280,6 +331,15 @@ class SettingFragment : Fragment() {
         }
     }
 
+/*
+  =============================================================
+  =======                                               =======
+  =======                   Funktionen                  =======
+  =======                                               =======
+  =============================================================
+*/
+
+    // === insertConfigDataInDb === //
     private fun insertConfigDataInDb() {
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
@@ -287,9 +347,9 @@ class SettingFragment : Fragment() {
         userData.setThresholdBentBack(thresholdBent)
         userData.setThresholdLeanBack(thresholdLean)
 
-        // Schreibe Daten als Document in die Collection Messungen in DB;
-        // Eine id als Document Name wird automatisch vergeben
-        // Implementiere auch onSuccess und onFailure Listender
+        // Speichern der Daten in der Datenbank
+        // Daten werden benutzerspezifisch gespeichert
+        // Speicherpfad users/uid/date/Einstellungen/Konfiguration
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection("Einstellungen").document("Konfiguration")
             .set(userData)
@@ -302,7 +362,7 @@ class SettingFragment : Fragment() {
     }
 
 
-
+    // === serviceConnection === //
     // BluetoothLE Service Anbindung
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
@@ -310,15 +370,14 @@ class SettingFragment : Fragment() {
             bluetoothLeService = (service as BluetoothLeService.LocalBinder).getService()
             if (!bluetoothLeService!!.initialize()) {
                 Log.e(ContentValues.TAG, "Unable to initialize Bluetooth")
-
             }
         }
-
         override fun onServiceDisconnected(componentName: ComponentName) {
             bluetoothLeService = null
         }
     }
 
+    // === makeGattUpdateIntentFilter === //
     private fun makeGattUpdateIntentFilter(): IntentFilter? {
         val intentFilter = IntentFilter()
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED)
@@ -328,6 +387,7 @@ class SettingFragment : Fragment() {
         return intentFilter
     }
 
+    // === gattUpdateReceiver === //
     private val gattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action = intent.action
@@ -341,22 +401,20 @@ class SettingFragment : Fragment() {
         }
     }
 
+    // === onConnect === //
     private fun onConnect() {
         isConnected = true
-        //binding.textViewConnected.setText(R.string.connected)
         Log.i(ContentValues.TAG, "connected")
-        toast("connected")
         binding.textViewStatusBLE.text = getString(R.string.tv_status_ble, "verbunden")
         binding.buttonConnectSensor.visibility = View.INVISIBLE
         binding.buttonStart.isEnabled = true
         binding.buttonGetConfigData.isEnabled = true
     }
 
+    // === onDisconnect === //
     private fun onDisconnect() {
         isConnected = false
-        //binding.textViewConnected.setText(R.string.disconnected)
         Log.i(ContentValues.TAG, "disconnected")
-        toast("disconnected")
         binding.buttonConnectSensor.visibility = View.VISIBLE
         binding.buttonStart.isEnabled = false
         binding.buttonStart2.isEnabled = false
@@ -365,10 +423,12 @@ class SettingFragment : Fragment() {
         binding.textViewStatusBLE.text = getString(R.string.tv_status_ble, "Nicht verbunden")
     }
 
+    // === onGattCharacteristicDiscovered === //
     private fun onGattCharacteristicDiscovered() {
         gattCharacteristic = bluetoothLeService?.getGattCharacteristic()
     }
 
+    // === onDataAvailable === //
     private fun onDataAvailable() {
         // neue Daten verfügbar
         Log.i(ContentValues.TAG, "Data available")
@@ -378,17 +438,18 @@ class SettingFragment : Fragment() {
         parseJSONData(s)
     }
 
+    // === parseJSONData === //
     private fun parseJSONData(jsonString: String) {
         try {
             val obj = JSONObject(jsonString)
             //extrahieren des Objektes data
 
-
-            toast("Daten empfangen")
+            // Konfigurationsdaten empfangen
             thresholdBent = obj.getString("thresholdBentBack").toInt()
             thresholdLean = obj.getString("thresholdLeanBack").toInt()
             toast(thresholdBent.toString() + thresholdLean.toString())
 
+            // Daten speichern
             insertConfigDataInDb()
 
         } catch (e: JSONException) {
@@ -396,12 +457,13 @@ class SettingFragment : Fragment() {
         }
     }
 
+    // === onDestroyView === //
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-
+    // === onResume === //
     override fun onResume() {
         super.onResume()
         (requireActivity() as MainActivity).supportActionBar!!.show()
@@ -417,6 +479,8 @@ class SettingFragment : Fragment() {
 
     }
 
+    // === onDestroy === //
+    // Ble-Verbindung beenden
     override fun onDestroy() {
         super.onDestroy()
         bluetoothLeService!!.disconnect()
@@ -425,6 +489,8 @@ class SettingFragment : Fragment() {
         bluetoothLeService = null
     }
 
+    // === onPause === //
+    // countdown beenden
     override fun onPause() {
         super.onPause()
         context?.unregisterReceiver(gattUpdateReceiver)
@@ -434,6 +500,7 @@ class SettingFragment : Fragment() {
         handler.removeCallbacksAndMessages(null)
     }
 
+    // === insertDataInDb === //
     private fun insertDataInDb() {
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
@@ -441,9 +508,9 @@ class SettingFragment : Fragment() {
         userData.setVibration(statusVibration)
         userData.setVibrationLength(vibrationLength)
 
-        // Schreibe Daten als Document in die Collection Messungen in DB;
-        // Eine id als Document Name wird automatisch vergeben
-        // Implementiere auch onSuccess und onFailure Listender
+        // Speichern der Daten in der Datenbank
+        // Daten werden benutzerspezifisch gespeichert
+        // Speicherpfad users/uid/date/Einstellungen/Vibration
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection("Einstellungen").document("Vibration")
             .set(userData)
@@ -455,24 +522,27 @@ class SettingFragment : Fragment() {
             }
     }
 
+    // === loadDbData === //
+    // Einlesen der Daten aus der Datenbank
     fun loadDbData() {
 
-        // Einstiegspunkt für die Abfrage ist users/uid/Messungen
+        // Einstiegspunkt für die Abfrage ist users/uid/Einstellungen/Vibration
         val uid = mFirebaseAuth.currentUser!!.uid
         db.collection("users").document(uid).collection("Einstellungen")
-            .document("Vibration")// alle Einträge abrufen
+            .document("Vibration")
             .get()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Datenbankantwort in Objektvariable speichern
                     data = task.result!!.toObject(UserDataSetting::class.java)
 
+                    // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (data != null) {
                         vibrationLength = data!!.getVibrationLength()
                         statusVibration = data!!.getVibration()
 
+                        // Anzeige anpassen
                         binding.switchVibration.isChecked = statusVibration == "VIBON"
-
 
                         if (vibrationLength == 500) {
                             binding.toggleButton.check(R.id.buttonVibShort)

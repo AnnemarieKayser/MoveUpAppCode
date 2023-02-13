@@ -15,22 +15,67 @@ import splitties.alertdialog.okButton
 
 class SplashScreen : AppCompatActivity() {
 
+/*
+ ======================================================================================
+ ==========================          Einleitung              ==========================
+ ======================================================================================
+ Projektname: moveUP
+ Autor: Annemarie Kayser
+ Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
+            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
+ Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
+           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+ Letztes Update: 07.02.2023
+
+======================================================================================
+*/
+
+/*
+  =============================================================
+  =======              Function Activity                =======
+  =============================================================
+
+  Diese Activity wird bei Beginn der App aufgerufen und zeigt den Begrüßungsbildschirm
+  für zwei Sekunden an.
+
+*/
+
+/*
+  =============================================================
+  =======                   Variables                   =======
+  =============================================================
+*/
+
+    // === Datenbank === //
     private val mFirebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+
+    // === Handler-Runnable-Konstrukt === //
     private val mHandler: Handler by lazy { Handler() }
     private lateinit var mRunnable: Runnable
+
+
+/*
+  =============================================================
+  =======                                               =======
+  =======                   onCreate                    =======
+  =======                                               =======
+  =============================================================
+*/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)
 
 
-        // --- Check if there is a connection to wifi --- //
-        // if there is no connection, an alertDialog is displayed and reminds
-        // the user to connect his phone to Wifi
-        // afterwards the app is closed
+        // --- Prüfen, ob eine Verbindung zum WLAN besteht --- //
+        // Wenn keine Verbindung besteht, wird ein alertDialog angezeigt und erinnert
+        // den Benutzer daran, sein Handy mit dem Wifi zu verbinden
+        // danach wird die App geschlossen
         if(!isNetworkAvailable(this)){
             // --- alertDialog --- //
-            // reminder to turn on wifi
             alertDialog (
                 title = getString(R.string.alert_dialog_title_reminder),
                 message = getString(R.string.alert_dialog_message_wifi)) {
@@ -40,6 +85,8 @@ class SplashScreen : AppCompatActivity() {
             }.show()
         }
         else {
+            // LoginActivity oder MainActivity wird nach 2 Sekunden geöffnet, je nachdem
+            // ob der User eingeloggt ist oder nicht
             mRunnable = Runnable {
                 if (mFirebaseAuth.currentUser == null) {
                     val intent = Intent (this, LoginInActivity::class.java)
@@ -54,10 +101,18 @@ class SplashScreen : AppCompatActivity() {
         }
     }
 
+/*
+  =============================================================
+  =======                                               =======
+  =======                   Funktionen                  =======
+  =======                                               =======
+  =============================================================
+*/
+
     // === isNetworkAvailable === //
-    // this function checks if there is a connection to wifi
-    // it returns true, if a connection is available
-    // otherwise it returns false
+    // diese Funktion prüft, ob eine Verbindung zum WLAN besteht
+    // gibt true zurück, wenn eine Verbindung vorhanden ist
+    // sonst gibt sie false zurück
     private fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

@@ -18,12 +18,22 @@
     <color name="brown_light">#d3b8ae</color>
     <color name="brown_dark">#725b53</color>
     <color name="grey_light">#A59F9D</color>
-    <color name="purple">#FF360E30</color>
-    <color name="purple_dark">#270722</color>
+    <color name="purple">#270021</color>
+    <color name="purple_dark">#23051F</color>
     <color name="pink_dark">#FF6E2A42</color>
     <color name="pink_medium">#BC1A53</color>
-    <color name="pink_medium2">#560027</color>
+    <color name="pink_medium2">#2E0417</color>
+    <color name="pink_medium3">#4C1A2C</color>
+    <color name="pink_medium4">#ad1457</color>
+
     <color name="purple_light">#CDBCCB</color>
+    <color name="green">#1C7034</color>
+    <color name="green_dark">#94af76</color>
+    <color name="green_light">#D5E3C6</color>
+    <color name="green_medium">#003300</color>
+
+
+
 
 
 
