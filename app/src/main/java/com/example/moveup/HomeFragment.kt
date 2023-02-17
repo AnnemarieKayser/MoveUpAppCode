@@ -313,7 +313,9 @@ class HomeFragment : Fragment() {
             progressMax = timeMaxProgressBar
 
             // ProgressBar Farbe
-            progressBarColorStart = Color.MAGENTA
+            progressBarColorStart = Color.parseColor("#94af76")
+            progressBarColorEnd = Color.YELLOW
+
 
             // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT

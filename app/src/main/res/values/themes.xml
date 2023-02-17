@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Theme.MoveUP" parent="Theme.Material3.Light.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/blue_grey_dark</item>
-        <item name="colorPrimaryVariant">@color/blue_grey_dark</item>
+        <item name="colorPrimary">@color/green_dark</item>
+        <item name="colorPrimaryVariant">@color/green_medium</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/brown</item>
@@ -33,10 +33,10 @@
 
 
     <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/purple_dark</item>
-        <item name="colorSecondary">@color/purple_dark</item>
-        <item name="colorSurface">@color/purple_light</item>
-        <item name="colorOnSurface">@color/purple_dark</item>
+        <item name="colorPrimary">@color/green_medium</item>
+        <item name="colorSecondary">@color/green_medium</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/green_medium</item>
         <item name="alertDialogStyle">@style/MaterialAlertDialog.App</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.App.Title.Text</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.App.Button</item>
@@ -49,7 +49,7 @@
     </style>
 
     <style name="MaterialAlertDialog.App.Title.Text" parent="MaterialAlertDialog.Material3.Title.Text">
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/green_medium</item>
     </style>
 
     <style name="Widget.App.Button" parent="Widget.Material3.Button.TextButton.Dialog">

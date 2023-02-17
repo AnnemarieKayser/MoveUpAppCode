@@ -197,7 +197,8 @@ class GraphFragment : Fragment() {
             progressMax = timeMaxProgressBar
 
             // ProgressBar Farbe
-            progressBarColorStart = Color.MAGENTA
+            progressBarColorStart = Color.parseColor("#94af76")
+            progressBarColorEnd = Color.YELLOW
 
             // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
@@ -223,8 +224,8 @@ class GraphFragment : Fragment() {
             progressMax = timeMaxProgressBar
 
             // ProgressBar Farbe
-            progressBarColorStart = Color.GREEN
-            progressBarColorEnd = Color.GREEN
+            progressBarColorStart = Color.parseColor("#8CD34F")
+            progressBarColorEnd = Color.parseColor("#8CD34F")
 
             // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
@@ -347,10 +348,10 @@ class GraphFragment : Fragment() {
             .setChartType(AAChartType.Column)
             .setXAxisVisible(true)
             .setTitle(getString(R.string.chart_title))
-            .setColorsTheme(arrayOf("#ce93d8", "#bbdefb", "#9c27b0","#6ab7ff", "#ff77a9", "#283593" ))
+            .setColorsTheme(arrayOf("#699638", "#BEFCA4", "#EEFF05","#345428", "#a7e810", "#0a6e09" ))
             .setStacking(AAChartStackingType.Normal)
             .setTitleStyle(AAStyle.Companion.style("#FFFFFF"))
-            .setBackgroundColor("#102027")
+            .setBackgroundColor("#182015")
             .setAxesTextColor("#FFFFFF")
             .setCategories("00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30", "04:00", "04:30", "05:00", "05:30",
                 "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
@@ -358,7 +359,7 @@ class GraphFragment : Fragment() {
                 "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30"
             )
             .setYAxisTitle("Minuten")
-            .setYAxisMax(25f)
+            .setYAxisMax(30f)
             .setScrollablePlotArea(
                 AAScrollablePlotArea()
                     .minWidth(600)
@@ -626,8 +627,8 @@ class GraphFragment : Fragment() {
             binding.circularProgressBar1.progress = progressTime
 
             // Verhältnis zwischen gerader und ungerader Haltung wird berechnet und angezeigt
-            val ratio = ((progressTime/(counterReminder + progressTime))*100).roundToInt()
-            binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio)
+            val ratio = ((progressTime/(counterReminder + progressTime))*100)
+            binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio) + "%"
 
             // Aktualisierung des Graphen
             val seriesArr = configureChartSeriesArray()
@@ -854,9 +855,10 @@ class GraphFragment : Fragment() {
                         // Aktualisierung der Anzeige
                         binding.circularProgressBar1.progress = progressTime
 
+
                         // Verhältnis zwischen gerader und ungerader Haltung wird berechnet und angezeigt
-                        val ratio = ((progressTime / (counterReminder + progressTime)) * 100).roundToInt()
-                        binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio)
+                        val ratio = ((progressTime / (counterReminder + progressTime)) * 100)
+                        binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio) + "%"
 
                         // ProgressBar mit Anzeige der gesamten Zeit an gerader Haltung wird aktualisiert
                         if (progressTime < timeMaxProgressBar) {

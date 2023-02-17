@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/green_dark2"
     android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -21,7 +21,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             app:cardCornerRadius="10dp"
-            app:cardElevation="5dp"
+            app:cardElevation="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
@@ -36,12 +36,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/green_dark"
                     android:fontFamily="sans-serif-light"
                     android:text="@string/btn_start_config"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.497"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewIntro" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewIntro"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
                 <TextView
                     android:id="@+id/textViewIntro"
@@ -84,14 +87,16 @@
                     android:id="@+id/buttonNavigate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="28dp"
-                    android:backgroundTint="#E4A9D8"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/green_dark"
                     android:fontFamily="sans-serif-light"
                     android:text="@string/btn_connect"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.498"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewConnectSensor" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewConnectSensor"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
                 <TextView
                     android:id="@+id/textViewConnectSensor"
@@ -147,11 +152,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/btn_challenge_home"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.498"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewChallengeHome" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewChallengeHome"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
                 <TextView
                     android:id="@+id/textViewChallengeHome"
@@ -233,11 +242,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/btn_data_graph"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/circularProgressBar" />
+                    app:layout_constraintTop_toBottomOf="@+id/circularProgressBar"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -252,7 +265,8 @@
             android:fontFamily="monospace"
             android:text="@string/tv_move_up"
             android:textAllCaps="false"
-            android:textSize="16dp"
+            android:textColor="@color/white"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
@@ -264,8 +278,10 @@
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:layout_marginTop="10dp"
+            android:backgroundTint="@color/green"
             android:text="@string/btn_log_out"
-            android:textSize="10sp"
+            android:textColor="@color/white"
+            android:textSize="11sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">moveUP</string>
+    <string name="app_name">moveUp</string>
     <string name="action_settings">Settings</string>
     <string name="title_home">Home</string>
     <string name="title_graph">Graph</string>
@@ -48,7 +48,7 @@
     <string name="dialog_set_time_title">Geben Sie ihre Zielzeit in Minuten an</string>
     <string name="dialog_cancel">Abbrechen</string>
     <string name="dialog_OK">Ok</string>
-    <string name="tv_progress">Dein aktueller Stand heute: </string>
+    <string name="tv_progress">Dein aktueller Stand an gerader Haltung heute: </string>
     <string name="btn_data_graph">Daten aktualisieren</string>
     <string name="btn_select_date">Wähle eine Datum aus</string>
     <string name="tv_reminder_lean_back">Anzahl der Phasen mit zurückgelehnter Haltung: %d.</string>
@@ -73,7 +73,7 @@
     <string name="btn_medium">Mittel</string>
     <string name="btn_long">Lang</string>
     <string name="tv_vibration_length">Länge der Vibration bei einer ungeraden Haltung:</string>
-    <string name="tv_get_data_config">Aktiviere den Empfang von Daten, damit die Konfigurationsdaten des moveUp Sensors eingelesen werden können.</string>
+    <string name="tv_get_data_config">Aktiviere den Empfang von Daten, damit die Konfigurationsdaten des moveUp Sensors empfangen werden können.</string>
     <string name="tv_config_3">Nehme nun eine zurückgelehnte Haltung ein und starte die Messung. Halte die Position für 10 Sekunden.</string>
 
     <!-- ExerciseFragment -->
@@ -94,7 +94,7 @@
     <string name="tv_start_exercise_recommendation">Empfehlung:\nJede halbe Stunde bis Stunde 3–5 Minuten lang bewegen.</string>
     <string name="message_alert_dialog_exercise">Eine Übung wird für insgesamt 1 Minute angezeigt.
         Wiederhole diese Übung so oft wie möglich in dieser Zeit. Anschließend kannst du die
-        nächste Übung über den Button starten. Die Videos werden zufällig ausgweählt. Mache so viele Übungen wie du möchtest. Viel Erfolg!</string>
+        nächste Übung über den Button starten. Die Videos werden zufällig ausgwählt. Mache so viele Übungen wie du möchtest. Viel Erfolg!</string>
     <string name="btn_show_directions">Erklärung Bewegungspause</string>
 
     <!-- Bluetooth -->
@@ -128,12 +128,13 @@
     <string name="btn_pause">Messung pausieren</string>
     <string name="tv_upright_bent">Ungerade vs. gerade Haltung</string>
     <string name="tv_upright_bent2">Versuche 75–100% der Zeit gerade zusitzen</string>
-    <string name="tv_upright_bent_status">Aktuell: %d</string>
-    <string name="tv_stop_measurment">Stoppe die Messung bevor du eine Challenge oder Bewegungspause startest</string>
+    <string name="tv_upright_bent_status">Aktuell: %1$.0f</string>
+    <string name="tv_stop_measurment">Stoppe die Messung bevor du eine Challenge oder Bewegungspause startest:</string>
     <string name="error_video">Video konnte nicht geladen werden</string>
     <string name="progress_dialog_title">Einen Moment...</string>
     <string name="progress_dialog_message">Das Video wird geladen</string>
     <string name="date_picker_title">Wähle ein Datum aus</string>
     <string name="btn_start_config">Starte Konfiguration</string>
+    <string name="tv_title_vibration">Einstellung der Vibration</string>
 
 </resources>

@@ -295,7 +295,7 @@ class ExerciseFragment : Fragment() {
             // Das Video wird fünf mal abgespielt
             // Anschließend kann ein neues geladen werden
             counterShowVideo++
-            if(counterShowVideo < 5) {
+            if(counterShowVideo < 6) {
                 binding.videoView.start()
             }else {
                 toast("Starte neues Video")

@@ -25,12 +25,18 @@
     <color name="pink_medium2">#2E0417</color>
     <color name="pink_medium3">#4C1A2C</color>
     <color name="pink_medium4">#ad1457</color>
+    <color name="pink_light">#E4A9D8</color>
+
+
 
     <color name="purple_light">#CDBCCB</color>
-    <color name="green">#1C7034</color>
+    <color name="green">#49613F</color>
     <color name="green_dark">#94af76</color>
-    <color name="green_light">#D5E3C6</color>
-    <color name="green_medium">#003300</color>
+    <color name="green_dark2">#182015</color>
+    <color name="green_light">#BEFCA4</color>
+    <color name="green_medium">#232F1F</color>
+    <color name="yellow">#8CD34F</color>
+    <color name="yellow2">#EEFF05</color>
 
 
 

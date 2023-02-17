@@ -4,18 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:backgroundTint="#182015"
     tools:context=".ExerciseFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
 
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#182015">
 
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="350dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
@@ -24,7 +26,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/buttonStopStart">
+            app:layout_constraintTop_toBottomOf="@+id/cardView9">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -37,9 +39,9 @@
                     android:layout_marginTop="16dp"
                     android:text="@string/tv_challenge"
                     android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textViewChallenge" />
 
@@ -48,17 +50,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/btn_start_challenge"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/buttonGetData" />
+                    app:layout_constraintTop_toBottomOf="@+id/buttonGetData"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
 
                 <EditText
                     android:id="@+id/editTextChallengeTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
                     android:ems="10"
                     android:hint="@string/tv_hint_challenge"
                     android:inputType="number"
@@ -74,11 +80,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/btn_get_data"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/editTextChallengeTime" />
+                    app:layout_constraintTop_toBottomOf="@+id/editTextChallengeTime"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
                 <TextView
                     android:id="@+id/textViewChallengesCompleted"
@@ -93,12 +103,14 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/buttonStartChallenge" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/textViewChallenge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:fontFamily="serif"
+                    android:fontFamily="sans-serif-light"
+                    android:shadowColor="@color/yellow2"
+                    android:shadowDx="2.0"
                     android:text="@string/tv_challenge_title"
                     android:textSize="34sp"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -114,7 +126,7 @@
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView2"
             android:layout_width="match_parent"
-            android:layout_height="750dp"
+            android:layout_height="480dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
@@ -136,6 +148,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/tv_practice"
                     android:textSize="34sp"
                     android:typeface="serif"
@@ -149,7 +162,7 @@
                     android:layout_width="150dp"
                     android:layout_height="200dp"
                     android:layout_marginStart="8dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:elevation="10dp"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -160,12 +173,16 @@
                     android:id="@+id/buttonGetVideo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/btn_get_video"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/buttonShowDirections" />
+                    app:layout_constraintTop_toBottomOf="@+id/buttonShowDirections"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
                 <TextView
                     android:id="@+id/textViewStartExercise"
@@ -174,7 +191,7 @@
                     android:layout_marginTop="16dp"
                     android:text="@string/tv_start_exercise"
                     android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.494"
                     app:layout_constraintStart_toStartOf="parent"
@@ -184,19 +201,23 @@
                     android:id="@+id/buttonShowDirections"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
                     android:text="@string/btn_show_directions"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.496"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textViewRecommendation" />
+                    app:layout_constraintTop_toBottomOf="@+id/textViewRecommendation"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
 
                 <TextView
                     android:id="@+id/textViewRecommendation"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:text="@string/tv_start_exercise_recommendation"
                     android:textAlignment="center"
@@ -209,30 +230,56 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-        <Button
-            android:id="@+id/buttonStopStart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/btn_pause"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.497"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewStopMeasurment" />
 
-        <TextView
-            android:id="@+id/textViewStopMeasurment"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardView9"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="8dp"
-            android:text="@string/tv_stop_measurment"
-            android:textAlignment="center"
+            android:layout_height="110dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="5dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <Button
+                    android:id="@+id/buttonStopStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/green_dark"
+                    android:fontFamily="sans-serif-light"
+                    android:text="@string/btn_pause"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/textViewStopMeasurment"
+                    app:strokeColor="@color/yellow2"
+                    app:strokeWidth="1dp" />
+
+                <TextView
+                    android:id="@+id/textViewStopMeasurment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/tv_stop_measurment"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

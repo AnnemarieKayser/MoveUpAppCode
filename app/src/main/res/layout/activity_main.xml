@@ -10,17 +10,19 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/nav_view"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="?attr/colorPrimary"
+        android:layout_height="50dp"
+        android:background="@color/green_medium"
         app:elevation="5dp"
+        app:hideOnScroll="false"
+        app:itemActiveIndicatorStyle="@style/Theme.MoveUP"
         app:itemIconTint="@color/white"
+        app:itemRippleColor="#FDF39A"
         app:itemTextColor="#FFFFFF"
         app:labelVisibilityMode="unlabeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-
         app:menu="@menu/bottom_nav_menu" />
 
 
@@ -42,7 +44,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@color/blue_grey_dark"
+        android:background="@color/green_medium"
         android:elevation="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
