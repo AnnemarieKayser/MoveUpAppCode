@@ -2,6 +2,7 @@ package com.example.moveup
 
 class UserDataConfig {
 
+    // Variablen zum Speichern der Konfigurationswerte in der Datenbank
     private var thresholdBentBack = -30
     private var thresholdLeanBack = 20
 

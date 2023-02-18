@@ -22,7 +22,7 @@
     <string name="tv_welcome">Willkommen in der moveUp-App</string>
     <string name="hint_email">Email</string>
     <string name="hint_passwort">Passwort</string>
-    <string name="btn_login">Einlogggen</string>
+    <string name="btn_login">Einloggen</string>
     <string name="tv_passwort">Passwort vergessen?</string>
     <string name="hint_name">Benutzername</string>
     <string name="tv_login">Login</string>
@@ -54,7 +54,10 @@
     <string name="tv_reminder_lean_back">Anzahl der Phasen mit zurückgelehnter Haltung: %d.</string>
     <string name="tv_counter_challenge">Anzahl der abgeschlossenen Challenges heute: %d.</string>
     <string name="tv_counter_movement">Anzahl der Bewegungspausen heute: %d.</string>
-
+    <string name="date_picker_title">Wähle ein Datum aus</string>
+    <string name="tv_upright_bent">Ungerade vs. gerade Haltung</string>
+    <string name="tv_upright_bent2">Versuche 75–100% der Zeit gerade zusitzen</string>
+    <string name="tv_upright_bent_status">Aktuell: %1$.0f</string>
 
     <!-- SettingFragment -->
     <string name="tv_vibration">Vibration</string>
@@ -75,6 +78,8 @@
     <string name="tv_vibration_length">Länge der Vibration bei einer ungeraden Haltung:</string>
     <string name="tv_get_data_config">Aktiviere den Empfang von Daten, damit die Konfigurationsdaten des moveUp Sensors empfangen werden können.</string>
     <string name="tv_config_3">Nehme nun eine zurückgelehnte Haltung ein und starte die Messung. Halte die Position für 10 Sekunden.</string>
+    <string name="btn_start_config">Starte Konfiguration</string>
+    <string name="tv_title_vibration">Einstellung der Vibration</string>
 
     <!-- ExerciseFragment -->
     <string name="title_exercise">Exercise</string>
@@ -96,6 +101,11 @@
         Wiederhole diese Übung so oft wie möglich in dieser Zeit. Anschließend kannst du die
         nächste Übung über den Button starten. Die Videos werden zufällig ausgwählt. Mache so viele Übungen wie du möchtest. Viel Erfolg!</string>
     <string name="btn_show_directions">Erklärung Bewegungspause</string>
+    <string name="tv_stop_measurment">Stoppe die Messung bevor du eine Challenge oder Bewegungspause startest:</string>
+    <string name="error_video">Video konnte nicht geladen werden</string>
+    <string name="progress_dialog_title">Einen Moment...</string>
+    <string name="progress_dialog_message">Das Video wird geladen</string>
+    <string name="btn_pause">Messung pausieren</string>
 
     <!-- Bluetooth -->
     <string name="bt_not_available">Bluetooth nicht verfügbar</string>
@@ -111,7 +121,7 @@
     <string name="btn_data">Daten</string>
     <string name="bt_data_off">Aktualisierung beenden</string>
     <string name="tv_move_up">moveUp</string>
-    <string name="tv_bluetooth">Suche und Verbinde deinen moveUp-Sensor:</string>
+    <string name="tv_bluetooth">Suche und verbinde deinen moveUp-Sensor:</string>
 
     <!-- AlertDialog -->
     <string name="title_alert_dialog">Hinweis</string>
@@ -125,16 +135,6 @@
     <!-- Datenbank -->
     <string name="save">Daten wurden gespeichert!</string>
     <string name="not_save">Daten wurden nicht gespeichert!</string>
-    <string name="btn_pause">Messung pausieren</string>
-    <string name="tv_upright_bent">Ungerade vs. gerade Haltung</string>
-    <string name="tv_upright_bent2">Versuche 75–100% der Zeit gerade zusitzen</string>
-    <string name="tv_upright_bent_status">Aktuell: %1$.0f</string>
-    <string name="tv_stop_measurment">Stoppe die Messung bevor du eine Challenge oder Bewegungspause startest:</string>
-    <string name="error_video">Video konnte nicht geladen werden</string>
-    <string name="progress_dialog_title">Einen Moment...</string>
-    <string name="progress_dialog_message">Das Video wird geladen</string>
-    <string name="date_picker_title">Wähle ein Datum aus</string>
-    <string name="btn_start_config">Starte Konfiguration</string>
-    <string name="tv_title_vibration">Einstellung der Vibration</string>
+    <string name="message_alert_dialog_home">Der Sensor vibriert, wenn 30 Sekunden in einer ungeraden Haltung verbracht wurden. Die Länge der Vibration kann in den Einstellungen festgelegt werden oder diese ausgestellt werden. Wenn du dich länger nicht bewegst, weist der Sensor sich über zwei kurze Vibrationen darauf hin, eine aktive Pause einzulegen.</string>
 
 </resources>

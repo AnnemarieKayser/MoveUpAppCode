@@ -6,7 +6,7 @@ import kotlin.collections.ArrayList
 
 class UserData {
 
-    private var progressTime = 0F
+    // Variablen zum Speichern der Daten des Sitzverhaltens in der Datenbank
     private var progressTimeMax = 60F
     private var arrayDynamicPhase = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
     private var arrayBentBack = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
@@ -25,14 +25,6 @@ class UserData {
 
     fun setServerTimestamp(serverTimestamp: Timestamp?) {
         this.serverTimestamp = serverTimestamp
-    }
-
-    fun getProgressTime(): Float {
-        return progressTime
-    }
-
-    fun setProgressTime(progressTime: Float) {
-        this.progressTime = progressTime
     }
 
     fun getProgressTimeMax(): Float {
@@ -79,7 +71,6 @@ class UserData {
     override fun toString(): String {
         return "UserData{" +
                 ", dynamicPhase='" + arrayDynamicPhase +
-                ", progressTime='" + progressTime +
                 ", progressTimeMax='" + progressTimeMax +
                 ", arrayBentBack='" + arrayBentBack +
                 ", arrayLeanBack='" + arrayLeanBack +

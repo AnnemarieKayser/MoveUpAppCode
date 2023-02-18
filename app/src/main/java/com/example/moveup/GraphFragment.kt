@@ -38,27 +38,29 @@ import kotlin.math.roundToInt
 
 class GraphFragment : Fragment() {
 
-/*
- ======================================================================================
- ==========================          Einleitung              ==========================
- ======================================================================================
- Projektname: moveUP
- Autor: Annemarie Kayser
- Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
-            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
-            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
- Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
-           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
-           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
-           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
- Letztes Update: 07.02.2023
 
-======================================================================================
+/*
+   ======================================================================================
+   ==========================           Einleitung             ==========================
+   ======================================================================================
+   Projektname: moveUP
+   Autor: Annemarie Kayser
+   Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+              Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen oder sich lange Zeit nicht
+              bewegt wurde, in Form von Vibration am Rücken. Messung des dynamischen und statischen
+              Sitzverhaltens mithilfe von Gyroskopwerten.
+   Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+             Datenübertragung zwischen dem Esp32 Thing und der App erfolgt via Bluetooth Low Energy.
+             Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung oder sich zubewegen.
+             Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+   Letztes Update: 18.02.2023
+
+  ======================================================================================
 */
 
 /*
   =============================================================
-  =======              Function Activity                =======
+  =======                 Funktion                      =======
   =============================================================
 
   In diesem Fragment werden die Daten zum Sitzverhalten ausgewertet und dargestellt
@@ -72,7 +74,7 @@ class GraphFragment : Fragment() {
 
 /*
   =============================================================
-  =======                   Variables                   =======
+  =======                   Variablen                   =======
   =============================================================
 */
 
@@ -192,6 +194,7 @@ class GraphFragment : Fragment() {
 
         // --- Konfiguration CircularProgressBar --- //
         // Anzeige des Fortschritts mit gerader Haltung
+        // https://github.com/lopspower/CircularProgressBar
         binding.circularProgressBar.apply {
             // Progress Max
             progressMax = timeMaxProgressBar
@@ -211,7 +214,6 @@ class GraphFragment : Fragment() {
             progressBarWidth = 10f
             backgroundProgressBarWidth = 4f
 
-
             roundBorder = true
 
             progressDirection = CircularProgressBar.ProgressDirection.TO_RIGHT
@@ -219,6 +221,7 @@ class GraphFragment : Fragment() {
 
         // --- Konfiguration CircularProgressBar --- //
         // Anzeige des Verhältnisses zwischen gerader und ungerader Haltung
+        // https://github.com/lopspower/CircularProgressBar
         binding.circularProgressBar1.apply {
             // Progress Max
             progressMax = timeMaxProgressBar
@@ -620,10 +623,12 @@ class GraphFragment : Fragment() {
             }
 
             // progressMax wird aktualisiert
+            // https://github.com/lopspower/CircularProgressBar
             binding.circularProgressBar1.apply {
                 progressMax = counterReminder + progressTime
             }
             // Aktualisierung der Anzeige
+            // https://github.com/lopspower/CircularProgressBar
             binding.circularProgressBar1.progress = progressTime
 
             // Verhältnis zwischen gerader und ungerader Haltung wird berechnet und angezeigt
@@ -631,10 +636,12 @@ class GraphFragment : Fragment() {
             binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio) + "%"
 
             // Aktualisierung des Graphen
+            // https://github.com/AAChartModel/AAChartCore-Kotlin
             val seriesArr = configureChartSeriesArray()
             binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
             // Aktualisierung der Anzeige der Zeit mit gerader Haltung
+            // https://github.com/lopspower/CircularProgressBar
             if (progressTime < timeMaxProgressBar) {
                 binding.circularProgressBar.progress = progressTime
                 binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
@@ -669,10 +676,12 @@ class GraphFragment : Fragment() {
                         timeMaxProgressBar = editTextView.text.toString().toFloat()
 
                         // Aktualisierung der Anzeige
+                        // https://github.com/lopspower/CircularProgressBar
                         binding.circularProgressBar.apply {
                             progressMax = timeMaxProgressBar
                         }
 
+                        // https://github.com/lopspower/CircularProgressBar
                         if(progressTime < timeMaxProgressBar) {
                             binding.textViewTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
                             binding.textViewProgressUpright.text = getString(R.string.tv_progress)
@@ -755,7 +764,6 @@ class GraphFragment : Fragment() {
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
-        userData.setProgressTime(progressTime)
         userData.setProgressTimeMax(timeMaxProgressBar)
         userData.setArrayBentBack(arrayBentList)
         userData.setArrayLeanBack(arrayLeanList)
@@ -796,7 +804,6 @@ class GraphFragment : Fragment() {
 
                     // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (data != null) {
-                        progressTime = data!!.getProgressTime()
                         timeMaxProgressBar = data!!.getProgressTimeMax()
                         arrayBentList = data!!.getArrayBentBack()
                         arrayLeanList = data!!.getArrayLeanBack()
@@ -848,11 +855,13 @@ class GraphFragment : Fragment() {
                         }
 
                         // Berechnung progressMax
+                        // https://github.com/lopspower/CircularProgressBar
                         binding.circularProgressBar1.apply {
                             progressMax = counterReminder + progressTime
                         }
 
                         // Aktualisierung der Anzeige
+                        // https://github.com/lopspower/CircularProgressBar
                         binding.circularProgressBar1.progress = progressTime
 
 
@@ -861,6 +870,7 @@ class GraphFragment : Fragment() {
                         binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, ratio) + "%"
 
                         // ProgressBar mit Anzeige der gesamten Zeit an gerader Haltung wird aktualisiert
+                        // https://github.com/lopspower/CircularProgressBar
                         if (progressTime < timeMaxProgressBar) {
                             binding.circularProgressBar.apply {
                                 progressMax = timeMaxProgressBar
@@ -882,14 +892,28 @@ class GraphFragment : Fragment() {
                         val seriesArr = configureChartSeriesArrayAfterLoadDb()
                         binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
+                        // https://github.com/lopspower/CircularProgressBar
                         binding.textViewProgressUpright.text = getString(R.string.tv_progress)
                         binding.circularProgressBar.apply {
                             progressMax = 0F
                             binding.textViewTime.text = getString(R.string.tv_time, 0F, 0F)
                         }
                         binding.circularProgressBar.progress = 0F
+
+                        // Berechnung progressMax
+                        // https://github.com/lopspower/CircularProgressBar
+                        binding.circularProgressBar1.apply {
+                            progressMax = 0F
+                        }
+                        // Aktualisierung der Anzeige
+                        // https://github.com/lopspower/CircularProgressBar
+                        binding.circularProgressBar1.progress = 0F
+
+                        // Verhältnis zwischen gerader und ungerader Haltung wird berechnet und angezeigt
+                        binding.textViewUprightBentStatus.text = getString(R.string.tv_upright_bent_status, 0f) + "%"
                     }
 
+                    // https://github.com/AAChartModel/AAChartCore-Kotlin
                     val seriesArr = configureChartSeriesArray()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 
@@ -935,6 +959,7 @@ class GraphFragment : Fragment() {
                         binding.textViewMovementGraph.text = getString(R.string.tv_counter_movement, 0)
                     }
 
+                    // https://github.com/AAChartModel/AAChartCore-Kotlin
                     val seriesArr = configureChartSeriesArray()
                     binding.chartView.aa_onlyRefreshTheChartDataWithChartOptionsSeriesArray(seriesArr)
 

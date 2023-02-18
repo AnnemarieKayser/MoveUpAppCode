@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -29,28 +30,27 @@ import java.util.*
 
 class HomeFragment : Fragment() {
 
-
 /*
- ======================================================================================
- ==========================          Einleitung              ==========================
- ======================================================================================
- Projektname: moveUP
- Autor: Annemarie Kayser
- Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
-            Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
-            am Rücken. Messung des dynamischen und statischen Sitzverhaltens mithilfe von Gyroskopwerten.
- Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
-           Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
-           Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
-           Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
- Letztes Update: 07.02.2023
+   ======================================================================================
+   ==========================           Einleitung             ==========================
+   ======================================================================================
+   Projektname: moveUP
+   Autor: Annemarie Kayser
+   Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+              Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen oder sich lange Zeit nicht
+              bewegt wurde, in Form von Vibration am Rücken. Messung des dynamischen und statischen
+              Sitzverhaltens mithilfe von Gyroskopwerten.
+   Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+             Datenübertragung zwischen dem Esp32 Thing und der App erfolgt via Bluetooth Low Energy.
+             Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung oder sich zubewegen.
+             Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+   Letztes Update: 18.02.2023
 
-======================================================================================
+  ======================================================================================
 */
-
 /*
   =============================================================
-  =======              Function Activity                =======
+  =======                    Funktion                   =======
   =============================================================
 
   Dieses Fragment zeigt einen ersten Überblick über die Funktionen der App
@@ -63,7 +63,7 @@ class HomeFragment : Fragment() {
 
 /*
   =============================================================
-  =======                   Variables                   =======
+  =======                   Variablen                   =======
   =============================================================
 */
 
@@ -100,14 +100,11 @@ class HomeFragment : Fragment() {
     private var dataSetting: UserDataSetting? = null
     private var dataConfig: UserDataConfig? = null
 
-
     // === Variablen für Datenbank === //
     private var statusVibration = "VIBON"
     private var vibrationLength = 1000
     private var thresholdBent = -30
     private var thresholdLean = 20
-    private var counterReminder = 0
-    private var counterLeanBack = 0
     private var configData = false
     private var arrayStraight = arrayOfNulls<Any>(48)
     private var arrayBent = arrayOfNulls<Any>(48)
@@ -144,9 +141,11 @@ class HomeFragment : Fragment() {
        // --- Deaktivierung des Zurück-Buttons --- //
        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {}
 
+        // --- imageButton unsichbar machen --- //
+        binding.imageButtonInfo.isVisible = false
+
         // --- Initialisierung Bluetooth-Adapter --- //
         mBluetooth = BluetoothAdapter.getDefaultAdapter()
-
 
         // --- BluetoothLe Service starten --- //
         val gattServiceIntent = Intent(context, BluetoothLeService::class.java)
@@ -236,7 +235,7 @@ class HomeFragment : Fragment() {
         }
 
         // --- Navigation zu ExerciseFragment --- //
-        binding.buttonConfigStartChallengeHome.setOnClickListener {
+        binding.buttonStartChallengeHome.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_exercise)
         }
 
@@ -246,6 +245,17 @@ class HomeFragment : Fragment() {
             mFirebaseAuth.signOut()
             val intent = Intent(getActivity(), LoginInActivity::class.java)
             getActivity()?.startActivity(intent)
+        }
+
+        binding.imageButtonInfo.setOnClickListener {
+            context?.let {
+                MaterialAlertDialogBuilder(it)
+                    .setTitle(resources.getString(R.string.title_alert_dialog))
+                    .setMessage(resources.getString(R.string.message_alert_dialog_home))
+                    .setPositiveButton(resources.getString(R.string.dialog_OK)) { dialog, which ->
+                    }
+                    .show()
+            }
         }
 
         // --- Daten empfangen vom ESP32 thing für 2 Sekunden --- //
@@ -296,18 +306,15 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // --- Messung starten/stoppen --- //
-        // Abfrage, ob der Sensor bereits konfiguriert wurde
-        // wenn Nein, Messung wird nicht gestartet
-        // wenn Ja und Sensor verbunden, Daten werden an ESP32 thing gesendet
-        binding.buttonStartSensor.setOnClickListener {
+
+        // --- Wechsel zu SettingFragment --- //
+        binding.buttonStartConfig.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_setting)
-
         }
-
 
         // --- Konfiguration CircularProgressBar --- //
         // Anzeige des Fortschritts mit gerader Haltung
+        // https://github.com/lopspower/CircularProgressBar
         binding.circularProgressBar.apply {
             // Progress Max
             progressMax = timeMaxProgressBar
@@ -315,7 +322,6 @@ class HomeFragment : Fragment() {
             // ProgressBar Farbe
             progressBarColorStart = Color.parseColor("#94af76")
             progressBarColorEnd = Color.YELLOW
-
 
             // Farbgradient
             progressBarColorDirection = CircularProgressBar.GradientDirection.RIGHT_TO_LEFT
@@ -417,6 +423,8 @@ class HomeFragment : Fragment() {
             binding.buttonNavigate.text = getString(R.string.btn_start_sensor)
             sensorStarted = viewModel.getStatusMeasurment()
         }
+        binding.imageButtonInfo.isVisible = true
+
     }
 
     // === onDisconnect === //
@@ -524,6 +532,7 @@ class HomeFragment : Fragment() {
             }
 
             // Aktualisierung der Anzeige der Zeit mit gerader Haltung
+            // https://github.com/lopspower/CircularProgressBar
             if (progressTime <= timeMaxProgressBar) {
                 binding.circularProgressBar.progress = progressTime
                 binding.textViewHomeProgressTime.text = getString(R.string.tv_time, progressTime, timeMaxProgressBar)
@@ -614,7 +623,6 @@ class HomeFragment : Fragment() {
 
         //Objekt mit Daten befüllen (ID wird automatisch ergänzt)
         val userData = UserData()
-        userData.setProgressTime(progressTime)
         userData.setProgressTimeMax(timeMaxProgressBar)
         userData.setArrayBentBack(arrayBentList)
         userData.setArrayLeanBack(arrayLeanList)
@@ -660,7 +668,6 @@ class HomeFragment : Fragment() {
 
                     // Daten werden den Variablen zugewiesen, wenn diese ungleich null sind
                     if (data != null) {
-                        progressTime = data!!.getProgressTime()
                         timeMaxProgressBar = data!!.getProgressTimeMax()
                         arrayBentList = data!!.getArrayBentBack()
                         arrayLeanList = data!!.getArrayLeanBack()
@@ -684,7 +691,14 @@ class HomeFragment : Fragment() {
                             arrayStraight[i] = arrayStraightList[i]
                         }
 
+                        // Berechnung der gesamten Zeit an gerader Haltung an einem Tag
+                        progressTime = 0F
+                        for (i in 0 until 48) {
+                            progressTime += arrayStraight[i].toString().toInt()
+                        }
+
                         // ProgressBar mit Anzeige der gesamten Zeit an gerader Haltung wird aktualisiert
+                        // https://github.com/lopspower/CircularProgressBar
                         if (progressTime < timeMaxProgressBar) {
 
                             binding.circularProgressBar.apply {

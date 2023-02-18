@@ -5,7 +5,7 @@ import com.google.firebase.firestore.ServerTimestamp
 
 class UserDataExercise {
 
-
+    // Variablen zum Speichern der Daten zu Challenges und Bewegungspausen in der Datenbank
     private var challenge = 0
     private var movementBreak = 0
     private var arrayChallenge = arrayListOf<Any?>(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)

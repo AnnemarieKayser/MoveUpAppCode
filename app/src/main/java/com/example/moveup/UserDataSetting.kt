@@ -2,7 +2,7 @@ package com.example.moveup
 
 class UserDataSetting {
 
-
+    // Variablen zum Speichern der Einstellung zur Vibration in der Datenbank
     private var vibration = "VIBON"
     private var vibrationLength = 1500
 

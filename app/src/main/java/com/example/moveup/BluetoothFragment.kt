@@ -25,28 +25,28 @@ import com.example.moveup.databinding.FragmentBluetoothBinding
 
 class BluetoothFragment : Fragment() {
 
-    /*
+/*
    ======================================================================================
-   ==========================           Introduction           ==========================
+   ==========================           Einleitung             ==========================
    ======================================================================================
    Projektname: moveUP
    Autor: Annemarie Kayser
    Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
-              Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
-              am Rücken und Senden einer Benachrichtigung an die zugehörige App. Messung des dynamischen und statischen
+              Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen oder sich lange Zeit nicht
+              bewegt wurde, in Form von Vibration am Rücken. Messung des dynamischen und statischen
               Sitzverhaltens mithilfe von Gyroskopwerten.
    Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
-             Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
-             Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
+             Datenübertragung zwischen dem Esp32 Thing und der App erfolgt via Bluetooth Low Energy.
+             Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung oder sich zubewegen.
              Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
-   Letztes Update: 07.02.2023
+   Letztes Update: 18.02.2023
 
   ======================================================================================
 */
 
 /*
   =============================================================
-  =======              Function Activity                =======
+  =======                  Funktion                     =======
   =============================================================
 
   In diesem Fragment kann die Bluetooth Low Energy Verbindung zum Mikrocontroller
@@ -58,7 +58,7 @@ class BluetoothFragment : Fragment() {
 
 /*
   =============================================================
-  =======                   Variables                   =======
+  =======                   Variablen                   =======
   =============================================================
 */
 
@@ -130,7 +130,7 @@ class BluetoothFragment : Fragment() {
             }
         }
 
-        // --- herstellen oder beenden der BLE-Verbindung zum ESP32 thing --- //
+        // --- Herstellen oder Beenden der BLE-Verbindung zum ESP32 thing --- //
         binding.buttonConnect.setOnClickListener {
 
             if (isConnected) {

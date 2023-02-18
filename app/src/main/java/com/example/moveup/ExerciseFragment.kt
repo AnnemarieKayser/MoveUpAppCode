@@ -30,28 +30,28 @@ import java.util.*
 
 class ExerciseFragment : Fragment() {
 
- /*
-  ======================================================================================
-  ==========================           Introduction           ==========================
-  ======================================================================================
-  Projektname: moveUP
-  Autor: Annemarie Kayser
-  Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
-             Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen wurde, in Form von Vibration
-             am Rücken und Senden einer Benachrichtigung an die zugehörige App. Messung des dynamischen und statischen
-             Sitzverhaltens mithilfe von Gyroskopwerten.
-  Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
-            Verbindung zwischen dem Esp32 Thing und einem Smartphone erfolgt via Bluetooth Low Energy.
-            Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung.
-            Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
-  Letztes Update: 07.02.2023
+/*
+   ======================================================================================
+   ==========================           Einleitung             ==========================
+   ======================================================================================
+   Projektname: moveUP
+   Autor: Annemarie Kayser
+   Anwendung: Tragbares sensorbasiertes Messsystem zur Kontrolle des Sitzverhaltens;
+              Ausgabe eines Hinweises, wenn eine krumme Haltung eingenommen oder sich lange Zeit nicht
+              bewegt wurde, in Form von Vibration am Rücken. Messung des dynamischen und statischen
+              Sitzverhaltens mithilfe von Gyroskopwerten.
+   Bauteile: Verwendung des 6-Achsen-Beschleunigungssensors MPU 6050 in Verbindung mit dem Esp32 Thing;
+             Datenübertragung zwischen dem Esp32 Thing und der App erfolgt via Bluetooth Low Energy.
+             Ein Vibrationsmotor am Rücken gibt den Hinweis auf eine krumme Haltung oder sich zubewegen.
+             Die Sensorik wurde in einem kleinen Gehäuse befestigt, welches mit einem Clip am Oberteil befestigt werden kann.
+   Letztes Update: 18.02.2023
 
- ======================================================================================
+  ======================================================================================
 */
 
 /*
   =============================================================
-  =======              Function Activity                =======
+  =======                Funktion                       =======
   =============================================================
 
   In diesem Fragment kann eine Challenge oder eine Bewegungspause gestartet werden
@@ -68,7 +68,7 @@ class ExerciseFragment : Fragment() {
 
 /*
   =============================================================
-  =======                   Variables                   =======
+  =======                   Variablen                   =======
   =============================================================
 */
 
@@ -163,12 +163,11 @@ class ExerciseFragment : Fragment() {
             arrayMovementBreak.add(i, 0)
         }
 
-        // --- Daten aus der Datenbank lesen --- //
+        // --- Daten aus der Datenbank laden --- //
         loadDbData()
 
         // --- Anzeige der abgeschlossenen Challenges --- //
-        binding.textViewChallengesCompleted.text =
-            getString(R.string.tv_challenge_completed, counterChallenge)
+        binding.textViewChallengesCompleted.text = getString(R.string.tv_challenge_completed, counterChallenge)
 
         // --- Empfang von Daten vom ESP32 thing aktivieren/deaktivieren --- //
         binding.buttonGetData.setOnClickListener {
@@ -381,7 +380,6 @@ class ExerciseFragment : Fragment() {
 
                 // Video starten
                 binding.videoView.requestFocus()
-
                 binding.videoView.start()
 
             }
@@ -474,8 +472,6 @@ class ExerciseFragment : Fragment() {
             val obj = JSONObject(jsonString)
             //Daten einlesen und Variablen zuweisen
             statusChallenge = obj.getString("challenge").toString()
-
-            toast(statusChallenge)
 
             // Challenge beendet
             if (statusChallenge == "geschafft" && !statusReceived) {
